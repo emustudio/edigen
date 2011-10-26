@@ -41,3 +41,9 @@ Input file example
 	"%s %s, %s" = instruction dst_reg src_reg |
 	"%s %s, [%X]" = instruction dst_reg src_mem |
 	"%s %s, %X" = instruction dst_reg immediate;
+
+Note for developers
+-------------------
+To build Edigen yourself from source, you need to download [JavaCC](http://javacc.java.net/). Then add this line to your `nbproject/private/private.properties` file:
+
+	javacc.dir=Directory containing javacc.jar

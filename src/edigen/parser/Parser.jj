@@ -1,0 +1,18 @@
+options {
+    STATIC = false;
+}
+
+PARSER_BEGIN(Parser)
+package edigen.parser;
+
+class Parser {
+
+}
+PARSER_END(Parser)
+
+void Start():
+{}
+{
+    " "
+    <EOF>
+}

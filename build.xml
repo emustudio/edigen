@@ -71,4 +71,11 @@
     nbproject/build-impl.xml file. 
 
     -->
+    <target name="-pre-compile">
+        <mkdir dir="${src.dir}/edigen/parser/gen"/>
+        <javacc target="${src.dir}/edigen/parser/Parser.jj" outputdirectory="${src.dir}/edigen/parser/gen" javacchome="${javacc.dir}"/>
+    </target>
+    <target name="-post-clean">
+        <delete dir="${src.dir}/edigen/parser/gen"/>
+    </target>
 </project>
