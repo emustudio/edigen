@@ -18,15 +18,16 @@
 package edigen;
 
 /**
- *
+ * The main application class.
  * @author Matúš Sulír
  */
 public class Main {
 
     /**
+     * The application entry point.
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        // TODO code application logic here
+        
     }
 }
