@@ -19,6 +19,7 @@ options {
     STATIC = false;
 }
 
+
 PARSER_BEGIN(Parser)
 package edigen.parser.gen;
 
@@ -29,8 +30,50 @@ public class Parser {
 }
 PARSER_END(Parser)
 
-SKIP : { <"#" (~["\n", "\r"])*> } // one-line comment
-SKIP : { " " | "\n" | "\r" | "\t" } // white characters
+
+// One-line comment
+<*> SKIP :
+{
+    <"#" (~["\n", "\r"])*>
+}
+
+// White characters
+<*> SKIP :
+{
+    " " | "\n" | "\r" | "\t"
+}
+
+// Operators
+TOKEN :
+{
+    <EQUALS: "=">
+  | <SEMICOLON: ";">
+  | <COLON: ":">
+  | <OR: "|">
+  | <PART_SEPARATOR: "%%">
+}
+
+// Identifiers and literals
+TOKEN :
+{
+    <ID: (["A"-"Z", "a"-"z", "_"])+ (["A"-"Z", "a"-"z", "_", "0"-"9"])*>
+  | <STRING: "\"" (~["\"", "\n", "\r"])* "\"">
+  | <HEX_NUMBER: "0x" (["0"-"9", "A"-"F", "a"-"f"])+>
+  | <BIN_NUMBER: ("0" | "1")+>
+}
+
+// Decimal numbers can be located only inside parentheses
+TOKEN :
+{
+    <LEFT_PAR: "("> : IN_PARENTHESES
+}
+
+<IN_PARENTHESES> TOKEN :
+{
+    <RIGHT_PAR: ")"> : DEFAULT
+  | <DEC_NUMBER: (["1"-"9"])+ (["0"-"9"])*>
+}
+
 
 void Start():
 {}

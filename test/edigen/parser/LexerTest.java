@@ -22,9 +22,10 @@ import edigen.parser.gen.Token;
 import edigen.parser.gen.Parser;
 import java.io.StringReader;
 import static org.junit.Assert.*;
+import static edigen.parser.gen.Parser.*;
 
 /**
- * Lexical analyzer test case.
+ * The lexical analyzer test case.
  * @author Matúš Sulír
  */
 public class LexerTest {
@@ -48,20 +49,20 @@ public class LexerTest {
      * 
      * @param input string to be tokenized
      * @param tokenKinds the sequence of token kinds expected
-     * @param tokenValues the sequence of token values expected
+     * @param tokenImages the sequence of token images (string representations) expected
      */
-    private void testTokens(String input, int[] tokenKinds, Object[] tokenValues) {
+    private void testTokens(String input, int[] tokenKinds, Object[] tokenImages) {
         Parser parser = new Parser(new StringReader(input));
         
         for (int i = 0; i < tokenKinds.length; i++) {
             Token token = parser.getNextToken();
             assertEquals(tokenKinds[i], token.kind);
             
-            if (tokenValues.length > i)
-                assertEquals(tokenValues[i], token.getValue());
+            if (tokenImages.length > i)
+                assertEquals(tokenImages[i], token.image);
         }
         
-        assertEquals(parser.getNextToken().kind, Parser.EOF);
+        assertEquals(parser.getNextToken().kind, EOF);
     }
     
     /**
@@ -71,5 +72,41 @@ public class LexerTest {
     public void testCommentsAndBlanks() {
         String input = "\r\n\t # comment\n#comment\r  # some comment\r\n#comment";
         testTokens(input, new int[] {});
+    }
+    
+    /**
+     * Tests operator lexical analysis.
+     */
+    @Test
+    public void testOperators() {
+        String input = "= ;:| %%";
+        int[] expected = {EQUALS, SEMICOLON, COLON, OR, PART_SEPARATOR};
+        
+        testTokens(input, expected);
+    }
+    
+    /**
+     * Tests identifiers and string literals.
+     */
+    @Test
+    public void testIDsAndStrings() {
+        String input = "ident \"string\" _Id3ent_\"some string\t2\"";
+        int[] kinds = {ID, STRING, ID, STRING};
+        String[] images = {"ident", "\"string\"", "_Id3ent_", "\"some string\t2\""};
+        
+        testTokens(input, kinds, images);
+    }
+    
+    /**
+     * Tests numeric literals.
+     */
+    @Test
+    public void testNumbers() {
+        String input = "0110 0xFF 0x1A2 (123) ( 10 )";
+        int[] kinds = {BIN_NUMBER, HEX_NUMBER, HEX_NUMBER,
+            LEFT_PAR, DEC_NUMBER, RIGHT_PAR, LEFT_PAR, DEC_NUMBER, RIGHT_PAR};
+        String[] images = {"0110", "0xFF", "0x1A2", "(", "123", ")", "(", "10", ")"};
+        
+        testTokens(input, kinds, images);
     }
 }
