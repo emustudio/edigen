@@ -22,6 +22,8 @@ import edigen.parser.ParseException;
 import edigen.parser.Parser;
 import edigen.parser.TokenMgrError;
 import edigen.tree.SimpleNode;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.StringReader;
 
 /**
@@ -35,14 +37,22 @@ public class Main {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        Parser p = new Parser(new StringReader((". %% .")));
-        
-        try {
-            SimpleNode rootNode = p.parse();
-            TreePrinter printer = new TreePrinter();
-            printer.dump(rootNode);
-        } catch (ParseException | TokenMgrError ex) {
-            ex.printStackTrace();
+        if (args.length == 1) {
+            try {
+                Parser p = new Parser(new FileReader(args[0]));
+
+                try {
+                    SimpleNode rootNode = p.parse();
+                    TreePrinter printer = new TreePrinter();
+                    printer.dump(rootNode);
+                } catch (ParseException | TokenMgrError ex) {
+                    System.out.println(ex.getMessage());
+                }
+            } catch (FileNotFoundException ex) {
+                System.out.println("Could not open input file.");
+            }
+        } else {
+            System.out.println("Usage: edigen.jar filename");
         }
     }
 }
