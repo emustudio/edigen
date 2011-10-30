@@ -79,22 +79,107 @@ TOKEN :
 }
 
 
-SimpleNode Start():
-{}
+SimpleNode Start(): {}
 {
-    DecoderPart() <PART_SEPARATOR> DisassemblerPart()
-    <EOF>
+    DecoderPart() <PART_SEPARATOR> DisassemblerPart() <EOF>
     { return jjtThis; }
 }
 
-void DecoderPart():
-{}
+void DecoderPart(): {}
 {
-    "."
+    (DecoderRule() <SEMICOLON>)+
 }
 
-void DisassemblerPart():
-{}
+void DecoderRule(): {}
 {
-    "."
+    RuleName() <EQUALS> VariantSet()
+}
+
+void RuleName():
+{ Token t; }
+{
+    t = <ID> { jjtThis.jjtSetValue(t.image); }
+}
+
+void VariantSet(): {}
+{
+    Variant() (<OR> Variant())*
+}
+
+void Variant(): {}
+{
+    [LOOKAHEAD(2) (ReturnSubRule() | ReturnString()) <COLON>] Pattern()
+}
+
+void ReturnSubRule():
+{ Token t; }
+{
+    t = <ID> { jjtThis.jjtSetValue(t.image); }
+}
+
+void ReturnString():
+{ Token t; }
+{
+    t = <STRING> { jjtThis.jjtSetValue(t.image); }
+}
+
+void Pattern(): {}
+{
+    (SubRule() | HexConstant() | BinConstant())+
+}
+
+void SubRule(): {}
+{
+    SubRuleName() [<LEFT_PAR> SubRuleLength() <RIGHT_PAR>]
+}
+
+void SubRuleName():
+{ Token t; }
+{
+    t = <ID> { jjtThis.jjtSetValue(t.image); }
+}
+
+void SubRuleLength():
+{ Token t; }
+{
+    t = <DEC_NUMBER> { jjtThis.jjtSetValue(t.image); }
+}
+
+void HexConstant():
+{ Token t; }
+{
+    t = <HEX_NUMBER> { jjtThis.jjtSetValue(t.image); }
+}
+
+void BinConstant():
+{ Token t; }
+{
+    t = <BIN_NUMBER> { jjtThis.jjtSetValue(t.image); }
+}
+
+void DisassemblerPart(): {}
+{
+    (DisassemblerRule() <SEMICOLON>)+
+}
+
+void DisassemblerRule(): {}
+{
+    Format() <EQUALS> ArgumentSet()
+}
+
+void ArgumentSet(): {}
+{
+    (Argument())+
+}
+
+void Format():
+{ Token t; }
+{
+    t = <STRING> { jjtThis.jjtSetValue(t.image); }
+}
+
+void Argument():
+{ Token t; }
+{
+    t = <ID> { jjtThis.jjtSetValue(t.image); }
 }
