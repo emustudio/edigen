@@ -23,10 +23,10 @@ import edigen.tree.*;
  *
  * @author Matúš Sulír
  */
-public class PrintVisitor implements ParserVisitor {
+public class TreePrinter {
     private int indentCount = 0;
     
-    private Object print(SimpleNode node) {
+    public void dump(SimpleNode node) {
         StringBuilder output = new StringBuilder();
         
         for (int i = 0; i < indentCount; i++)
@@ -40,26 +40,11 @@ public class PrintVisitor implements ParserVisitor {
         System.out.println(output);
         
         indentCount++;
-        node.childrenAccept(this, null);
-        indentCount--;
         
-        return null;
-    }
-    
-    public Object visit(SimpleNode node, Object data) {
-        return null;
-    }
-
-    public Object visit(Start node, Object data) {
-        return print(node);
-    }
-
-    public Object visit(DecoderPart node, Object data) {
-        return print(node);
-    }
-
-    public Object visit(DisassemblerPart node, Object data) {
-        return print(node);
+        for (int i = 0; i < node.jjtGetNumChildren(); i++)
+            dump((SimpleNode)node.jjtGetChild(i));
+        
+        indentCount--;
     }
     
 }

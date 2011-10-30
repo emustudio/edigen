@@ -17,7 +17,7 @@
  */
 package edigen;
 
-import edigen.debug.PrintVisitor;
+import edigen.debug.TreePrinter;
 import edigen.parser.ParseException;
 import edigen.parser.Parser;
 import edigen.parser.TokenMgrError;
@@ -39,8 +39,8 @@ public class Main {
         
         try {
             SimpleNode rootNode = p.parse();
-            PrintVisitor printer = new PrintVisitor();
-            rootNode.jjtAccept(printer, null);
+            TreePrinter printer = new TreePrinter();
+            printer.dump(rootNode);
         } catch (ParseException | TokenMgrError ex) {
             ex.printStackTrace();
         }
