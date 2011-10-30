@@ -38,8 +38,8 @@ Input file example
 
 	%%
 
-	"%s %s, %s" = instruction dst_reg src_reg |
-	"%s %s, [%X]" = instruction dst_reg src_mem |
+	"%s %s, %s" = instruction dst_reg src_reg;
+	"%s %s, [%X]" = instruction dst_reg src_mem;
 	"%s %s, %X" = instruction dst_reg immediate;
 
 Notes for developers
