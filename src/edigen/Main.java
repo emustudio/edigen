@@ -17,7 +17,11 @@
  */
 package edigen;
 
+import edigen.debug.PrintVisitor;
+import edigen.parser.ParseException;
 import edigen.parser.Parser;
+import edigen.parser.TokenMgrError;
+import edigen.tree.SimpleNode;
 import java.io.StringReader;
 
 /**
@@ -32,5 +36,13 @@ public class Main {
      */
     public static void main(String[] args) {
         Parser p = new Parser(new StringReader((". %% .")));
+        
+        try {
+            SimpleNode rootNode = p.parse();
+            PrintVisitor printer = new PrintVisitor();
+            rootNode.jjtAccept(printer, null);
+        } catch (ParseException | TokenMgrError ex) {
+            ex.printStackTrace();
+        }
     }
 }

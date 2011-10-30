@@ -79,7 +79,7 @@ TOKEN :
 }
 
 
-SimpleNode Start() #Start:
+SimpleNode Start():
 {}
 {
     DecoderPart() <PART_SEPARATOR> DisassemblerPart()
@@ -87,7 +87,7 @@ SimpleNode Start() #Start:
     { return jjtThis; }
 }
 
-void DecoderPart() #DecoderPart:
+void DecoderPart():
 {}
 {
     "."
