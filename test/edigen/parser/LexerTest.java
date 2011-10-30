@@ -18,11 +18,9 @@
 package edigen.parser;
 
 import org.junit.Test;
-import edigen.parser.gen.Token;
-import edigen.parser.gen.Parser;
 import java.io.StringReader;
 import static org.junit.Assert.*;
-import static edigen.parser.gen.Parser.*;
+import static edigen.parser.Parser.*;
 
 /**
  * The lexical analyzer test case.

@@ -5,7 +5,7 @@ Edigen is a command-line tool which generates Java source code of an emulator an
 
 Writing disassemblers and emulator instruction decoders by hand is tedious and error-prone. The code is often unreadable and unmaintainable. *Edigen* takes a file containing instruction formats, operation codes, mnemonics and instruction semantics as an input. It generates Java classes compatible with [emuStudio](http://github.com/vbmacher/emuStudio) platform, i.e. implementing interfaces from [emuLib](http://github.com/vbmacher/emuLib).
 
-At this stage, only disassembler generator is being implemented.
+At this stage, only the disassembler generator is being implemented.
 
 Input file example
 ------------------
@@ -42,8 +42,10 @@ Input file example
 	"%s %s, [%X]" = instruction dst_reg src_mem |
 	"%s %s, %X" = instruction dst_reg immediate;
 
-Note for developers
+Notes for developers
 -------------------
 To build Edigen yourself from source, you need to download [JavaCC](http://javacc.java.net/). Then add this line to your `nbproject/private/private.properties` file:
 
 	javacc.dir=Directory containing javacc.jar
+
+Files in the `src/edigen/parser/` and `src/edigen/tree/` directories are automatically generated. Please do not edit them manually.

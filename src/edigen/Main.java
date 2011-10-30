@@ -17,6 +17,9 @@
  */
 package edigen;
 
+import edigen.parser.Parser;
+import java.io.StringReader;
+
 /**
  * The main application class.
  * @author Matúš Sulír
@@ -28,6 +31,6 @@ public class Main {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        
+        Parser p = new Parser(new StringReader((". %% .")));
     }
 }
