@@ -20,12 +20,19 @@ package edigen.debug;
 import edigen.tree.*;
 
 /**
- *
+ * The recursive tree printer.
  * @author Matúš Sulír
  */
 public class TreePrinter {
     private int indentCount = 0;
     
+    /**
+     * Prints a tree recursively.
+     * 
+     * If a node contains a value, it is also printed.
+     * 
+     * @param node the root node to dump
+     */
     public void dump(SimpleNode node) {
         StringBuilder output = new StringBuilder();
         

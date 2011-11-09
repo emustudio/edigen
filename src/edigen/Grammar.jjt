@@ -79,6 +79,7 @@ TOKEN :
 }
 
 
+// Parser grammar
 SimpleNode Start(): {}
 {
     DecoderPart() <PART_SEPARATOR> DisassemblerPart() <EOF>
