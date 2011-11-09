@@ -28,8 +28,12 @@ PARSER_BEGIN(Parser)
 package edigen.parser;
 
 public class Parser {
-    public SimpleNode parse() throws ParseException, TokenMgrError {
-        return Start();
+    public SimpleNode parse() throws ParseException {
+        try {
+            return Start();
+        } catch(TokenMgrError ex) {
+            throw new ParseException(ex.getMessage());
+        }
     }
 }
 PARSER_END(Parser)
@@ -76,6 +80,11 @@ TOKEN :
 {
     <RIGHT_PAR: ")"> : DEFAULT
   | <DEC_NUMBER: (["1"-"9"])+ (["0"-"9"])*>
+}
+
+<*> TOKEN :
+{
+    <UNEXPECTED: ~[]>
 }
 
 

@@ -46,8 +46,6 @@ public class Main {
                     printer.dump(rootNode);
                 } catch (ParseException ex) {
                     System.out.println(ex.getMessage());
-                } catch (TokenMgrError ex) {
-                    System.out.println(ex.getMessage());
                 }
             } catch (FileNotFoundException ex) {
                 System.out.println("Could not open input file.");
