@@ -24,7 +24,6 @@ import edigen.parser.TokenMgrError;
 import edigen.tree.SimpleNode;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.StringReader;
 
 /**
  * The main application class.
@@ -45,7 +44,9 @@ public class Main {
                     SimpleNode rootNode = p.parse();
                     TreePrinter printer = new TreePrinter();
                     printer.dump(rootNode);
-                } catch (ParseException | TokenMgrError ex) {
+                } catch (ParseException ex) {
+                    System.out.println(ex.getMessage());
+                } catch (TokenMgrError ex) {
                     System.out.println(ex.getMessage());
                 }
             } catch (FileNotFoundException ex) {
