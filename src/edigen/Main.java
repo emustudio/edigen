@@ -20,7 +20,6 @@ package edigen;
 import edigen.debug.TreePrinter;
 import edigen.parser.ParseException;
 import edigen.parser.Parser;
-import edigen.parser.TokenMgrError;
 import edigen.tree.SimpleNode;
 import java.io.FileNotFoundException;
 import java.io.FileReader;

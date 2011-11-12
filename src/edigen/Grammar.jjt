@@ -55,6 +55,7 @@ PARSER_END(Parser)
 TOKEN :
 {
     <EQUALS: "=">
+  | <COMMA: ",">
   | <SEMICOLON: ";">
   | <COLON: ":">
   | <OR: "|">
@@ -102,7 +103,12 @@ void DecoderPart(): {}
 
 void DecoderRule(): {}
 {
-    RuleName() <EQUALS> VariantSet()
+    RuleSet() <EQUALS> VariantSet()
+}
+
+void RuleSet(): {}
+{
+    RuleName() (<COMMA> RuleName())*
 }
 
 void RuleName():

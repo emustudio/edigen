@@ -3,7 +3,7 @@ Edigen - Emulator Disassembler Generator
 
 Edigen is a command-line tool which generates Java source code of an emulator and disassembler from a text file in a specific format.
 
-Writing disassemblers and emulator instruction decoders by hand is tedious and error-prone. The code is often unreadable and unmaintainable. *Edigen* takes a file containing instruction formats, operation codes, mnemonics and instruction semantics as an input. It generates Java classes compatible with [emuStudio](http://github.com/vbmacher/emuStudio) platform, i.e. implementing interfaces from [emuLib](http://github.com/vbmacher/emuLib).
+Writing disassemblers and emulator instruction decoders by hand is tedious and error-prone. The code is often unreadable and unmaintainable. *Edigen* takes a file containing instruction formats, operation codes, mnemonics and instruction semantics as an input. It generates Java classes compatible with the [emuStudio](http://github.com/vbmacher/emuStudio) platform, i.e. implementing interfaces from [emuLib](http://github.com/vbmacher/emuLib).
 
 At this stage, only the disassembler generator is being implemented.
 
@@ -22,10 +22,7 @@ Input file example
 		0 dst_reg(3) 1 src_mem |
 		1 dst_reg(3) 0 immediate;
 
-	src_reg = reg;
-	dst_reg = reg;
-
-	reg =
+	src_reg, dst_reg =
 		"eax": 000 |
 		"ebx": 001;
 
