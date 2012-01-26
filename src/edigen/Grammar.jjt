@@ -96,7 +96,7 @@ SimpleNode Start(): {}
     { return jjtThis; }
 }
 
-void DecoderPart(): {}
+void DecoderPart() #void: {}
 {
     (DecoderRule() <SEMICOLON>)+
 }
@@ -106,7 +106,7 @@ void DecoderRule(): {}
     RuleSet() <EQUALS> VariantSet()
 }
 
-void RuleSet(): {}
+void RuleSet() #void: {}
 {
     RuleName() (<COMMA> RuleName())*
 }
@@ -117,7 +117,7 @@ void RuleName():
     t = <ID> { jjtThis.jjtSetValue(t.image); }
 }
 
-void VariantSet(): {}
+void VariantSet() #void: {}
 {
     Variant() (<OR> Variant())*
 }
@@ -139,12 +139,12 @@ void ReturnString():
     t = <STRING> { jjtThis.jjtSetValue(t.image); }
 }
 
-void Pattern(): {}
+void Pattern() #void: {}
 {
     (SubRule() | HexConstant() | BinConstant())+
 }
 
-void SubRule(): {}
+void SubRule() #void: {}
 {
     SubRuleName() [<LEFT_PAR> SubRuleLength() <RIGHT_PAR>]
 }
@@ -173,7 +173,7 @@ void BinConstant():
     t = <BIN_NUMBER> { jjtThis.jjtSetValue(t.image); }
 }
 
-void DisassemblerPart(): {}
+void DisassemblerPart() #void: {}
 {
     (DisassemblerRule() <SEMICOLON>)+
 }
@@ -183,7 +183,7 @@ void DisassemblerRule(): {}
     Format() <EQUALS> ArgumentSet()
 }
 
-void ArgumentSet(): {}
+void ArgumentSet() #void: {}
 {
     (Argument())+
 }
