@@ -40,7 +40,8 @@ Input file example
 	"%s %s, %X" = instruction dst_reg immediate;
 
 Notes for developers
--------------------
+--------------------
+
 To build Edigen yourself from source, you need to download [JavaCC](http://javacc.java.net/). Then add this line to your `nbproject/private/private.properties` file:
 
 	javacc.dir=Directory containing javacc.jar
