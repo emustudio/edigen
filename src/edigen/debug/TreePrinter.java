@@ -17,7 +17,7 @@
  */
 package edigen.debug;
 
-import edigen.tree.*;
+import edigen.tree.SimpleNode;
 
 /**
  * The recursive tree printer.
@@ -49,7 +49,7 @@ public class TreePrinter {
         indentCount++;
         
         for (int i = 0; i < node.jjtGetNumChildren(); i++)
-            dump((SimpleNode)node.jjtGetChild(i));
+            dump((SimpleNode) node.jjtGetChild(i));
         
         indentCount--;
     }

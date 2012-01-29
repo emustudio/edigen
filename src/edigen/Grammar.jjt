@@ -96,17 +96,17 @@ SimpleNode Start(): {}
     { return jjtThis; }
 }
 
-void DecoderPart() #void: {}
+void DecoderPart(): {}
 {
     (DecoderRule() <SEMICOLON>)+
 }
 
 void DecoderRule(): {}
 {
-    RuleSet() <EQUALS> VariantSet()
+    RuleNameSet() <EQUALS> VariantSet()
 }
 
-void RuleSet() #void: {}
+void RuleNameSet(): {}
 {
     RuleName() (<COMMA> RuleName())*
 }
@@ -119,10 +119,10 @@ void RuleName():
 
 void VariantSet() #void: {}
 {
-    Variant() (<OR> Variant())*
+    RuleVariant() (<OR> RuleVariant())*
 }
 
-void Variant(): {}
+void RuleVariant(): {}
 {
     [LOOKAHEAD(2) (ReturnSubRule() | ReturnString()) <COLON>] Pattern()
 }
@@ -173,7 +173,7 @@ void BinConstant():
     t = <BIN_NUMBER> { jjtThis.jjtSetValue(t.image); }
 }
 
-void DisassemblerPart() #void: {}
+void DisassemblerPart(): {}
 {
     (DisassemblerRule() <SEMICOLON>)+
 }
