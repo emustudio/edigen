@@ -48,17 +48,17 @@ public class NamePass {
      * @throws SemanticException when a duplicate rule name is detected
      */
     public void checkNode(SimpleNode node) throws SemanticException {
-        int childrenCount = node.jjtGetNumChildren();
+        int childCount = node.jjtGetNumChildren();
         
         if (node instanceof RuleNameSet) {
             Rule emptyRule = new Rule();
             
-            for (int i = 0; i < childrenCount; i++) {
+            for (int i = 0; i < childCount; i++) {
                 SimpleNode child = (SimpleNode) node.jjtGetChild(i);
                 addRule((String) child.jjtGetValue(), emptyRule);
             }
         } else {
-            for (int i = 0; i < childrenCount; i++)
+            for (int i = 0; i < childCount; i++)
                 checkNode((SimpleNode) node.jjtGetChild(i));
         }
     }
