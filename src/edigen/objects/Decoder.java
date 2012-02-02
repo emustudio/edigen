@@ -22,7 +22,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-
 /**
  * The "root" class of the instruction decoder generator.
  * 

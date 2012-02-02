@@ -60,6 +60,10 @@ public class Edigen {
                 // the first semantic pass
                 NamePass namePass = new NamePass(decoder);
                 namePass.checkNode(rootNode);
+                
+                // the second semantic pass
+                ConvertPass converter = new ConvertPass(decoder);
+                rootNode.jjtAccept(converter, null);
             } catch (ParseException ex) {
                 System.out.println(ex.getMessage());
             } catch (SemanticException ex) {
