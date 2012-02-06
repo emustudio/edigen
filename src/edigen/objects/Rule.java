@@ -22,15 +22,18 @@ import java.util.List;
 
 /**
  * The disassembler rule containing multiple variants.
- * 
+ *
  * Does not contain rule names.
+ *
  * @author Matúš Sulír
  */
 public class Rule {
+
     private List<Variant> variants = new ArrayList<Variant>();
-    
+
     /**
      * Adds a variant to this rule.
+     *
      * @param variant the variant object
      */
     public void addVariant(Variant variant) {

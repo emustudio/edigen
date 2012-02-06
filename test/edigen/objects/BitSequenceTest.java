@@ -56,6 +56,23 @@ public class BitSequenceTest {
     }
 
     /**
+     * Test of get method, of class BitSequence.
+     */
+    @Test
+    public void testGet() {
+        BitSequence bits = new BitSequence(2);
+        bits.set(1, true);
+        
+        assertEquals(false, bits.get(0));
+        assertEquals(true, bits.get(1));
+        
+        try {
+            bits.get(2);
+            fail("The expected exception was not thrown.");
+        } catch (IndexOutOfBoundsException ex) { }
+    }
+    
+    /**
      * Test of set method, of class BitSequence.
      */
     @Test
@@ -92,6 +109,28 @@ public class BitSequenceTest {
         bits.append(appended);
         expected = new boolean[] {true, true, true, false, false};
         result = bits.toBooleanArray();
+        assertTrue(Arrays.equals(expected, result));
+    }
+    
+    /**
+     * Test of split method, of class BitSequence.
+     */
+    @Test
+    public void testSplit() {
+        BitSequence bits = new BitSequence(2 * 16 + 3);
+        bits.set(3, true);
+        bits.set(2 * 16 + 1, true);
+        BitSequence[] result = bits.split(2);
+        
+        BitSequence[] expected = {
+            new BitSequence(16),
+            new BitSequence(16),
+            new BitSequence(3)
+        };
+        
+        expected[0].set(3, true);
+        expected[2].set(1, true);
+        
         assertTrue(Arrays.equals(expected, result));
     }
 }
