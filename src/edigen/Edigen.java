@@ -70,6 +70,10 @@ public class Edigen {
                 ConvertPass converter = new ConvertPass(decoder);
                 rootNode.jjtAccept(converter, null);
                 decoder.dump(System.out);
+                
+                // transformation: join
+                decoder.accept(new JoinVisitor());
+                decoder.dump(System.out);
             } catch (ParseException ex) {
                 System.out.println(ex.getMessage());
             } catch (SemanticException ex) {
