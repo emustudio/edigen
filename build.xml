@@ -74,7 +74,7 @@
     <target name="-pre-compile">
         <mkdir dir="${src.dir}/edigen/tree"/>
         <mkdir dir="${src.dir}/edigen/parser"/>
-        <jjtree target="${src.dir}/edigen/Grammar.jjt" outputdirectory="${src.dir}/edigen/tree" outputfile="../parser/Grammar.jj" javacchome="${javacc.dir}"/>
+        <jjtree target="${src.dir}/edigen/Grammar.jjt" nodepackage="edigen.tree" outputdirectory="${src.dir}/edigen/tree" outputfile="../parser/Grammar.jj" javacchome="${javacc.dir}"/>
         <javacc target="${src.dir}/edigen/parser/Grammar.jj" javacchome="${javacc.dir}"/>
     </target>
     <target name="-post-clean">
