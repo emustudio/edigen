@@ -17,10 +17,12 @@
  */
 package edigen;
 
-import edigen.objects.Decoder;
+import edigen.decoder.JoinVisitor;
+import edigen.decoder.tree.Decoder;
 import edigen.parser.ParseException;
 import edigen.parser.Parser;
 import edigen.tree.SimpleNode;
+import edigen.util.TreePrinter;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 
@@ -53,17 +55,21 @@ public class Edigen {
             Parser p = new Parser(new FileReader(inputFile));
 
             try {
-                // lexical and syntactic analysis
+                // lexical and syntactic analysis -> parse tree
                 SimpleNode rootNode = p.parse();
-                Decoder decoder = new Decoder();
+                new TreePrinter(System.out).dump(rootNode);
 
-                // the first semantic pass
+                Decoder decoder = new Decoder();
+                
+                // parse tree -> customized tree containing only rules fo far
                 NamePass namePass = new NamePass(decoder);
                 namePass.checkNode(rootNode);
+                decoder.dump(System.out);
                 
-                // the second semantic pass
+                // parse tree -> fully-populated custom tree
                 ConvertPass converter = new ConvertPass(decoder);
                 rootNode.jjtAccept(converter, null);
+                decoder.dump(System.out);
             } catch (ParseException ex) {
                 System.out.println(ex.getMessage());
             } catch (SemanticException ex) {

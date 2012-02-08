@@ -17,26 +17,24 @@
  */
 package edigen;
 
-import edigen.objects.BitSequence;
-import edigen.objects.Decoder;
-import edigen.objects.Rule;
-import edigen.objects.Variant;
+import edigen.decoder.tree.*;
 import edigen.tree.*;
+import edigen.util.BitSequence;
 
 /**
- * The AST traversal which converts the syntactic tree to a set of customized
- * objects.
+ * The traversal which converts the parse tree to a new, customized tree.
  * 
- * The input AST is not a suitable data structure for direct code generation.
- * Moreover, as far as we know, it is not possible to add custom methods to
- * JJTree-generated classes (without direct modification of the generated code,
- * which is a terribly wrong idea).
+ * <p>Rule nodes must already be added to the decoder (the root node of the tree
+ * being constructed) before this pass.</p>
  * 
- * This class traverses the AST with help of the visitor design pattern. It
- * creates a set of objects (mathematically speaking, we can call them an object
- * graph). In addition, these objects will already contain data in a form
- * appropriate for code generation - e.g. the binary masks instead of strings,
- * references to rules instead of rule names, etc. 
+ * <p>The syntax tree (an output from JJTree) is not a suitable data structure
+ * for direct code generation. This class traverses it with help of the visitor
+ * design pattern.</p>
+ * 
+ * <p>The created tree will consist of nodes represented by objects in the
+ * {@link edigen.decoder.tree} package. They will contain data in a form
+ * appropriate for further processing (and finally, code generation) - e.g. the
+ * binary masks instead of strings.</p>
  * @author Matúš Sulír
  */
 public class ConvertPass implements ParserVisitor {
@@ -45,18 +43,18 @@ public class ConvertPass implements ParserVisitor {
     
     /**
      * Constructs the converting tree traversal.
-     * @param decoder the decoder object, where the result will be stored
+     * @param decoder the decoder object, where the result will be stored; this
+     *                decoder must already contain all rule nodes as chldren
      */
     public ConvertPass(Decoder decoder) {
         this.decoder = decoder;
     }
 
     /**
-     * Useless method required by JJTree.
+     * Useless method required to support the visitor design pattern.
      * 
-     * This is required to support the visitor design pattern - other methods
-     * have subclasses of <code>SimpleNode</code> as the first parameter. This
-     * method is actually never called.
+     * Other methods have subclasses of <code>SimpleNode</code> as the first 
+     * parameter. This method is actually never called.
      * @param node something
      * @param data whatever
      * @return null
@@ -68,9 +66,9 @@ public class ConvertPass implements ParserVisitor {
 
     /**
      * Starts traversing the whole tree from the root node.
-     * @param node the root node
+     * @param node the starting syntax tree node
      * @param data unused
-     * @return the decoder object populated with all rules
+     * @return the fully-populated decoder tree
      */
     @Override
     public Decoder visit(Start node, Object data) {
@@ -93,38 +91,42 @@ public class ConvertPass implements ParserVisitor {
     }
     
     /**
-     * Visits the decoder rule and populates it with variants.
+     * Populates rules in a RuleNameSet with variants.
      * @param node the rule node
      * @param data unused
      * @return null
      */
     @Override
     public Object visit(DecoderRule node, Object data) {
-        // the first child is a set of rule names
-        String ruleName = (String) node.jjtGetChild(0).jjtAccept(this, data);
-        
-        Rule rule = decoder.getRuleByName(ruleName);
+        String[] ruleNames = (String[]) node.jjtGetChild(0).jjtAccept(this, data);
         int childCount = node.jjtGetNumChildren();
         
-        // the other children are variants
-        for (int i = 1; i < childCount; i++)
-            rule.addVariant((Variant) node.jjtGetChild(i).jjtAccept(this, data));
+        for (String ruleName : ruleNames) {
+            Rule rule = decoder.getRuleByName(ruleName);
+
+            // all children except the first one are variants
+            for (int i = 1; i < childCount; i++)
+                rule.addChild((Variant) node.jjtGetChild(i).jjtAccept(this, data));
+        }
         
         return null;
     }
 
     /**
-     * Returns the first name of the given rule.
-     * 
-     * The first name is sufficient to identify the right rule and get a
-     * reference to it.
+     * Returns an array of rule names.
      * @param node the node containig a set of rule names
      * @param data unused
-     * @return the rule name as a string
+     * @return rule names
      */
     @Override
-    public String visit(RuleNameSet node, Object data) {
-        return (String) node.jjtGetChild(0).jjtAccept(this, data);
+    public String[] visit(RuleNameSet node, Object data) {
+        int childCount = node.jjtGetNumChildren();
+        String[] ruleNames = new String[childCount];
+        
+        for (int i = 0; i < childCount; i++)
+            ruleNames[i] = (String) node.jjtGetChild(i).jjtAccept(this, data);
+        
+        return ruleNames;
     }
     
     /**
@@ -141,10 +143,10 @@ public class ConvertPass implements ParserVisitor {
     /**
      * Causes all children of the variant node to perform an appropriate action.
      * 
-     * The children (subrules, subrule lengths, hexadecimal and binary
-     * constants) are visited in the same order as they occured in the input
-     * file. The single variant object is passed as an argument to all these
-     * children and they perform an appropriate action on it.
+     * The children (subrules, hexadecimal and binary constants) are visited in
+     * the same order as they occured in the input file. The single variant
+     * object is passed as an argument to all these children and they perform
+     * an appropriate action on it.
      * @param node the variant node
      * @param data unused
      * @return the populated variant object
@@ -168,7 +170,7 @@ public class ConvertPass implements ParserVisitor {
         Variant variant = (Variant) data;
         Rule returnRule = decoder.getRuleByName((String) node.jjtGetValue());
         
-        variant.setReturnValue(returnRule);
+        variant.setReturnRule(returnRule);
         
         return null;
     }
@@ -184,45 +186,64 @@ public class ConvertPass implements ParserVisitor {
         Variant variant = (Variant) data;
         String returnString = ((String) node.jjtGetValue()).replace("\"", "");
         
-        variant.setReturnValue(returnString);
+        variant.setReturnString(returnString);
         
         return null;
     }
 
     /**
-     * Adds the subrule to the variant.
+     * Adds a subrule to the variant.
+     * 
+     * The subrule is constructed using the name and optionally the length
+     * obtained from the child / children.
+     * @param node the SubRule node
+     * @param data the variant object
+     * @return null
+     */
+    @Override
+    public Object visit(SubRule node, Object data) {
+        Variant variant = (Variant) data;
+        Subrule subrule;
+        
+        String name = (String) node.jjtGetChild(0).jjtAccept(this, data);
+        Rule rule = decoder.getRuleByName(name);
+        
+        if (node.jjtGetNumChildren() == 1) { // without length
+            subrule = new Subrule(rule);
+        } else { // with specified length
+            int length = (Integer) node.jjtGetChild(1).jjtAccept(this, data);
+            subrule = new Subrule(rule, length);
+        }
+
+        variant.addChild(subrule);
+        
+        return null;
+    }
+    
+    /**
+     * Returns the subrule name.
      * @param node the subrule node
-     * @param data the variant object
-     * @return null
+     * @param data unused
+     * @return the rule name
      */
     @Override
-    public Object visit(SubRuleName node, Object data) {
-        Variant variant = (Variant) data;
-        Rule rule = decoder.getRuleByName((String) node.jjtGetValue());
-        
-        variant.getPattern().addRule(rule);
-        
-        return null;
+    public String visit(SubRuleName node, Object data) {
+        return (String) node.jjtGetValue();
     }
 
     /**
-     * Adds the subrule length to the variant.
+     * Returns the subrule length.
      * @param node the subrule-length node
-     * @param data the variant object
-     * @return null
+     * @param data unused
+     * @return the length in bits
      */
     @Override
-    public Object visit(SubRuleLength node, Object data) {
-        Variant variant = (Variant) data;
-        int length = Integer.parseInt((String) node.jjtGetValue());
-        
-        variant.getPattern().addRuleLength(length);
-        
-        return null;
+    public Integer visit(SubRuleLength node, Object data) {
+        return Integer.parseInt((String) node.jjtGetValue());
     }
 
     /**
-     * Adds the hexadecimal constant to the variant.
+     * Adds a bit pattern obtained from the hexadecimal constant to the variant.
      * @param node the node containing the hexadecimal constant
      * @param data the variant object
      * @return null
@@ -232,13 +253,14 @@ public class ConvertPass implements ParserVisitor {
         Variant variant = (Variant) data;
         
         String hexString = ((String) node.jjtGetValue()).substring(2); // remove "0x"
-        variant.getPattern().addConstant(BitSequence.fromHexadecimal(hexString));
+        Pattern pattern = new Pattern(BitSequence.fromHexadecimal(hexString));
+        variant.addChild(pattern);
         
         return null;
     }
 
     /**
-     * Adds the binary constant to the variant.
+     * Adds a bit pattern obtained from the binary constant to the variant.
      * @param node the node containing the binary constant
      * @param data the variant object
      * @return null
@@ -248,7 +270,8 @@ public class ConvertPass implements ParserVisitor {
         Variant variant = (Variant) data;
         
         String binaryString = (String) node.jjtGetValue();
-        variant.getPattern().addConstant(BitSequence.fromBinary(binaryString));
+        Pattern pattern = new Pattern(BitSequence.fromBinary(binaryString));
+        variant.addChild(pattern);
         
         return null;
     }

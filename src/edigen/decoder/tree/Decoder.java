@@ -15,34 +15,28 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package edigen.objects;
+package edigen.decoder.tree;
 
+import edigen.decoder.TreeNode;
+import edigen.decoder.Visitor;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 /**
- * The "root" class of the instruction decoder generator.
- * 
- * Contains references to all rules.
+ * The root node of the instruction decoder generator tree.
  * @author Matúš Sulír
  */
-public class Decoder {
-    private Map<String, Rule> rulesByName = new HashMap<String, Rule>();
-    private Set<Rule> uniqueRules = new HashSet<Rule>();
+public class Decoder extends TreeNode {
+    
+    private Map<String, Rule> rules = new HashMap<String, Rule>();
     
     /**
-     * Adds a rule to the decoder.
-     * 
-     * One rule can have multiple names. This method tracks both a unique rule
-     * set and associations from names to rules.
-     * @param name the rule name
+     * Adds a new rule to the decoder as a child.
      * @param rule the rule object
      */
-    public void addRule(Rule rule, String name) {
-        rulesByName.put(name, rule);
-        uniqueRules.add(rule);
+    public void addRule(Rule rule) {
+        rules.put(rule.getName(), rule);
+        addChild(rule);
     }
     
     /**
@@ -51,14 +45,15 @@ public class Decoder {
      * @return the rule object
      */
     public Rule getRuleByName(String name) {
-        return rulesByName.get(name);
+        return rules.get(name);
     }
     
     /**
-     * Returns a set of all unique rules.
-     * @return the rule set
+     * Accepts the visitor.
+     * @param visitor the visitor object
      */
-    public Set<Rule> getUniqueRules() {
-        return uniqueRules;
+    @Override
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
     }
 }

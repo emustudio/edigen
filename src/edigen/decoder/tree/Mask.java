@@ -15,28 +15,43 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package edigen.objects;
+package edigen.decoder.tree;
 
-import java.util.ArrayList;
-import java.util.List;
+import edigen.decoder.TreeNode;
+import edigen.decoder.Visitor;
+import edigen.util.BitSequence;
 
 /**
- * The disassembler rule containing multiple variants.
- *
- * Does not contain rule names.
- *
+ * Mask node - a sequence of bits used to filter another sequence during binary
+ * pattern matching.
  * @author Matúš Sulír
  */
-public class Rule {
-
-    private List<Variant> variants = new ArrayList<Variant>();
-
+public class Mask extends TreeNode {
+    
+    private BitSequence bits;
+    
     /**
-     * Adds a variant to this rule.
-     *
-     * @param variant the variant object
+     * Constructs the mask.
+     * @param bits the bit sequence
      */
-    public void addVariant(Variant variant) {
-        variants.add(variant);
+    public Mask(BitSequence bits) {
+        this.bits = bits;
+    }
+    
+    /**
+     * Returns the bit sequence.
+     * @return the bit sequence
+     */
+    public BitSequence getBits() {
+        return this.bits;
+    }
+    
+    /**
+     * Accepts the visitor.
+     * @param visitor the visitor object
+     */
+    @Override
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
     }
 }

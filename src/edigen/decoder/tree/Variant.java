@@ -15,13 +15,20 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package edigen.objects;
+package edigen.decoder.tree;
+
+import edigen.decoder.TreeNode;
+import edigen.decoder.Visitor;
 
 /**
- * The rule variant.
+ * Rule variant node.
+ * 
+ * One of the instruction decoder's task is to find out which variant of the
+ * particular rule matches against the part of the decoded instruction.
  * @author Matúš Sulír
  */
-public class Variant {
+public class Variant extends TreeNode {
+    
     private enum ReturnType {
         NOTHING,
         STRING,
@@ -30,35 +37,32 @@ public class Variant {
     
     private ReturnType returnType = ReturnType.NOTHING;
     private String returnString;
-    private Rule returnSubRule;
-    private Pattern pattern = new Pattern();
+    private Rule returnRule;
     
     /**
      * Tells the variant to return the string on match.
      * @param returnString the string to return
      */
-    public void setReturnValue(String returnString) {
+    public void setReturnString(String returnString) {
         returnType = ReturnType.STRING;
         this.returnString = returnString;
     }
     
     /**
      * Tells the variant to return the value of the specified subrule.
-     * @param returnSubRule the subrule, must be contained in the pattern
+     * @param returnRule the subrule, must be contained in the pattern
      */
-    public void setReturnValue(Rule returnSubRule) {
+    public void setReturnRule(Rule returnRule) {
         returnType = ReturnType.SUBRULE;
-        this.returnSubRule = returnSubRule;
+        this.returnRule = returnRule;
     }
     
     /**
-     * Returns the pattern object associated with this variant.
-     * 
-     * Each variant object has exactly one, permanently associated pattern.
-     * @return 
+     * Accepts the visitor.
+     * @param visitor the visitor object
      */
-    public Pattern getPattern() {
-        return pattern;
+    @Override
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
     }
-    
 }

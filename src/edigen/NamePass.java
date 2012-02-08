@@ -17,13 +17,16 @@
  */
 package edigen;
 
-import edigen.objects.Decoder;
-import edigen.objects.Rule;
+import edigen.decoder.tree.Decoder;
+import edigen.decoder.tree.Rule;
 import edigen.tree.RuleNameSet;
 import edigen.tree.SimpleNode;
 
 /**
- * The AST-pass which registers rule names and checks for duplicate rule names.
+ * The input syntax tree traversal which creates a new tree, containing only
+ * the root decoder node and rule nodes so far.
+ * 
+ * It also checks for duplicate rule names.
  * @author Matúš Sulír
  */
 public class NamePass {
@@ -41,9 +44,10 @@ public class NamePass {
     /**
      * Recursively traverses the tree nodes.
      * 
-     * Checks whether there are no duplicate rule names. For each RuleNameSet,
-     * adds an empty rule associated with all corresponding names to
-     * the decoder.
+     * Checks whether there are no duplicate rule names and adds the rules
+     * to the decoder. Multiple rule names in a RuleNameSet are treated as 
+     * multiple independent rules, of which each one will contain a copy of all
+     * corresponding variants.
      * @param node the node to start checking
      * @throws SemanticException when a duplicate rule name is detected
      */
@@ -51,11 +55,12 @@ public class NamePass {
         int childCount = node.jjtGetNumChildren();
         
         if (node instanceof RuleNameSet) {
-            Rule emptyRule = new Rule();
-            
             for (int i = 0; i < childCount; i++) {
-                SimpleNode child = (SimpleNode) node.jjtGetChild(i);
-                addRule((String) child.jjtGetValue(), emptyRule);
+                SimpleNode ruleNameNode = (SimpleNode) node.jjtGetChild(i);
+                String name = (String) ruleNameNode.jjtGetValue();
+                
+                Rule emptyRule = new Rule(name);
+                registerRule(emptyRule);
             }
         } else {
             for (int i = 0; i < childCount; i++)
@@ -70,9 +75,11 @@ public class NamePass {
      * @param rule the rule object
      * @throws SemanticException when a duplicate rule name is detected
      */
-    private void addRule(String name, Rule rule) throws SemanticException {
+    private void registerRule(Rule rule) throws SemanticException {
+        String name = rule.getName();
+        
         if (decoder.getRuleByName(name) == null) {
-            decoder.addRule(rule, name);
+            decoder.addRule(rule);
         } else {
             throw new SemanticException("Rule \"" + name + "\" is declared more than once.");
         }
