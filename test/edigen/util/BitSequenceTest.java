@@ -15,11 +15,11 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package edigen.objects;
+package edigen.util;
 
 import java.util.Arrays;
-import org.junit.Test;
 import static org.junit.Assert.*;
+import org.junit.Test;
 
 /**
  * Test of the BitSequence class.
@@ -132,5 +132,26 @@ public class BitSequenceTest {
         expected[2].set(1, true);
         
         assertTrue(Arrays.equals(expected, result));
+    }
+    
+    /**
+     * Test of equals method, of class BitSequence.
+     */
+    @Test
+    public void testEquals() {
+        BitSequence test = new BitSequence(3);
+        test.set(2, true);
+        
+        BitSequence equal = new BitSequence(3);
+        equal.set(2, true);
+    
+        BitSequence unequal1 = new BitSequence(4);
+        unequal1.set(2, true);
+        
+        BitSequence unequal2 = new BitSequence(3);
+        
+        assertEquals(equal, test);
+        assertFalse(unequal1.equals(test));
+        assertFalse(unequal2.equals(test));
     }
 }
