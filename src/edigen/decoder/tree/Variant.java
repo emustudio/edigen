@@ -37,7 +37,7 @@ public class Variant extends TreeNode {
     
     private ReturnType returnType = ReturnType.NOTHING;
     private String returnString;
-    private Rule returnRule;
+    private Subrule returnSubrule;
     
     /**
      * Tells the variant to return the string on match.
@@ -49,12 +49,23 @@ public class Variant extends TreeNode {
     }
     
     /**
+     * Returns the subrule which this variant returns.
+     * @return the subrule, or null if the variant returns a string or nothing
+     */
+    public Subrule getReturnSubrule() {
+        if (returnType == ReturnType.SUBRULE)
+            return returnSubrule;
+        else
+            return null;
+    }
+    
+    /**
      * Tells the variant to return the value of the specified subrule.
      * @param returnRule the subrule, must be contained in the pattern
      */
-    public void setReturnRule(Rule returnRule) {
+    public void setReturnSubrule(Subrule returnRule) {
         returnType = ReturnType.SUBRULE;
-        this.returnRule = returnRule;
+        this.returnSubrule = returnRule;
     }
     
     /**

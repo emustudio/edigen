@@ -33,6 +33,7 @@ public class JoinVisitor extends Visitor {
 
     private BitSequence maskBits;
     private BitSequence patternBits;
+    private Subrule returnSubrule;
     
     /**
      * Traverses all children nodes and adds one mask and pattern as a result
@@ -43,6 +44,7 @@ public class JoinVisitor extends Visitor {
     public void visit(Variant variant) {
         maskBits = new BitSequence();
         patternBits = new BitSequence();
+        returnSubrule = variant.getReturnSubrule();
         
         variant.acceptChildren(this);
         
@@ -69,9 +71,14 @@ public class JoinVisitor extends Visitor {
     /**
      * Sets the starting offset of the subrule.
      * 
-     * If the subrule has length specified, adds "false" bits to the mask
-     * because these bits will not be checked against a pattern during decoding.
-     * @param subrule 
+     * <p>If the subrule has length specified, adds "false" bits to the mask
+     * because these bits will not be checked against a pattern during
+     * decoding.</p>
+     * 
+     * <p>If the subrule has the same name as the subrule which the parent
+     * variant returns, it is assocated with the variant and removed from the
+     * tree.</p>
+     * @param subrule the subrule node
      */
     @Override
     public void visit(Subrule subrule) {
@@ -82,6 +89,11 @@ public class JoinVisitor extends Visitor {
         if (bitCount != null) {
             maskBits.append(new BitSequence(bitCount, false));
             patternBits.append(new BitSequence(bitCount, false));
+        }
+        
+        if (returnSubrule != null && subrule.getName().equals(returnSubrule.getName())) {
+            ((Variant) subrule.getParent()).setReturnSubrule(subrule);
+            subrule.markForRemoval();
         }
     }
 }

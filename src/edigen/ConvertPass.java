@@ -168,9 +168,10 @@ public class ConvertPass implements ParserVisitor {
     @Override
     public Object visit(ReturnSubRule node, Object data) {
         Variant variant = (Variant) data;
-        Rule returnRule = decoder.getRuleByName((String) node.jjtGetValue());
         
-        variant.setReturnRule(returnRule);
+        String name = (String) node.jjtGetValue();
+        Subrule subrule = new Subrule(new Rule(name));
+        variant.setReturnSubrule(subrule);
         
         return null;
     }
@@ -212,7 +213,11 @@ public class ConvertPass implements ParserVisitor {
             subrule = new Subrule(rule);
         } else { // with specified length
             int length = (Integer) node.jjtGetChild(1).jjtAccept(this, data);
-            subrule = new Subrule(rule, length);
+            
+            if (rule == null) // probably used as ReturnSubRule
+                subrule = new Subrule(new Rule(name), length);
+            else // normal rule
+                subrule = new Subrule(rule, length);
         }
 
         variant.addChild(subrule);
