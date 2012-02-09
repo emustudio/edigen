@@ -94,4 +94,24 @@ public class Subrule extends TreeNode {
     public void accept(Visitor visitor) {
         visitor.visit(this);
     }
+    
+    /**
+     * Returns a string representation of the object containing the rule name
+     * and optionally start and length.
+     * @return the string
+     */
+    @Override
+    public String toString() {
+        StringBuilder result = new StringBuilder("Subrule: ");
+        
+        result.append(getName());
+        
+        if (start != null)
+            result.append(", start: ").append(start);
+        
+        if (length != null)
+            result.append(", length: ").append(length);
+        
+        return result.toString();
+    }
 }

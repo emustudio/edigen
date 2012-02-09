@@ -76,4 +76,20 @@ public class Variant extends TreeNode {
     public void accept(Visitor visitor) {
         visitor.visit(this);
     }
+    
+    /**
+     * Returns the mask as a string in binary notation.
+     * @return the string
+     */
+    @Override
+    public String toString() {
+        StringBuilder result = new StringBuilder("Variant");
+        
+        if (returnType == ReturnType.STRING)
+            result.append(": return \"").append(returnString).append("\"");
+        else if (returnType == ReturnType.SUBRULE)
+            result.append(": return ").append(returnSubrule);
+        
+        return result.toString();
+    }
 }

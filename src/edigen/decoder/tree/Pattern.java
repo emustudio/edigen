@@ -53,4 +53,13 @@ public class Pattern extends TreeNode {
     public void accept(Visitor visitor) {
         visitor.visit(this);
     }
+    
+    /**
+     * Returns the pattern as a string in binary notation.
+     * @return the string
+     */
+    @Override
+    public String toString() {
+        return "Pattern: " + bits.toString();
+    }
 }

@@ -56,4 +56,13 @@ public class Decoder extends TreeNode {
     public void accept(Visitor visitor) {
         visitor.visit(this);
     }
+    
+    /**
+     * Returns a string representation of the object.
+     * @return the string
+     */
+    @Override
+    public String toString() {
+        return "Decoder";
+    }
 }

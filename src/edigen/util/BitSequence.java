@@ -261,4 +261,18 @@ public class BitSequence {
         
         return hash;
     }
+    
+    /**
+     * Returns a string representation of the object.
+     * @return the string
+     */
+    @Override
+    public String toString() {
+        StringBuilder result = new StringBuilder();
+        
+        for (int i = 0; i < length; i++)
+            result.append(bitSet.get(i) ? '1' : '0');
+        
+        return result.toString();
+    }
 }

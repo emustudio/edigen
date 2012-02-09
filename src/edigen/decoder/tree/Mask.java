@@ -54,4 +54,13 @@ public class Mask extends TreeNode {
     public void accept(Visitor visitor) {
         visitor.visit(this);
     }
+    
+    /**
+     * Returns the mask as a string in binary notation.
+     * @return the string
+     */
+    @Override
+    public String toString() {
+        return "Mask: " + bits.toString();
+    }
 }

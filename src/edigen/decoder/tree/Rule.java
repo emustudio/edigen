@@ -52,4 +52,13 @@ public class Rule extends TreeNode {
     public void accept(Visitor visitor) {
         visitor.visit(this);
     }
+    
+    /**
+     * Returns a string representation of the object containing a rule name.
+     * @return the string
+     */
+    @Override
+    public String toString() {
+        return "Rule: " + name;
+    }
 }
