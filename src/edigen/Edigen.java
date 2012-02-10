@@ -18,6 +18,7 @@
 package edigen;
 
 import edigen.decoder.JoinVisitor;
+import edigen.decoder.SplitVisitor;
 import edigen.decoder.tree.Decoder;
 import edigen.parser.ParseException;
 import edigen.parser.Parser;
@@ -73,6 +74,10 @@ public class Edigen {
                 
                 // transformation: join
                 decoder.accept(new JoinVisitor());
+                decoder.dump(System.out);
+                
+                // transformation: split
+                decoder.accept(new SplitVisitor());
                 decoder.dump(System.out);
             } catch (ParseException ex) {
                 System.out.println(ex.getMessage());

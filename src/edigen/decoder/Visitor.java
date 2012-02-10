@@ -47,6 +47,10 @@ public abstract class Visitor {
     public void visit(Pattern pattern) {
         pattern.acceptChildren(this);
     }
+
+    public void visit(Mask mask) {
+        mask.acceptChildren(this);
+    }
     
     public void visit(Subrule subrule) {
         subrule.acceptChildren(this);
