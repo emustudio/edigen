@@ -47,6 +47,7 @@ public class JoinVisitor extends Visitor {
         returnSubrule = variant.getReturnSubrule();
         
         variant.acceptChildren(this);
+        variant.removeMarked();
         
         variant.addChild(new Mask(maskBits));
         variant.addChild(new Pattern(patternBits));
@@ -65,7 +66,7 @@ public class JoinVisitor extends Visitor {
         maskBits.append(new BitSequence(bitCount, true));
         patternBits.append(pattern.getBits());
         
-        pattern.markForRemoval(); // after visiting all children of the parent variant
+        pattern.markForRemoval();
     }
     
     /**

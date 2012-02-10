@@ -78,6 +78,9 @@ public abstract class TreeNode {
     
     /**
      * Removes this node from the tree (including all children).
+     * 
+     * <strong>Warning:</strong> Do not use while iterating children of this
+     * node. Use {@link #markForRemoval()} method in that case.
      */
     public void remove() {
         parent.childrenSet.remove(this);
@@ -87,15 +90,26 @@ public abstract class TreeNode {
     /**
      * Marks this node for removal.
      * 
-     * <p>This is used to prevent {@link ConcurrentModificationException}.</p>
-     * 
-     * <p>The node will be removed immediately after parent's iteration in the
-     * {@link #acceptChildren(Visitor)} method ends. If the parent node
-     * currently does not perform an iteration, use the {@link #remove()}
-     * method instead.</p>
+     * <p>This is used to prevent {@link ConcurrentModificationException}. The
+     * node will be removed when parent's {@link #removeMarked()} method
+     * is called.</p>
+     * <p>If the parent node currently does not perform an iteration on
+     * children, use the {@link #remove()} method instead.</p>
+     * @see #removeMarked()
      */
     public void markForRemoval() {
         parent.nodesToRemove.add(this);
+    }
+    
+    /**
+     * Removes all children marked for removal.
+     * @see #markForRemoval()
+     */
+    public void removeMarked() {
+        for (TreeNode node : nodesToRemove)
+            node.remove();
+        
+        nodesToRemove.clear();
     }
     
     /**
@@ -118,9 +132,6 @@ public abstract class TreeNode {
     public void acceptChildren(Visitor visitor) {
         for (TreeNode child : childrenSet)
             child.accept(visitor);
-        
-        for (TreeNode node : nodesToRemove)
-            node.remove();
     }
     
     /**
