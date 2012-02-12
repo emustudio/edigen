@@ -17,6 +17,7 @@
  */
 package edigen.decoder;
 
+import edigen.SemanticException;
 import edigen.decoder.tree.*;
 
 /**
@@ -28,31 +29,31 @@ import edigen.decoder.tree.*;
  * @author Matúš Sulír
  */
 public abstract class Visitor {
-    public void visit(TreeNode node) {
+    public void visit(TreeNode node) throws SemanticException {
         node.acceptChildren(this);
     }
     
-    public void visit(Decoder decoder) {
+    public void visit(Decoder decoder) throws SemanticException {
         decoder.acceptChildren(this);
     }
     
-    public void visit(Rule rule) {
+    public void visit(Rule rule) throws SemanticException {
         rule.acceptChildren(this);
     }
     
-    public void visit(Variant variant) {
+    public void visit(Variant variant) throws SemanticException {
         variant.acceptChildren(this);
     }
     
-    public void visit(Pattern pattern) {
+    public void visit(Pattern pattern) throws SemanticException {
         pattern.acceptChildren(this);
     }
 
-    public void visit(Mask mask) {
+    public void visit(Mask mask) throws SemanticException {
         mask.acceptChildren(this);
     }
     
-    public void visit(Subrule subrule) {
+    public void visit(Subrule subrule) throws SemanticException {
         subrule.acceptChildren(this);
     }
 }

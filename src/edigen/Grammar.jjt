@@ -20,6 +20,7 @@ options {
     MULTI = true;
     VISITOR = true;
     NODE_PREFIX = "";
+    VISITOR_EXCEPTION = "edigen.SemanticException";
 }
 
 

@@ -82,7 +82,7 @@ public class Edigen {
             } catch (ParseException ex) {
                 System.out.println(ex.getMessage());
             } catch (SemanticException ex) {
-                System.out.println("Error: " + ex.getMessage());
+                System.out.println("Error: " + ex.getMessage() + ".");
             }
         } catch (FileNotFoundException ex) {
             System.out.println("Could not open input file.");

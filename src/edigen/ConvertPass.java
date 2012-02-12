@@ -39,6 +39,8 @@ import edigen.util.BitSequence;
  */
 public class ConvertPass implements ParserVisitor {
 
+    private static final String NONEXISTENT_RULE = "Subrule %s refers to non-existent rule";
+    
     private Decoder decoder;
     
     /**
@@ -71,7 +73,7 @@ public class ConvertPass implements ParserVisitor {
      * @return the fully-populated decoder tree
      */
     @Override
-    public Decoder visit(Start node, Object data) {
+    public Decoder visit(Start node, Object data) throws SemanticException {
         node.jjtGetChild(0).jjtAccept(this, data);
         
         return decoder;
@@ -84,7 +86,7 @@ public class ConvertPass implements ParserVisitor {
      * @return null
      */
     @Override
-    public Object visit(DecoderPart node, Object data) {
+    public Object visit(DecoderPart node, Object data) throws SemanticException {
         node.childrenAccept(this, data);
         
         return null;
@@ -97,7 +99,7 @@ public class ConvertPass implements ParserVisitor {
      * @return null
      */
     @Override
-    public Object visit(DecoderRule node, Object data) {
+    public Object visit(DecoderRule node, Object data) throws SemanticException {
         String[] ruleNames = (String[]) node.jjtGetChild(0).jjtAccept(this, data);
         int childCount = node.jjtGetNumChildren();
         
@@ -119,7 +121,7 @@ public class ConvertPass implements ParserVisitor {
      * @return rule names
      */
     @Override
-    public String[] visit(RuleNameSet node, Object data) {
+    public String[] visit(RuleNameSet node, Object data) throws SemanticException {
         int childCount = node.jjtGetNumChildren();
         String[] ruleNames = new String[childCount];
         
@@ -152,7 +154,7 @@ public class ConvertPass implements ParserVisitor {
      * @return the populated variant object
      */
     @Override
-    public Variant visit(RuleVariant node, Object data) {
+    public Variant visit(RuleVariant node, Object data) throws SemanticException {
         Variant variant = new Variant();
         node.childrenAccept(this, variant);
         
@@ -202,7 +204,7 @@ public class ConvertPass implements ParserVisitor {
      * @return null
      */
     @Override
-    public Object visit(SubRule node, Object data) {
+    public Object visit(SubRule node, Object data) throws SemanticException {
         Variant variant = (Variant) data;
         Subrule subrule;
         
@@ -210,14 +212,21 @@ public class ConvertPass implements ParserVisitor {
         Rule rule = decoder.getRuleByName(name);
         
         if (node.jjtGetNumChildren() == 1) { // without length
-            subrule = new Subrule(rule);
+            if (rule == null)
+                throw new SemanticException(String.format(NONEXISTENT_RULE, name));
+            else
+                subrule = new Subrule(rule);
         } else { // with specified length
             int length = (Integer) node.jjtGetChild(1).jjtAccept(this, data);
             
-            if (rule == null) // probably used as ReturnSubRule
-                subrule = new Subrule(new Rule(name), length);
-            else // normal rule
+            if (rule == null) {
+                if (variant.getReturnSubrule() != null && variant.getReturnSubrule().getName().equals(name))
+                    subrule = new Subrule(new Rule(name), length);
+                else
+                    throw new SemanticException(String.format(NONEXISTENT_RULE, name));
+            } else {
                 subrule = new Subrule(rule, length);
+            }
         }
 
         variant.addChild(subrule);

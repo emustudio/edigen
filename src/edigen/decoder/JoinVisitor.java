@@ -17,6 +17,7 @@
  */
 package edigen.decoder;
 
+import edigen.SemanticException;
 import edigen.decoder.tree.Mask;
 import edigen.decoder.tree.Pattern;
 import edigen.decoder.tree.Subrule;
@@ -33,21 +34,32 @@ public class JoinVisitor extends Visitor {
 
     private BitSequence maskBits;
     private BitSequence patternBits;
-    private Subrule returnSubrule;
+    private String variantReturn;
     
     /**
      * Traverses all children nodes and adds one mask and pattern as a result
      * of joining.
      * @param variant the variant node
+     * @throws SemanticException when the returning subrule is not found on the
+     *         right side
      */
     @Override
-    public void visit(Variant variant) {
+    public void visit(Variant variant) throws SemanticException {
         maskBits = new BitSequence();
         patternBits = new BitSequence();
-        returnSubrule = variant.getReturnSubrule();
+        
+        if (variant.getReturnSubrule() != null)
+            variantReturn = variant.getReturnSubrule().getName();
+        else
+            variantReturn = null;
         
         variant.acceptChildren(this);
         variant.removeMarked();
+        
+        if (variantReturn != null && variant.getReturnSubrule().getStart() == null) {
+            throw new SemanticException("Returning subrule " + variantReturn +
+                    " was not found on the right side of the variant");
+        }
         
         variant.addChild(new Mask(maskBits));
         variant.addChild(new Pattern(patternBits));
@@ -92,7 +104,7 @@ public class JoinVisitor extends Visitor {
             patternBits.append(new BitSequence(bitCount, false));
         }
         
-        if (returnSubrule != null && subrule.getName().equals(returnSubrule.getName())) {
+        if (variantReturn != null && subrule.getName().equals(variantReturn)) {
             ((Variant) subrule.getParent()).setReturnSubrule(subrule);
             subrule.markForRemoval();
         }
