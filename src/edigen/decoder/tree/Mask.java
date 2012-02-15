@@ -17,6 +17,7 @@
  */
 package edigen.decoder.tree;
 
+import edigen.SemanticException;
 import edigen.decoder.TreeNode;
 import edigen.decoder.Visitor;
 import edigen.util.BitSequence;
@@ -51,7 +52,7 @@ public class Mask extends TreeNode {
      * @param visitor the visitor object
      */
     @Override
-    public void accept(Visitor visitor) {
+    public void accept(Visitor visitor) throws SemanticException {
         visitor.visit(this);
     }
     

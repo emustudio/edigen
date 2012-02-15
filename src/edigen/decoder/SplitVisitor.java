@@ -17,6 +17,7 @@
  */
 package edigen.decoder;
 
+import edigen.SemanticException;
 import edigen.decoder.tree.Mask;
 import edigen.decoder.tree.Pattern;
 import edigen.decoder.tree.Variant;
@@ -43,7 +44,7 @@ public class SplitVisitor extends Visitor {
      * @param variant 
      */
     @Override
-    public void visit(Variant variant) {
+    public void visit(Variant variant) throws SemanticException {
         variant.acceptChildren(this);
         variant.removeMarked();
         

@@ -17,6 +17,7 @@
  */
 package edigen.decoder;
 
+import edigen.SemanticException;
 import java.io.PrintStream;
 import java.util.*;
 
@@ -119,7 +120,7 @@ public abstract class TreeNode {
      * design pattern properly.
      * @param visitor the visitor object
      */
-    public void accept(Visitor visitor) {
+    public void accept(Visitor visitor) throws SemanticException {
         visitor.visit(this);
     }
     
@@ -129,7 +130,7 @@ public abstract class TreeNode {
      * All nodes marked for removal are then removed.
      * @param visitor the visitor object
      */
-    public void acceptChildren(Visitor visitor) {
+    public void acceptChildren(Visitor visitor) throws SemanticException {
         for (TreeNode child : childrenSet)
             child.accept(visitor);
     }
