@@ -48,12 +48,19 @@ public class SplitVisitor extends Visitor {
         variant.acceptChildren(this);
         variant.removeMarked();
         
-        BitSequence[] splittedMask = maskBits.split(BYTES_PER_PIECE);
-        BitSequence[] splittedPattern = patternBits.split(BYTES_PER_PIECE);
+        BitSequence[] masks = maskBits.split(BYTES_PER_PIECE);
+        BitSequence[] patterns = patternBits.split(BYTES_PER_PIECE);
         
-        for (int i = 0; i < splittedMask.length; i++) {
-            variant.addChild(new Mask(splittedMask[i]));
-            variant.addChild(new Pattern(splittedPattern[i]));
+        TreeNode parent = variant;
+        
+        for (int i = 0; i < masks.length; i++) {
+            Mask mask = new Mask(masks[i]);
+            Pattern pattern = new Pattern(patterns[i]);
+            
+            parent.addChild(mask);
+            mask.addChild(pattern);
+            
+            parent = pattern;
         }
     }
 
