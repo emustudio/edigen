@@ -114,7 +114,8 @@ public class Generator {
     private void transform() throws SemanticException {
         Visitor[] transforms = {
             new JoinVisitor(),
-            new SplitVisitor()
+            new SplitVisitor(),
+            new MoveVariantVisitor()
         };
 
         for (Visitor visitor : transforms) {
