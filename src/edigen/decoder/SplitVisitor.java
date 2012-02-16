@@ -46,6 +46,7 @@ public class SplitVisitor extends Visitor {
      * corresponding mask and each mask is a child of the previous pattern
      * (or variant, if there is no previous pattern).
      * @param variant the variant node
+     * @throws SemanticException should not be thrown
      */
     @Override
     public void visit(Variant variant) throws SemanticException {
