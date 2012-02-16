@@ -35,7 +35,7 @@ public class MoveVariantVisitor extends Visitor {
     /**
      * Attaches the top mask of each variant to the rule.
      * @param rule the rule node
-     * @throws SemanticException should not be thrown
+     * @throws SemanticException never
      */
     @Override
     public void visit(Rule rule) throws SemanticException {
@@ -50,7 +50,7 @@ public class MoveVariantVisitor extends Visitor {
     /**
      * Saves the current variant and dettaches the variant from the rule.
      * @param variant the variant node
-     * @throws SemanticException should not be thrown
+     * @throws SemanticException never
      */
     @Override
     public void visit(Variant variant) throws SemanticException {
@@ -64,7 +64,7 @@ public class MoveVariantVisitor extends Visitor {
     /**
      * Saves the topmost mask of the variant and dettaches it from the variant.
      * @param mask the mask node
-     * @throws SemanticException should not be thrown
+     * @throws SemanticException never
      */
     @Override
     public void visit(Mask mask) throws SemanticException {
@@ -79,7 +79,7 @@ public class MoveVariantVisitor extends Visitor {
     /**
      * Attaches the variant to the bottommost pattern.
      * @param pattern the pattern node
-     * @throws SemanticException should not be thrown
+     * @throws SemanticException never
      */
     @Override
     public void visit(Pattern pattern) throws SemanticException {
