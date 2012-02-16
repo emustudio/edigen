@@ -54,7 +54,6 @@ public class JoinVisitor extends Visitor {
             variantReturn = null;
         
         variant.acceptChildren(this);
-        variant.removeMarked();
         
         if (variantReturn != null && variant.getReturnSubrule().getStart() == null) {
             throw new SemanticException("Returning subrule " + variantReturn +
@@ -78,7 +77,7 @@ public class JoinVisitor extends Visitor {
         maskBits.append(new BitSequence(bitCount, true));
         patternBits.append(pattern.getBits());
         
-        pattern.markForRemoval();
+        pattern.remove();
     }
     
     /**
@@ -106,7 +105,7 @@ public class JoinVisitor extends Visitor {
         
         if (variantReturn != null && subrule.getName().equals(variantReturn)) {
             ((Variant) subrule.getParent()).setReturnSubrule(subrule);
-            subrule.markForRemoval();
+            subrule.remove();
         }
     }
 }

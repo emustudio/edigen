@@ -18,6 +18,7 @@
 package edigen;
 
 import edigen.decoder.JoinVisitor;
+import edigen.decoder.MoveVariantVisitor;
 import edigen.decoder.SplitVisitor;
 import edigen.decoder.tree.Decoder;
 import edigen.parser.ParseException;
@@ -56,7 +57,7 @@ public class Edigen {
             Parser p = new Parser(new FileReader(inputFile));
 
             try {
-                // lexical and syntactic analysis -> parse tree
+                // input file -> parse tree
                 SimpleNode rootNode = p.parse();
                 new TreePrinter(System.out).dump(rootNode);
 
@@ -67,7 +68,7 @@ public class Edigen {
                 namePass.checkNode(rootNode);
                 decoder.dump(System.out);
                 
-                // parse tree -> fully-populated custom tree
+                // parse tree -> fully-populated customized tree
                 ConvertPass converter = new ConvertPass(decoder);
                 rootNode.jjtAccept(converter, null);
                 decoder.dump(System.out);

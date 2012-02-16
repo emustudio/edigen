@@ -19,7 +19,10 @@ package edigen.decoder;
 
 import edigen.SemanticException;
 import java.io.PrintStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 /**
  * A node of the customized tree which will be used for transformation and code
@@ -32,8 +35,7 @@ import java.util.*;
 public abstract class TreeNode {
     
     private TreeNode parent;
-    private Set<TreeNode> childrenSet = new LinkedHashSet<TreeNode>();
-    private List<TreeNode> nodesToRemove = new ArrayList<TreeNode>();
+    private Set<TreeNode> children = new LinkedHashSet<TreeNode>();
     
     /**
      * Returns the parent of this node.
@@ -52,7 +54,7 @@ public abstract class TreeNode {
      * @return the child node
      */
     public TreeNode getChild(int index) {
-        Iterator<TreeNode> iterator = childrenSet.iterator();
+        Iterator<TreeNode> iterator = children.iterator();
         
         for (int i = 0; i < index; i++)
             iterator.next();
@@ -62,10 +64,21 @@ public abstract class TreeNode {
     
     /**
      * Returns all children of this node.
+     * 
+     * A copy of the collection is returned to allow children removal and
+     * insertion during the iteration.
      * @return the iterable collection of all children
      */
     public Iterable<TreeNode> getChildren() {
-        return Collections.unmodifiableSet(childrenSet);
+        return new ArrayList<TreeNode>(children);
+    }
+    
+    /**
+     * Returns the number of all direct children of this node.
+     * @return the child count
+     */
+    public int childCount() {
+        return children.size();
     }
     
     /**
@@ -74,43 +87,18 @@ public abstract class TreeNode {
      */
     public void addChild(TreeNode child) {
         child.parent = this;
-        childrenSet.add(child);
+        children.add(child);
     }
     
     /**
-     * Removes this node from the tree (including all children).
+     * Removes this node from the tree.
      * 
-     * <strong>Warning:</strong> Do not use while iterating children of this
-     * node. Use {@link #markForRemoval()} method in that case.
+     * This can be described as "tearing off" the node. The link between this
+     * node and the parent one is removed bilaterally.
      */
     public void remove() {
-        parent.childrenSet.remove(this);
+        parent.children.remove(this);
         this.parent = null;
-    }
-    
-    /**
-     * Marks this node for removal.
-     * 
-     * <p>This is used to prevent {@link ConcurrentModificationException}. The
-     * node will be removed when parent's {@link #removeMarked()} method
-     * is called.</p>
-     * <p>If the parent node currently does not perform an iteration on
-     * children, use the {@link #remove()} method instead.</p>
-     * @see #removeMarked()
-     */
-    public void markForRemoval() {
-        parent.nodesToRemove.add(this);
-    }
-    
-    /**
-     * Removes all children marked for removal.
-     * @see #markForRemoval()
-     */
-    public void removeMarked() {
-        for (TreeNode node : nodesToRemove)
-            node.remove();
-        
-        nodesToRemove.clear();
     }
     
     /**
@@ -126,12 +114,10 @@ public abstract class TreeNode {
     
     /**
      * Sequentially calls the {@link #accept(Visitor)} method for all children.
-     * 
-     * All nodes marked for removal are then removed.
      * @param visitor the visitor object
      */
     public void acceptChildren(Visitor visitor) throws SemanticException {
-        for (TreeNode child : childrenSet)
+        for (TreeNode child : getChildren())
             child.accept(visitor);
     }
     
@@ -140,26 +126,22 @@ public abstract class TreeNode {
      * @param outStream the stream to write to
      */
     public void dump(PrintStream outStream) {
-        print(this, outStream, 0);
+        print(outStream, 0);
         outStream.println("---------------");
     }
     
     /**
      * Prints the tree node recursively.
-     * @param node the node
      * @param outStream the stream to write to
      * @param indent the indentation level
      */
-    private void print(TreeNode node, PrintStream outStream, int indent) {
-        StringBuilder output = new StringBuilder();
-        
+    private void print(PrintStream outStream, int indent) {
         for (int i = 0; i < indent; i++)
-            output.append("  ");
+            outStream.print("  ");
         
-        output.append(node);
-        outStream.println(output);
+        outStream.println(this);
         
-        for (TreeNode children : node.getChildren())
-            print(children, outStream, indent + 1);
+        for (TreeNode child : getChildren())
+            child.print(outStream, indent + 1);
     }
 }

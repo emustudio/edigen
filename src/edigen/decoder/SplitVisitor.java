@@ -40,13 +40,16 @@ public class SplitVisitor extends Visitor {
     private BitSequence patternBits;
     
     /**
-     * Splits the mask and pattern and adds 
-     * @param variant 
+     * Splits the mask and pattern and adds the splitted pieces to the variant.
+     * 
+     * The nodes are placed "vertically" - each pattern is a child of the
+     * corresponding mask and each mask is a child of the previous pattern
+     * (or variant, if there is no previous pattern).
+     * @param variant the variant node
      */
     @Override
     public void visit(Variant variant) throws SemanticException {
         variant.acceptChildren(this);
-        variant.removeMarked();
         
         BitSequence[] masks = maskBits.split(BYTES_PER_PIECE);
         BitSequence[] patterns = patternBits.split(BYTES_PER_PIECE);
@@ -65,22 +68,22 @@ public class SplitVisitor extends Visitor {
     }
 
     /**
-     * Saves the mask bits and marks the node for removal.
+     * Saves the mask bits and removes the node.
      * @param mask the mask node
      */
     @Override
     public void visit(Mask mask) {
         maskBits = mask.getBits();
-        mask.markForRemoval();
+        mask.remove();
     }
 
     /**
-     * Saves the pattern bits and marks the node for removal.
+     * Saves the pattern bits and removes the node.
      * @param pattern the pattern node
      */
     @Override
     public void visit(Pattern pattern) {
         patternBits = pattern.getBits();
-        pattern.markForRemoval();
+        pattern.remove();
     }
 }
