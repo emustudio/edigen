@@ -19,7 +19,7 @@ Input file example
 
 	arith_operands =
 		0 dst_reg(3) 0 src_reg |
-		0 dst_reg(3) 1 src_mem |
+		0 dst_reg(3) 10 src_mem |
 		1 dst_reg(3) 0 immediate;
 
 	src_reg, dst_reg =
@@ -27,7 +27,7 @@ Input file example
 		"ebx": 001;
 
 	src_mem = 
-		mem: 000 mem(16);
+		mem: 00 mem(16);
 
 	immediate =
 		imm: 000 imm(8) |

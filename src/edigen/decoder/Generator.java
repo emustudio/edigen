@@ -116,7 +116,8 @@ public class Generator {
             new JoinVisitor(),
             new SplitVisitor(),
             new MoveVariantVisitor(),
-            new GroupVisitor()
+            new GroupVisitor(),
+            new MoveMaskVisitor()
         };
 
         for (Visitor visitor : transforms) {
