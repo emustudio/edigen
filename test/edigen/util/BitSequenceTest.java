@@ -120,7 +120,7 @@ public class BitSequenceTest {
         BitSequence bits = new BitSequence(2 * 16 + 3);
         bits.set(3, true);
         bits.set(2 * 16 + 1, true);
-        BitSequence[] result = bits.split(2);
+        BitSequence[] result = bits.split(16);
         
         BitSequence[] expected = {
             new BitSequence(16),
@@ -153,5 +153,23 @@ public class BitSequenceTest {
         assertEquals(equal, test);
         assertFalse(unequal1.equals(test));
         assertFalse(unequal2.equals(test));
+    }
+    
+    /**
+     * Test of toHexadecimal method, of class BitSequence.
+     */
+    @Test
+    public void testToHexadecimal() {
+        String expected = "";
+        String result = new BitSequence().toHexadecimal();
+        assertEquals(expected, result);
+        
+        expected = "a1b";
+        result = BitSequence.fromHexadecimal("a1b").toHexadecimal();
+        assertEquals(expected, result);
+        
+        expected = "10e";
+        result = BitSequence.fromBinary("100001110").toHexadecimal();
+        assertEquals(expected, result);
     }
 }

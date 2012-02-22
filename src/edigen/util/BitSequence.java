@@ -31,6 +31,8 @@ import java.util.BitSet;
  */
 public class BitSequence {
     
+    private static final int NIBBLE_LENGTH = 4;
+    
     private int length;
     private BitSet bitSet;
     
@@ -104,14 +106,14 @@ public class BitSequence {
             throw new NumberFormatException("Invalid hexadecimal number.");
         
         int digitCount = hexString.length();
-        BitSequence bits = new BitSequence(digitCount * 4);
+        BitSequence bits = new BitSequence(digitCount * NIBBLE_LENGTH);
         
         for (int nibbleIndex = 0; nibbleIndex < digitCount; nibbleIndex++) {
             int nibble = Integer.parseInt(hexString.substring(nibbleIndex, nibbleIndex + 1), 16);
             
-            for (int bitIndex = 0; bitIndex < 4; bitIndex++) {
+            for (int bitIndex = 0; bitIndex < NIBBLE_LENGTH; bitIndex++) {
                 boolean bit = ((nibble >>> (3 - bitIndex)) & 1) != 0;
-                bits.set(4 * nibbleIndex + bitIndex, bit);
+                bits.set(NIBBLE_LENGTH * nibbleIndex + bitIndex, bit);
             }
         }
         
@@ -173,28 +175,14 @@ public class BitSequence {
     }
     
     /**
-     * Returns this sequence as an array of boolean values.
-     * @return the boolean array
-     */
-    public boolean[] toBooleanArray() {
-        boolean[] booleanArray = new boolean[length];
-        
-        for (int i = 0; i < length; i++)
-            booleanArray[i] = bitSet.get(i);
-        
-        return booleanArray;
-    }
-    
-    /**
      * Splits the sequence into shorter sequences of equal length.
      * 
      * If it is necessary, the last sequence in the returned array will contain
      * less than 8 * bytesPerPiece bits.
-     * @param bytesPerPiece the number of bytes in each sequence
+     * @param bitsPerPiece the number of bits in each sequence
      * @return the array of shorter sequences
      */
-    public BitSequence[] split(int bytesPerPiece) {
-        int bitsPerPiece = 8 * bytesPerPiece;
+    public BitSequence[] split(int bitsPerPiece) {
         int count = (int) Math.ceil((double) length / bitsPerPiece);
         BitSequence[] sequences = new BitSequence[count];
         
@@ -272,6 +260,55 @@ public class BitSequence {
         
         for (int i = 0; i < length; i++)
             result.append(bitSet.get(i) ? '1' : '0');
+        
+        return result.toString();
+    }
+    
+    /**
+     * Returns this sequence as an array of boolean values.
+     * @return the boolean array
+     */
+    public boolean[] toBooleanArray() {
+        boolean[] booleanArray = new boolean[length];
+        
+        for (int i = 0; i < length; i++)
+            booleanArray[i] = bitSet.get(i);
+        
+        return booleanArray;
+    }
+    
+    /**
+     * Returns the hexadecimal representation of this sequence.
+     * 
+     * Before computation, the sequence is zero-padded to whole nibbles from
+     * the beginning.
+     * @return the hexadecimal string, in lowercase
+     */
+    public String toHexadecimal() {
+        int padBitCount = NIBBLE_LENGTH - (length % NIBBLE_LENGTH);
+        
+        if (padBitCount == NIBBLE_LENGTH)
+            padBitCount = 0;
+        
+        BitSequence padded = new BitSequence(padBitCount);
+        padded.append(this);
+        
+        BitSequence[] nibbles = padded.split(NIBBLE_LENGTH);
+        StringBuilder result = new StringBuilder();
+        
+        for (BitSequence nibble : nibbles) {
+            int digit = 0;
+            int factor = 8;
+            
+            for (int i = 0; i < NIBBLE_LENGTH; i++) {
+                if (nibble.get(i))
+                    digit += factor;
+                
+                factor /= 2;
+            }
+            
+            result.append(Integer.toHexString(digit));
+        }
         
         return result.toString();
     }

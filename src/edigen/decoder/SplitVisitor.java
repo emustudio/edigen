@@ -34,7 +34,7 @@ import edigen.util.BitSequence;
  */
 public class SplitVisitor extends Visitor {
 
-    private static final int BYTES_PER_PIECE = 1;
+    private static final int BITS_PER_PIECE = 8;
     
     private BitSequence maskBits;
     private BitSequence patternBits;
@@ -52,8 +52,8 @@ public class SplitVisitor extends Visitor {
     public void visit(Variant variant) throws SemanticException {
         variant.acceptChildren(this);
         
-        BitSequence[] masks = maskBits.split(BYTES_PER_PIECE);
-        BitSequence[] patterns = patternBits.split(BYTES_PER_PIECE);
+        BitSequence[] masks = maskBits.split(BITS_PER_PIECE);
+        BitSequence[] patterns = patternBits.split(BITS_PER_PIECE);
         
         TreeNode parent = variant;
         
