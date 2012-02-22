@@ -18,6 +18,7 @@
 package edigen;
 
 import edigen.decoder.Generator;
+import java.io.*;
 
 /**
  * The main application class.
@@ -30,12 +31,43 @@ public class Edigen {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        if (args.length == 1) {
-            Generator generator = new Generator(args[0]);
+        if (args.length == 2) {
+            String inputFile = args[0];
+            String outputClass = args[1];
+
+            new Edigen().generateDecoder(inputFile, outputClass);
+        } else {
+            System.out.println("Usage: edigen.jar InputFile OutputClassName");
+        }
+    }
+    
+    /**
+     * Generates the instruction decoder.
+     * @param inputFile the input file name
+     * @param outputClass the output class name (whithout the ".java" extension)
+     */
+    public void generateDecoder(String inputFile, String outputClass) {
+        Reader input = null;
+        PrintStream output = null;
+        
+        try {
+            input = new FileReader(inputFile);
+            output = new PrintStream(outputClass + ".java");
+
+            Generator generator = new Generator(input, output, outputClass);
             generator.enableDebugging(System.out);
             generator.run();
-        } else {
-            System.out.println("Usage: edigen.jar filename");
+        } catch (FileNotFoundException ex) {
+            System.out.println("Could not open file: " + ex.getMessage());
+        } finally {
+            if (input != null) {
+                try {
+                    input.close();
+                } catch (IOException ex) { }
+            }
+
+            if (output != null)
+                output.close();
         }
     }
 }

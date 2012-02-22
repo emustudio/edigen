@@ -25,20 +25,21 @@ import edigen.parser.ParseException;
 import edigen.parser.Parser;
 import edigen.tree.SimpleNode;
 import edigen.util.TreePrinter;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.PrintStream;
+import java.io.Reader;
 
 /**
- * The instruction decoder generator (currently only partially implemented).
+ * The instruction decoder generator.
  *
  * @author Matúš Sulír
  */
 public class Generator {
 
-    private String inputFile;
+    private Reader input;
+    private PrintStream output;
+    private String outputClass;
     private boolean debug = false;
-    private PrintStream debugStream;
+    private PrintStream debugStream = null;
     private Decoder decoder;
 
     /**
@@ -46,14 +47,16 @@ public class Generator {
      *
      * @param inputFile the input file name
      */
-    public Generator(String inputFile) {
-        this.inputFile = inputFile;
+    public Generator(Reader input, PrintStream output, String outputClass) {
+        this.input = input;
+        this.output = output;
+        this.outputClass = outputClass;
     }
 
     /**
      * Enables dumping of the tree after each pass / transformation.
      * 
-     * @param debugStream the output stream to write to
+     * @param debugStream the debugging output stream
      */
     public void enableDebugging(PrintStream debugStream) {
         debug = true;
@@ -75,7 +78,7 @@ public class Generator {
     public void run() {
         try {
             // input file -> parse tree
-            Parser p = new Parser(new FileReader(inputFile));
+            Parser p = new Parser(input);
             SimpleNode rootNode = p.parse();
 
             if (debug)
@@ -98,8 +101,9 @@ public class Generator {
 
             // apply transformations
             transform();
-        } catch (FileNotFoundException ex) {
-            System.out.println("Could not open input file.");
+            
+            // generate code
+            decoder.accept(new GenerateCodeVisitor(output, outputClass));
         } catch (ParseException ex) {
             System.out.println(ex.getMessage());
         } catch (SemanticException ex) {
