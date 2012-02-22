@@ -21,10 +21,12 @@ import edigen.SemanticException;
 import edigen.decoder.tree.Mask;
 import edigen.decoder.tree.Pattern;
 import edigen.decoder.tree.Rule;
+import edigen.util.BitSequence;
 
 /**
- * A visitor which removes all except the first sibling masks and attaches them
- * to the first mask.
+ * A visitor which removes all child masks of a node except the first one,
+ * attaches them to a new empty pattern and attaches that pattern (if it is not
+ * empty) to the first mask.
  * 
  * This is necessary to represent the fact that if no pattern matches an input,
  * the next mask (an its associated patterns) is tried.
@@ -41,20 +43,6 @@ public class MoveMaskVisitor extends Visitor {
     public void visit(Rule rule) throws SemanticException {
         moveMasks(rule);
     }
-
-    /**
-     * Moves all child masks of an another mask node except the first one.
-     * 
-     * One mask can contain multiple child masks as a result of previous moving.
-     * By recursive application of this method, it is ensured that each node
-     * will contain only one child mask.
-     * @param mask the mask node
-     * @throws SemanticException never
-     */
-    @Override
-    public void visit(Mask mask) throws SemanticException {
-        moveMasks(mask);
-    }
     
     /**
      * Moves all child masks of the pattern node except the first one.
@@ -67,25 +55,34 @@ public class MoveMaskVisitor extends Visitor {
     }
     
     /**
-     * Removes all child masks of the given node except the first one and
-     * attaches them to the first child mask.
+     * Removes all child masks of the given node except the first one, attaches
+     * them to a new empty pattern and attaches that pattern (if it is not
+     * empty) to the first mask.
+     * 
+     * One node can contain multiple child masks also as a result of previous
+     * moving. By recursive application, it is ensured that each node will
+     * contain only one child mask.
      * @param node the node object
      * @throws SemanticException never
      */
     private void moveMasks(TreeNode node) throws SemanticException {
         TreeNode firstMask = null;
-
+        Pattern defaultPattern = new Pattern(new BitSequence());
+        
         for (TreeNode child : node.getChildren()) {
             if (child instanceof Mask) {
                 if (firstMask == null) {
                     firstMask = child;
                 } else {
                     child.remove();
-                    firstMask.addChild(child);
+                    defaultPattern.addChild(child);
                 }
             }
         }
 
+        if (defaultPattern.childCount() != 0)
+            firstMask.addChild(defaultPattern);
+        
         node.acceptChildren(this);
     }
 }
