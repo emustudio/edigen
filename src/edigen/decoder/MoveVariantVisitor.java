@@ -48,7 +48,8 @@ public class MoveVariantVisitor extends Visitor {
     }
 
     /**
-     * Saves the current variant and dettaches the variant from the rule.
+     * Saves the current variant and dettaches the variant from the rule if at
+     * least one variant's child is a mask.
      * @param variant the variant node
      * @throws SemanticException never
      */
@@ -56,9 +57,13 @@ public class MoveVariantVisitor extends Visitor {
     public void visit(Variant variant) throws SemanticException {
         currentVariant = variant;
         topMask = null;
+        TreeNode parent = variant.getParent();
         
         variant.remove();
         variant.acceptChildren(this);
+        
+        if (topMask == null)
+            parent.addChild(variant);
     }
 
     /**
