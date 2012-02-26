@@ -47,6 +47,15 @@ public class Pattern extends TreeNode {
     }
     
     /**
+     * Returns a pattern ANDed with the specified mask.
+     * @param mask the mask
+     * @return the resulting pattern
+     */
+    public Pattern and(Mask mask) {
+        return new Pattern(bits.and(mask.getBits()));
+    }
+    
+    /**
      * Accepts the visitor.
      * @param visitor the visitor object
      */

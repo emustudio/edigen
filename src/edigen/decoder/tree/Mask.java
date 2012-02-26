@@ -48,6 +48,15 @@ public class Mask extends TreeNode {
     }
     
     /**
+     * Returns a mask ANDed with an another mask.
+     * @param mask the second mask
+     * @return the resulting mask
+     */
+    public Mask and(Mask other) {
+        return new Mask(bits.and(other.bits));
+    }
+    
+    /**
      * Accepts the visitor.
      * @param visitor the visitor object
      */

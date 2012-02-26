@@ -219,6 +219,23 @@ public class BitSequence {
     }
     
     /**
+     * Returns a bit sequence ANDed with an other bit sequence.
+     * @param other the second sequence
+     * @return the result, truncated to the length of the shorter input sequence
+     */
+    public BitSequence and(BitSequence other) {
+        int resultLength = Math.min(this.length, other.length);
+        BitSequence result = new BitSequence(resultLength);
+        
+        for (int i = 0; i < resultLength; i++) {
+            if (this.get(i) && other.get(i))
+                result.set(i, true);
+        }
+        
+        return result;
+    }
+    
+    /**
      * Checks whether the other bit sequence has exactly the same content and
      * length as this sequence.
      * @param object the sequence to compare

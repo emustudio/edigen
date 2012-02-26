@@ -112,7 +112,7 @@ public class Generator {
     }
 
     /**
-     * Executes all tree transformations.
+     * Executes all tree transformations and checks.
      * @throws SemanticException when a semantic error occurs
      */
     private void transform() throws SemanticException {
@@ -121,6 +121,7 @@ public class Generator {
             new SplitVisitor(),
             new MoveVariantVisitor(),
             new GroupVisitor(),
+            new DetectAmbiguousVisitor(),
             new MoveMaskVisitor()
         };
 
