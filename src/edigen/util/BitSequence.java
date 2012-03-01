@@ -154,6 +154,23 @@ public class BitSequence {
     }
     
     /**
+     * Returns true if the sequence contains only bits of the specified value.
+     * 
+     * If the sequence length is zero, <code>true</code> is returned.
+     * @param value the expected bit value
+     * @return true if the bit sequence contains only given bits, false
+     *         otherwise
+     */
+    public boolean containsOnly(boolean value) {
+        for (int i = 0; i < length; i++) {
+            if (get(i) != value)
+                return false;
+        }
+        
+        return true;
+    }
+    
+    /**
      * Appends another bit sequence to the end of this sequence.
      * @param bits the sequence to be appended
      */
@@ -276,7 +293,7 @@ public class BitSequence {
         StringBuilder result = new StringBuilder();
         
         for (int i = 0; i < length; i++)
-            result.append(bitSet.get(i) ? '1' : '0');
+            result.append(get(i) ? '1' : '0');
         
         return result.toString();
     }
@@ -289,7 +306,7 @@ public class BitSequence {
         boolean[] booleanArray = new boolean[length];
         
         for (int i = 0; i < length; i++)
-            booleanArray[i] = bitSet.get(i);
+            booleanArray[i] = get(i);
         
         return booleanArray;
     }

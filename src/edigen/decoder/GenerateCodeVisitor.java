@@ -30,6 +30,7 @@ public class GenerateCodeVisitor extends Visitor {
 
     private PrettyPrinter output;
     private String outputClass;
+    private String currentRule;
     private boolean isDefaultCase = false;
     
     /**
@@ -49,7 +50,10 @@ public class GenerateCodeVisitor extends Visitor {
     @Override
     public void visit(Decoder decoder) throws SemanticException {
         put("class " + outputClass + " {");
-        put("byte b;", true);
+        put("private byte b;");
+        put("private byte[] instruction = new byte[128];");
+        put("private int start = 0;");
+        put("private int length = 0;", true);
         decoder.acceptChildren(this);
         put("}");
     }
@@ -61,13 +65,15 @@ public class GenerateCodeVisitor extends Visitor {
      */
     @Override
     public void visit(Rule rule) throws SemanticException {
-        put("private void " + rule.getName() + "() {");
+        currentRule = rule.getName();
+        
+        put("private void " + currentRule + "(int start) {");
         rule.acceptChildren(this);
         put("}", true);
     }
 
     /**
-     * Writes the <code>switch</code> statement.
+     * Writes the <code>switch</code> statement (if the mask is not zero-only).
      * @param mask the mask node
      * @throws SemanticException never
      */
@@ -76,9 +82,15 @@ public class GenerateCodeVisitor extends Visitor {
         if (!isDefaultCase)
             put("b = read();", true);
         
-        put("switch (b & 0x" + mask.getBits().toHexadecimal() + ") {");
-        mask.acceptChildren(this);
-        put("}");
+        isDefaultCase = false;
+        
+        if (mask.getBits().containsOnly(false)) {
+            mask.acceptChildren(this);
+        } else {
+            put("switch (b & 0x" + mask.getBits().toHexadecimal() + ") {");
+            mask.acceptChildren(this);
+            put("}");
+        }
     }
 
     /**
@@ -105,7 +117,7 @@ public class GenerateCodeVisitor extends Visitor {
      */
     @Override
     public void visit(Subrule subrule) {
-        put(subrule.getName() + "();");
+        put(subrule.getName() + "(start + " + subrule.getStart() + ");");
     }
     
     /**

@@ -94,6 +94,29 @@ public class BitSequenceTest {
     }
 
     /**
+     * Test of containsOnly method, of class BitSequence.
+     */
+    @Test
+    public void testContainsOnly() {
+        BitSequence zeroesOnly = new BitSequence(10, false);
+        assertTrue(zeroesOnly.containsOnly(false));
+        assertFalse(zeroesOnly.containsOnly(true));
+        
+        BitSequence onesOnly = new BitSequence(12, true);
+        assertTrue(onesOnly.containsOnly(true));
+        assertFalse(onesOnly.containsOnly(false));
+        
+        BitSequence mixed = new BitSequence(3);
+        mixed.set(2, true);
+        assertFalse(mixed.containsOnly(false));
+        assertFalse(mixed.containsOnly(true));
+        
+        BitSequence empty = new BitSequence();
+        assertTrue(empty.containsOnly(false));
+        assertTrue(empty.containsOnly(true));
+    }
+    
+    /**
      * Test of append method, of class BitSequence.
      */
     @Test

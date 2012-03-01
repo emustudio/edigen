@@ -122,7 +122,8 @@ public class Generator {
             new MoveVariantVisitor(),
             new GroupVisitor(),
             new DetectAmbiguousVisitor(),
-            new MoveMaskVisitor()
+            new MoveMaskVisitor(),
+            new RemovePatternVisitor()
         };
 
         for (Visitor visitor : transforms) {
