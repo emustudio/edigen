@@ -17,7 +17,8 @@
  */
 package edigen.util;
 
-import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.io.Writer;
 
 /**
  * Minimalistic on-the-fly Java source code pretty-printer.
@@ -61,7 +62,7 @@ import java.io.PrintStream;
  */
 public class PrettyPrinter {
 
-    private PrintStream output;
+    private PrintWriter output;
     private int indentCount = 0;
     private static final String indentString = "    ";
 
@@ -69,8 +70,8 @@ public class PrettyPrinter {
      * Constructs the pretty printer.
      * @param output the output to write the source code to
      */
-    public PrettyPrinter(PrintStream output) {
-        this.output = output;
+    public PrettyPrinter(Writer output) {
+        this.output = new PrintWriter(output);
     }
 
     /**

@@ -20,7 +20,7 @@ package edigen.decoder;
 import edigen.SemanticException;
 import edigen.decoder.tree.*;
 import edigen.util.PrettyPrinter;
-import java.io.PrintStream;
+import java.io.Writer;
 
 /**
  * A visitor which generates Java source code of the instruction decoder.
@@ -28,8 +28,7 @@ import java.io.PrintStream;
  */
 public class GenerateCodeVisitor extends Visitor {
 
-    private PrettyPrinter output;
-    private String outputClass;
+    private PrettyPrinter printer;
     private String currentRule;
     private boolean isDefaultCase = false;
     
@@ -37,9 +36,8 @@ public class GenerateCodeVisitor extends Visitor {
      * Constructs the visitor.
      * @param output the output stream to write the code to
      */
-    public GenerateCodeVisitor(PrintStream output, String outputClass) {
-        this.output = new PrettyPrinter(output);
-        this.outputClass = outputClass;
+    public GenerateCodeVisitor(Writer output) {
+        this.printer = new PrettyPrinter(output);
     }
 
     /**
@@ -49,13 +47,7 @@ public class GenerateCodeVisitor extends Visitor {
      */
     @Override
     public void visit(Decoder decoder) throws SemanticException {
-        put("class " + outputClass + " {");
-        put("private byte b;");
-        put("private byte[] instruction = new byte[128];");
-        put("private int start = 0;");
-        put("private int length = 0;", true);
         decoder.acceptChildren(this);
-        put("}");
     }
     
     /**
@@ -79,18 +71,22 @@ public class GenerateCodeVisitor extends Visitor {
      */
     @Override
     public void visit(Mask mask) throws SemanticException {
-        if (!isDefaultCase)
-            put("b = read();", true);
+        boolean isZero = mask.getBits().containsOnly(false);
+        
+        if (!isDefaultCase) {
+            put("read(start, " + mask.getBits().getLength() + ");");
+            put("start += " + mask.getBits().getLength() + ";", true);
+        }
         
         isDefaultCase = false;
         
-        if (mask.getBits().containsOnly(false)) {
-            mask.acceptChildren(this);
-        } else {
-            put("switch (b & 0x" + mask.getBits().toHexadecimal() + ") {");
-            mask.acceptChildren(this);
+        if (!isZero)
+            put("switch (unit & 0x" + mask.getBits().toHexadecimal() + ") {");
+        
+        mask.acceptChildren(this);
+        
+        if (!isZero)
             put("}");
-        }
     }
 
     /**
@@ -111,6 +107,17 @@ public class GenerateCodeVisitor extends Visitor {
         put("break;");
     }
 
+    @Override
+    public void visit(Variant variant) throws SemanticException {
+        if (variant.getReturnString() != null)
+            put(currentRule + " = \"" + variant.getReturnString() + "\";");
+        else
+            put(currentRule + " = null;");
+        
+        variant.acceptChildren(this);
+        put("return;");
+    }
+
     /**
      * Writes the method invocation.
      * @param subrule the subrule node
@@ -128,10 +135,10 @@ public class GenerateCodeVisitor extends Visitor {
      *                 statement
      */
     private void put(String lineOfCode, boolean newBlock) {
-        output.writeLine(lineOfCode);
+        printer.writeLine(lineOfCode);
         
         if (newBlock)
-            output.writeLine("");
+            printer.writeLine("");
     }
 
     /**

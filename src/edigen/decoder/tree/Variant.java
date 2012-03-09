@@ -41,6 +41,17 @@ public class Variant extends TreeNode {
     private Subrule returnSubrule;
     
     /**
+     * Returns the string which this variant returns.
+     * @return the string, or null if the variant returns a subrule or nothing
+     */
+    public String getReturnString() {
+        if (returnType == ReturnType.STRING)
+            return returnString;
+        else
+            return null;
+    }
+    
+    /**
      * Tells the variant to return the string on match.
      * @param returnString the string to return
      */

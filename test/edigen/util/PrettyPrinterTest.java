@@ -17,8 +17,7 @@
  */
 package edigen.util;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
+import java.io.StringWriter;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
@@ -62,14 +61,13 @@ public class PrettyPrinterTest {
             expected.append(line).append(lineSeparator);
         }
         
-        ByteArrayOutputStream byteOutput = new ByteArrayOutputStream();
-        PrintStream printOutput = new PrintStream(byteOutput, true);
-        PrettyPrinter printer = new PrettyPrinter(printOutput);
+        StringWriter output = new StringWriter();
+        PrettyPrinter printer = new PrettyPrinter(output);
 
         for (String line : input) {
             printer.writeLine(line);
         }
 
-        assertEquals(expected.toString(), byteOutput.toString());
+        assertEquals(expected.toString(), output.toString());
     }
 }
