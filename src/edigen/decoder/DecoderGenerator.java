@@ -24,6 +24,7 @@ import edigen.decoder.tree.Decoder;
 import edigen.parser.ParseException;
 import edigen.parser.Parser;
 import edigen.tree.SimpleNode;
+import edigen.util.Template;
 import edigen.util.TreePrinter;
 import java.io.*;
 
@@ -75,18 +76,25 @@ public class DecoderGenerator {
      * Parses the specification, transforms the tree and generates the code.
      */
     public void generate() {
-        Reader specification = null, template = null;
-        Writer output = null;
+        BufferedReader specification = null, templateStream = null;
+        BufferedWriter output = null;
         
         try {
-            specification = new FileReader(specificationFile);
-            template = new FileReader(templateFile);
-            output = new FileWriter(className + ".java");
-            
+            specification = new BufferedReader(new FileReader(specificationFile));
             parse(specification);
             transform();
             
-            decoder.accept(new GenerateCodeVisitor(output));
+            Writer methods = new StringWriter();
+            decoder.accept(new GenerateCodeVisitor(methods));
+            
+            templateStream = new BufferedReader(new FileReader(templateFile));
+            output = new BufferedWriter(new FileWriter(className + ".java"));
+            Template template = new Template(templateStream, output);
+            
+            template.setVariable("decoder_class", className);
+            template.setVariable("decoder_methods", methods.toString());
+            
+            template.write();
         } catch (FileNotFoundException ex) {
             System.out.println("Could not open file: " + ex.getMessage());
         } catch (IOException ex) {
@@ -96,7 +104,7 @@ public class DecoderGenerator {
         } catch (SemanticException ex) {
             System.out.println("Error: " + ex.getMessage() + ".");
         } finally {
-            closeAll(specification, template, output);
+            closeAll(specification, templateStream, output);
         }
     }
 

@@ -71,7 +71,7 @@ public class PrettyPrinter {
      * @param output the output to write the source code to
      */
     public PrettyPrinter(Writer output) {
-        this.output = new PrintWriter(output);
+        this.output = new PrintWriter(output, true);
     }
 
     /**
