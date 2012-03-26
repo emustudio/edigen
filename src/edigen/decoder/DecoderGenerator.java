@@ -76,7 +76,7 @@ public class DecoderGenerator {
      * Parses the specification, transforms the tree and generates the code.
      */
     public void generate() {
-        BufferedReader specification = null, templateStream = null;
+        BufferedReader specification = null, templateSource = null;
         BufferedWriter output = null;
         
         try {
@@ -87,13 +87,18 @@ public class DecoderGenerator {
             Writer methods = new StringWriter();
             decoder.accept(new GenerateCodeVisitor(methods));
             
-            templateStream = new BufferedReader(new FileReader(templateFile));
-            output = new BufferedWriter(new FileWriter(className + ".java"));
-            Template template = new Template(templateStream, output);
+            if (templateFile == null) {
+                InputStream stream = getClass().getResourceAsStream("/edigen/res/Decoder.egt");
+                templateSource = new BufferedReader(new InputStreamReader(stream));
+            } else {
+                templateSource = new BufferedReader(new FileReader(templateFile));
+            }
             
+            output = new BufferedWriter(new FileWriter(className + ".java"));
+            
+            Template template = new Template(templateSource, output);
             template.setVariable("decoder_class", className);
             template.setVariable("decoder_methods", methods.toString());
-            
             template.write();
         } catch (FileNotFoundException ex) {
             System.out.println("Could not open file: " + ex.getMessage());
@@ -104,7 +109,7 @@ public class DecoderGenerator {
         } catch (SemanticException ex) {
             System.out.println("Error: " + ex.getMessage() + ".");
         } finally {
-            closeAll(specification, templateStream, output);
+            closeAll(specification, templateSource, output);
         }
     }
 

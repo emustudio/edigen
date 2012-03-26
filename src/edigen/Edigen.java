@@ -30,17 +30,17 @@ public class Edigen {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        if (args.length == 3) {
+        if (args.length == 2 || args.length == 3) {
             String specificationFile = args[0];
             String decoderClass = args[1];
-            String decoderTemplate = args[2];
+            String decoderTemplate = (args.length == 3) ? args[2] : null;
             
             DecoderGenerator decoder = new DecoderGenerator(specificationFile,
                     decoderClass, decoderTemplate);
             decoder.enableDebugging(System.out);
             decoder.generate();
         } else {
-            System.out.println("Usage: edigen.jar SpecificationFile DecoderClass DecoderTemplate");
+            System.out.println("Usage: edigen.jar SpecificationFile DecoderClass [DecoderTemplate]");
         }
     }
 }
