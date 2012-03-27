@@ -41,6 +41,7 @@ public class DecoderGenerator {
     private boolean debug = false;
     private PrintStream debugStream = null;
     private Decoder decoder;
+    private Writer methods;
 
     /**
      * Constructs the generator.
@@ -84,7 +85,7 @@ public class DecoderGenerator {
             parse(specification);
             transform();
             
-            Writer methods = new StringWriter();
+            methods = new StringWriter();
             decoder.accept(new GenerateCodeVisitor(methods));
             
             if (templateFile == null) {
@@ -97,8 +98,7 @@ public class DecoderGenerator {
             output = new BufferedWriter(new FileWriter(className + ".java"));
             
             Template template = new Template(templateSource, output);
-            template.setVariable("decoder_class", className);
-            template.setVariable("decoder_methods", methods.toString());
+            setTemplateVariables(template);
             template.write();
         } catch (FileNotFoundException ex) {
             System.out.println("Could not open file: " + ex.getMessage());
@@ -144,19 +144,6 @@ public class DecoderGenerator {
     }
     
     /**
-     * Closes all supplied streams.
-     * @param streams the streams to close
-     */
-    private void closeAll(Closeable... streams) {
-        for (Closeable stream : streams) {
-            try {
-                if (stream != null)
-                    stream.close();
-            } catch (IOException ex) { }
-        }
-    }
-    
-    /**
      * Executes all tree transformations and checks.
      * @throws SemanticException when a semantic error occurs
      */
@@ -178,4 +165,28 @@ public class DecoderGenerator {
                 decoder.dump(debugStream);
         }
     }
+    
+    /**
+     * Sets the variables used in the template file.
+     * @param template the template object
+     */
+    private void setTemplateVariables(Template template) {
+        template.setVariable("decoder_class", className);
+        template.setVariable("root_rule", decoder.getRootRule().getName());
+        template.setVariable("decoder_methods", methods.toString());
+    }
+    
+    /**
+     * Closes all supplied streams.
+     * @param streams the streams to close
+     */
+    private void closeAll(Closeable... streams) {
+        for (Closeable stream : streams) {
+            try {
+                if (stream != null)
+                    stream.close();
+            } catch (IOException ex) { }
+        }
+    }
+    
 }

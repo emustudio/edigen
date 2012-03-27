@@ -50,6 +50,16 @@ public class Decoder extends TreeNode {
     }
     
     /**
+     * Returns the starting rule.
+     * 
+     * This is the first rule in the input file.
+     * @return the root rule object
+     */
+    public Rule getRootRule() {
+        return (Rule) getChild(0);
+    }
+    
+    /**
      * Accepts the visitor.
      * @param visitor the visitor object
      */
