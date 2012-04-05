@@ -41,7 +41,6 @@ public class DecoderGenerator {
     private boolean debug = false;
     private PrintStream debugStream = null;
     private Decoder decoder;
-    private Writer methods;
 
     /**
      * Constructs the generator.
@@ -84,9 +83,6 @@ public class DecoderGenerator {
             specification = new BufferedReader(new FileReader(specificationFile));
             parse(specification);
             transform();
-            
-            methods = new StringWriter();
-            decoder.accept(new GenerateCodeVisitor(methods));
             
             if (templateFile == null) {
                 InputStream stream = getClass().getResourceAsStream("/edigen/res/Decoder.egt");
@@ -169,10 +165,18 @@ public class DecoderGenerator {
     /**
      * Sets the variables used in the template file.
      * @param template the template object
+     * @throws SemanticException never
      */
-    private void setTemplateVariables(Template template) {
+    private void setTemplateVariables(Template template) throws SemanticException {
         template.setVariable("decoder_class", className);
         template.setVariable("root_rule", decoder.getRootRule().getName());
+        
+        Writer fields = new StringWriter();
+        decoder.accept(new GenerateFieldsVisitor(fields));
+        template.setVariable("decoder_fields", fields.toString());
+        
+        Writer methods = new StringWriter();
+        decoder.accept(new GenerateMethodsVisitor(methods));
         template.setVariable("decoder_methods", methods.toString());
     }
     

@@ -46,6 +46,15 @@ public class Rule extends TreeNode {
     }
     
     /**
+     * Returns the rule code which will be used as a name of the constant in the
+     * generated code.
+     * @return the rule code
+     */
+    public String getCode() {
+        return name.toUpperCase();
+    }
+    
+    /**
      * Accepts the visitor.
      * @param visitor the visitor object
      */

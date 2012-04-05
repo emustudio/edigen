@@ -1,35 +1,57 @@
+package edigen.res;
+
 class %decoder_class implements IDecoder {
     private IMemoryContext memory;
     private int memoryPosition;
     private byte unit;
-    private byte[] instruction = new byte[128];
-    private int bytesRead = 0;
-    
+    private byte[] instructionBytes = new byte[128];
+    private int bytesRead;
+    private Instruction instruction = new Instruction();
+
+    %decoder_fields
+
     public %decoder_class(IMemoryContext memory) {
         this.memory = memory;
     }
     
-    public void decode(int memoryPosition) {
+    @Override
+    public Instruction decode(int memoryPosition) {
         this.memoryPosition = memoryPosition;
-        %root_rule();
+        bytesRead = 0;
+        instruction.reset();
+        %root_rule(0);
+        return instruction;
     }
     
-    private void read(int start, int length) {
+    private byte read(int start, int length) {
         if (start + length > 8 * bytesRead) {
-            instruction[bytesRead++] = memory.read(memoryPosition++);
+            instructionBytes[bytesRead++] = (Byte) memory.read(memoryPosition++);
         }
         
         int startByte = start / 8;
         int startOffset = start % 8;
-        byte startMask = ~0 >>> (8 - startOffset);
+        byte startMask = (byte) (~0 >>> (8 - startOffset));
 
         int endByte = (start + length) / 8;
         int endOffset = (startOffset + length) % 8;
-        byte endMask = ~0 << (8 - endOffset);
+        byte endMask = (byte) (~0 << (8 - endOffset));
         
-        unit = (instruction[startByte] & startMask) << endOffset;
-        unit |= (instruction[endByte] & endMask) >> (8 - endOffset);
+        byte result = (byte) ((instructionBytes[startByte] & startMask) << endOffset);
+        return (byte) (result | (instructionBytes[endByte] & endMask) >> (8 - endOffset));
     }
 
+    private byte[] getValue(int start, int length) {
+        int byteCount = (length - 1) / 8 + 1;
+        byte[] result = new byte[byteCount];
+        
+        for (int i = 0; i < byteCount; i++) {
+            int bits = (i != byteCount - 1) ? 8 : length % 8;
+            result[i] = read(start, bits);
+            start += 8;
+        }
+
+        return result;
+    }
+    
     %decoder_methods
 }

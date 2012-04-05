@@ -23,20 +23,21 @@ import edigen.util.PrettyPrinter;
 import java.io.Writer;
 
 /**
- * A visitor which generates Java source code of the instruction decoder.
+ * A visitor which generates Java source code of the instruction decoder methods
+ * for all rules.
  * @author Matúš Sulír
  */
-public class GenerateCodeVisitor extends Visitor {
+public class GenerateMethodsVisitor extends Visitor {
 
     private PrettyPrinter printer;
-    private String currentRule;
+    private Rule currentRule;
     private boolean isDefaultCase = false;
     
     /**
      * Constructs the visitor.
      * @param output the output stream to write the code to
      */
-    public GenerateCodeVisitor(Writer output) {
+    public GenerateMethodsVisitor(Writer output) {
         this.printer = new PrettyPrinter(output);
     }
 
@@ -57,9 +58,11 @@ public class GenerateCodeVisitor extends Visitor {
      */
     @Override
     public void visit(Rule rule) throws SemanticException {
-        currentRule = rule.getName();
+        currentRule = rule;
+        isDefaultCase = false;
         
-        put("private void " + currentRule + "(int start) {");
+        put("private void " + currentRule.getName() + "(int start) {");
+        put("int position = start;");
         rule.acceptChildren(this);
         put("}", true);
     }
@@ -74,8 +77,8 @@ public class GenerateCodeVisitor extends Visitor {
         boolean isZero = mask.getBits().containsOnly(false);
         
         if (!isDefaultCase) {
-            put("read(start, " + mask.getBits().getLength() + ");");
-            put("start += " + mask.getBits().getLength() + ";", true);
+            put("unit = read(position, " + mask.getBits().getLength() + ");");
+            put("position += " + mask.getBits().getLength() + ";", true);
         }
         
         isDefaultCase = false;
@@ -96,26 +99,33 @@ public class GenerateCodeVisitor extends Visitor {
      */
     @Override
     public void visit(Pattern pattern) throws SemanticException {
-        isDefaultCase = (pattern.getBits().getLength() == 0);
-        
-        if (!isDefaultCase)
+        if (pattern.getBits().getLength() != 0)
             put("case 0x" + pattern.getBits().toHexadecimal() + ":");
         else
             put("default:");
         
         pattern.acceptChildren(this);
         put("break;");
+        isDefaultCase = (pattern.getBits().getLength() == 0);
     }
 
+    /**
+     * Writes the assignment for the recognized variant.
+     * @param variant the variant node
+     * @throws SemanticException never
+     */
     @Override
     public void visit(Variant variant) throws SemanticException {
-        if (variant.getReturnString() != null)
-            put(currentRule + " = \"" + variant.getReturnString() + "\";");
-        else
-            put(currentRule + " = null;");
+        String value = "null";
+        Subrule subrule = variant.getReturnSubrule();
         
+        if (variant.getReturnString() != null)
+            value = "\"" + variant.getReturnString() + "\"";
+        else if (subrule != null)
+            value = "getValue(start + " + subrule.getStart() + ", " + subrule.getLength() + ")";
+        
+        put("instruction.addRule(" + currentRule.getCode() + ", " + value + ");");
         variant.acceptChildren(this);
-        put("return;");
     }
 
     /**
