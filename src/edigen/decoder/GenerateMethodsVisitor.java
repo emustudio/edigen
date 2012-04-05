@@ -61,7 +61,7 @@ public class GenerateMethodsVisitor extends Visitor {
         currentRule = rule;
         isDefaultCase = false;
         
-        put("private void " + currentRule.getName() + "(int start) {");
+        put("private void " + currentRule.getName() + "(int start) throws InvalidInstructionException {");
         put("int position = start;");
         rule.acceptChildren(this);
         put("}", true);
@@ -87,6 +87,11 @@ public class GenerateMethodsVisitor extends Visitor {
             put("switch (unit & 0x" + mask.getBits().toHexadecimal() + ") {");
         
         mask.acceptChildren(this);
+        
+        if (!isZero && !isDefaultCase) {
+            put("default:");
+            put("throw new InvalidInstructionException();");
+        }
         
         if (!isZero)
             put("}");

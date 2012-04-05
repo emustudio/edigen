@@ -15,7 +15,7 @@ class %decoder_class implements IDecoder {
     }
     
     @Override
-    public Instruction decode(int memoryPosition) {
+    public Instruction decode(int memoryPosition) throws InvalidInstructionException {
         this.memoryPosition = memoryPosition;
         bytesRead = 0;
         instruction.reset();
