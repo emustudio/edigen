@@ -18,29 +18,60 @@
 package edigen;
 
 import edigen.decoder.DecoderGenerator;
+import edigen.parser.ParseException;
+import edigen.ui.Argument;
+import edigen.ui.CommandLine;
+import edigen.ui.CommandLineException;
+import edigen.ui.Help;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.Map;
 
 /**
  * The main application class.
+ *
  * @author Matúš Sulír
  */
 public class Edigen {
 
+    private static final Argument[] ARGUMENTS = {
+        new Argument("<specification> - File containing the description of instructions",
+            "specification"),
+        new Argument("<decoder_class> - Resulting instruction decoder class name",
+            "decoder_class"),
+        new Argument("o", "Write generated files to <directory>", "output_dir"),
+        new Argument("p", "Make generated classes members of <package>", "package"),
+        new Argument("dt", "Use <template> for instruction decoder instead of the default one", "decoder_template"),
+        new Argument("d", "Enable debug mode", "debug")
+    };
+
     /**
      * The application entry point.
+     *
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        if (args.length == 2 || args.length == 3) {
-            String specificationFile = args[0];
-            String decoderClass = args[1];
-            String decoderTemplate = (args.length == 3) ? args[2] : null;
+        System.out.println("Edigen - Emulator Disassembler Generator");
+        CommandLine commandLine = new CommandLine(ARGUMENTS);
+        String help = new Help("java -jar Edigen.jar", commandLine).generate();
+        
+        try {
+            Map<String, String> configuration = commandLine.parse(args);
             
-            DecoderGenerator decoder = new DecoderGenerator(specificationFile,
-                    decoderClass, decoderTemplate);
-            decoder.enableDebugging(System.out);
+            DecoderGenerator decoder = new DecoderGenerator(configuration);
             decoder.generate();
-        } else {
-            System.out.println("Usage: edigen.jar SpecificationFile DecoderClass [DecoderTemplate]");
+            System.out.println("Instruction decoder successfully generated.");
+        } catch (CommandLineException ex) {
+            System.out.println("\nError: " + ex.getMessage() + ".\n");
+            System.out.print(help);
+        } catch (FileNotFoundException ex) {
+            System.out.println("Could not open file: " + ex.getMessage());
+        } catch (IOException ex) {
+            System.out.println("Error during file manipulation: " + ex.getMessage());
+        } catch (ParseException ex) {
+            System.out.println(ex.getMessage());
+        } catch (SemanticException ex) {
+            System.out.println("Error: " + ex.getMessage() + ".");
         }
     }
 }

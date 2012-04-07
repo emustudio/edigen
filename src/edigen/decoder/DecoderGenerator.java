@@ -27,6 +27,7 @@ import edigen.tree.SimpleNode;
 import edigen.util.Template;
 import edigen.util.TreePrinter;
 import java.io.*;
+import java.util.Map;
 
 /**
  * The instruction decoder generator.
@@ -35,75 +36,45 @@ import java.io.*;
  */
 public class DecoderGenerator {
 
-    private String specificationFile;
-    private String className;
-    private String templateFile;
+    private Map<String, String> settings;
     private boolean debug = false;
     private PrintStream debugStream = null;
     private Decoder decoder;
 
     /**
      * Constructs the generator.
-     * @param specificationFile the specification file name
-     * @param className the instruction decoder output class name
-     * @param templateFile the instruction decoder template file name
+     * @param settings the configuration obtained e.g. from the command line
      */
-    public DecoderGenerator(String specificationFile, String className, String templateFile) {
-        this.specificationFile = specificationFile;
-        this.className = className;
-        this.templateFile = templateFile;
-    }
-
-    /**
-     * Enables dumping of the tree after each pass / transformation.
-     * 
-     * @param debugStream the debugging output stream
-     */
-    public void enableDebugging(PrintStream debugStream) {
-        debug = true;
-        this.debugStream = debugStream;
-    }
-
-    /**
-     * Disables dumping of the tree.
-     * @see #enableDebugging(java.io.PrintStream)
-     */
-    public void disableDebugging() {
-        debug = false;
+    public DecoderGenerator(Map<String, String> settings) {
+        this.settings = settings;
+        
+        if (settings.containsKey("debug")) {
+            debug = true;
+            this.debugStream = System.out;
+        }
     }
     
     /**
      * Parses the specification, transforms the tree and generates the code.
+     * @throws IOException when the file can not be read / written
+     * @throws ParseException when the input file can not be parsed
+     * @throws SemanticException when there is a semantic error in the input file
      */
-    public void generate() {
+    public void generate() throws IOException, ParseException, SemanticException {
         BufferedReader specification = null, templateSource = null;
         BufferedWriter output = null;
         
         try {
-            specification = new BufferedReader(new FileReader(specificationFile));
+            specification = new BufferedReader(new FileReader(settings.get("specification")));
             parse(specification);
             transform();
             
-            if (templateFile == null) {
-                InputStream stream = getClass().getResourceAsStream("/edigen/res/Decoder.egt");
-                templateSource = new BufferedReader(new InputStreamReader(stream));
-            } else {
-                templateSource = new BufferedReader(new FileReader(templateFile));
-            }
-            
-            output = new BufferedWriter(new FileWriter(className + ".java"));
+            templateSource = getTemplate();
+            output = getOutput();
             
             Template template = new Template(templateSource, output);
             setTemplateVariables(template);
             template.write();
-        } catch (FileNotFoundException ex) {
-            System.out.println("Could not open file: " + ex.getMessage());
-        } catch (IOException ex) {
-            System.out.println("Error during file manipulation: " + ex.getMessage());
-        } catch (ParseException ex) {
-            System.out.println(ex.getMessage());
-        } catch (SemanticException ex) {
-            System.out.println("Error: " + ex.getMessage() + ".");
         } finally {
             closeAll(specification, templateSource, output);
         }
@@ -163,12 +134,56 @@ public class DecoderGenerator {
     }
     
     /**
+     * Returns the open reader of the template file.
+     * @return the template reader
+     * @throws FileNotFoundException when the file can not be open
+     */
+    private BufferedReader getTemplate() throws FileNotFoundException {
+        BufferedReader templateSource;
+        
+        if (settings.containsKey("decoder_template")) {
+            String file = settings.get("decoder_template");
+            templateSource = new BufferedReader(new FileReader(file));
+        } else {
+            InputStream stream = getClass().getResourceAsStream("/edigen/res/Decoder.egt");
+            templateSource = new BufferedReader(new InputStreamReader(stream));
+        }
+        
+        return templateSource;
+    }
+    
+    /**
+     * Returns the open writer of the output file.
+     * @return the file writer
+     * @throws IOException when the file can not be open for writing
+     */
+    private BufferedWriter getOutput() throws IOException {
+        String outputFile = settings.get("decoder_class") + ".java";
+        File outputPath;
+
+        if (settings.containsKey("output_dir"))
+            outputPath = new File(settings.get("output_dir"), outputFile);
+        else
+            outputPath = new File(outputFile);
+        
+        return new BufferedWriter(new FileWriter(outputPath));
+    }
+    
+    /**
      * Sets the variables used in the template file.
      * @param template the template object
      * @throws SemanticException never
      */
     private void setTemplateVariables(Template template) throws SemanticException {
-        template.setVariable("decoder_class", className);
+        template.setVariable("auto_gen_warning",
+                "/* Auto-generated file. Do not modify. */");
+        
+        if (settings.containsKey("package"))
+            template.setVariable("package_spec", "package " + settings.get("package") + ";");
+        else
+            template.setVariable("package_spec", "");
+        
+        template.setVariable("decoder_class", settings.get("decoder_class"));
         template.setVariable("root_rule", decoder.getRootRule().getName());
         
         Writer fields = new StringWriter();

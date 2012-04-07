@@ -1,5 +1,9 @@
-package edigen.res;
+%auto_gen_warning
+%package_spec
 
+/**
+ * The instruction decoder.
+ */
 class %decoder_class implements IDecoder {
     private IMemoryContext memory;
     private int memoryPosition;
@@ -7,13 +11,23 @@ class %decoder_class implements IDecoder {
     private byte[] instructionBytes = new byte[128];
     private int bytesRead;
     private Instruction instruction = new Instruction();
-
+    
     %decoder_fields
-
+    
+    /**
+     * The constructor.
+     * @param memory the memory context which will be used to read instructions
+     */
     public %decoder_class(IMemoryContext memory) {
         this.memory = memory;
     }
     
+    /**
+     * Decodes one instruction.
+     * @param memoryPosition the address of the start of the instruction
+     * @return the decoded instruction object
+     * @throws InvalidInstructionException when decoding is not successful
+     */
     @Override
     public Instruction decode(int memoryPosition) throws InvalidInstructionException {
         this.memoryPosition = memoryPosition;
@@ -23,6 +37,12 @@ class %decoder_class implements IDecoder {
         return instruction;
     }
     
+    /**
+     * Reads at most one unit (byte) of the current instruction.
+     * @param start the number of bits from the start of the current instruction
+     * @param length the number of bits to read
+     * @return the bits read
+     */
     private byte read(int start, int length) {
         if (start + length > 8 * bytesRead) {
             instructionBytes[bytesRead++] = (Byte) memory.read(memoryPosition++);
@@ -40,6 +60,12 @@ class %decoder_class implements IDecoder {
         return (byte) (result | (instructionBytes[endByte] & endMask) >> (8 - endOffset));
     }
 
+    /**
+     * Reads an arbitrary number of bits of the current instruction.
+     * @param start the number of bits from the start of the current instruction
+     * @param length the number of bits to read
+     * @return the bytes read
+     */
     private byte[] getValue(int start, int length) {
         int byteCount = (length - 1) / 8 + 1;
         byte[] result = new byte[byteCount];
