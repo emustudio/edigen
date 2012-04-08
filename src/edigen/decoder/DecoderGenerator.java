@@ -17,15 +17,11 @@
  */
 package edigen.decoder;
 
-import edigen.ConvertPass;
-import edigen.NamePass;
 import edigen.SemanticException;
 import edigen.decoder.tree.Decoder;
 import edigen.parser.ParseException;
 import edigen.parser.Parser;
-import edigen.tree.SimpleNode;
 import edigen.util.Template;
-import edigen.util.TreePrinter;
 import java.io.*;
 import java.util.Map;
 
@@ -89,22 +85,7 @@ public class DecoderGenerator {
     private void parse(Reader specification) throws ParseException, SemanticException {
         // input file -> parse tree
         Parser p = new Parser(specification);
-        SimpleNode rootNode = p.parse();
-
-        if (debug)
-            new TreePrinter(debugStream).dump(rootNode);
-
-        // parse tree -> customized tree containing only rules fo far
-        decoder = new Decoder();
-        NamePass namePass = new NamePass(decoder);
-        namePass.checkNode(rootNode);
-
-        if (debug)
-            decoder.dump(debugStream);
-
-        // parse tree -> fully-populated customized tree
-        ConvertPass converter = new ConvertPass(decoder);
-        rootNode.jjtAccept(converter, null);
+        decoder = p.parse();
 
         if (debug)
             decoder.dump(debugStream);

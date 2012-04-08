@@ -1,0 +1,317 @@
+/*
+ * Copyright (C) 2011 Matúš Sulír
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+options {
+    STATIC = false;
+}
+
+
+PARSER_BEGIN(Parser)
+package edigen.parser;
+
+import edigen.decoder.tree.*;
+import edigen.util.BitSequence;
+import java.util.*;
+
+public class Parser {
+    public Decoder parse() throws ParseException {
+        try {
+            return Start();
+        } catch(TokenMgrError ex) {
+            throw new ParseException(ex.getMessage());
+        }
+    }
+}
+PARSER_END(Parser)
+
+
+// One-line comment
+<*> SKIP :
+{
+    <"#" (~["\n", "\r"])*>
+}
+
+// White characters
+<*> SKIP :
+{
+    " " | "\n" | "\r" | "\t"
+}
+
+// Operators
+TOKEN :
+{
+    <EQUALS: "=">
+  | <COMMA: ",">
+  | <SEMICOLON: ";">
+  | <COLON: ":">
+  | <OR: "|">
+  | <PART_SEPARATOR: "%%">
+}
+
+// Identifiers and literals
+TOKEN :
+{
+    <ID: (["A"-"Z", "a"-"z", "_"])+ (["A"-"Z", "a"-"z", "_", "0"-"9"])*>
+  | <STRING: "\"" (~["\"", "\n", "\r"])* "\"">
+  | <HEX_NUMBER: "0x" (["0"-"9", "A"-"F", "a"-"f"])+>
+  | <BIN_NUMBER: ("0" | "1")+>
+}
+
+// Decimal numbers can be located only inside parentheses
+TOKEN :
+{
+    <LEFT_PAR: "("> : IN_PARENTHESES
+}
+
+<IN_PARENTHESES> TOKEN :
+{
+    <RIGHT_PAR: ")"> : DEFAULT
+  | <DEC_NUMBER: (["1"-"9"])+ (["0"-"9"])*>
+}
+
+<*> TOKEN :
+{
+    <UNEXPECTED: ~[]>
+}
+
+
+// Parser grammar
+Decoder Start():
+{
+    Decoder decoder;
+}
+{
+    decoder = DecoderPart()
+    <PART_SEPARATOR>
+    DisassemblerPart()
+    <EOF>
+    { return decoder; }
+}
+
+Decoder DecoderPart():
+{
+    Decoder decoder;
+    List<Rule> rules;
+}
+{
+    { decoder = new Decoder(); }
+    (
+        rules = DecoderRule()
+        {
+            for (Rule rule : rules)
+                decoder.addRule(rule);
+        }
+        <SEMICOLON>
+    )+
+    { return decoder; }
+}
+
+List<Rule> DecoderRule():
+{
+    List<Rule> rules;
+    List<Variant> variants;
+}
+{
+    rules = RuleNameSet()
+    <EQUALS>
+    variants = VariantSet()
+    {
+        for (Rule rule : rules)
+            for (Variant variant : variants)
+                rule.addChild(variant);
+        
+        return rules;
+    }
+}
+
+List<Rule> RuleNameSet():
+{
+    String name;
+    List<Rule> rules = new ArrayList<Rule>();
+}
+{
+    name = RuleName()
+    { rules.add(new Rule(name)); }
+    (
+        <COMMA>
+        name = RuleName()
+        { rules.add(new Rule(name)); }
+    )*
+    { return rules; }
+}
+
+String RuleName():
+{
+    Token name;
+}
+{
+    name = <ID>
+    { return name.image; }
+}
+
+List<Variant> VariantSet():
+{
+    Variant variant;
+    List<Variant> variants = new ArrayList<Variant>();
+}
+{
+    variant = Variant()
+    {variants.add(variant);}
+    (
+        <OR>
+        variant = Variant()
+        {variants.add(variant);}
+    )*
+    { return variants; }
+}
+
+Variant Variant():
+{
+    Variant variant = new Variant();
+    String value;
+}
+{
+    [LOOKAHEAD(2) (
+        value = ReturnSubRule()
+            { variant.setReturnSubrule(new Subrule(new Rule(value))); }
+        | value = ReturnString()
+            { variant.setReturnString(value); }
+    ) <COLON>]
+    PatternSet(variant)
+    { return variant; }
+}
+
+String ReturnSubRule():
+{
+    Token name;
+}
+{
+    name = <ID>
+    { return name.image; }
+}
+
+String ReturnString():
+{
+    Token string;
+}
+{
+    string = <STRING>
+    { return string.image.replace("\"", ""); }
+}
+
+void PatternSet(Variant variant):
+{
+    Subrule subrule;
+    Pattern constant;
+}
+{
+    (
+        subrule = SubRule()
+            { variant.addChild(subrule); }
+        | constant = HexConstant()
+            { variant.addChild(constant); }
+        | constant = BinConstant()
+            { variant.addChild(constant); }
+    )+
+}
+
+Subrule SubRule():
+{
+    String name;
+    Integer length = null;
+}
+{
+    name = SubRuleName()
+    [<LEFT_PAR>
+        length = SubRuleLength()
+    <RIGHT_PAR>]
+    {
+        if (length == null)
+            return new Subrule(new Rule(name));
+        else
+            return new Subrule(new Rule(name), length);
+    }
+}
+
+String SubRuleName():
+{
+    Token name;
+}
+{
+    name = <ID>
+    { return name.image; }
+}
+
+Integer SubRuleLength():
+{
+    Token length;
+}
+{
+    length = <DEC_NUMBER>
+    { return Integer.parseInt(length.image); }
+}
+
+Pattern HexConstant():
+{
+    Token hex;
+}
+{
+    hex = <HEX_NUMBER>
+    { return new Pattern(BitSequence.fromHexadecimal(hex.image.substring(2))); }
+}
+
+Pattern BinConstant():
+{
+    Token bin;
+}
+{
+    bin = <BIN_NUMBER>
+    { return new Pattern(BitSequence.fromBinary(bin.image)); }
+}
+
+void DisassemblerPart(): {}
+{
+    (DisassemblerRule() <SEMICOLON>)+
+}
+
+void DisassemblerRule(): {}
+{
+    Format() <EQUALS> ArgumentSet()
+}
+
+void ArgumentSet(): {}
+{
+    (Argument())+
+}
+
+void Format():
+{
+    Token t;
+}
+{
+    t = <STRING>
+    {  }
+}
+
+void Argument():
+{
+    Token t;
+}
+{
+    t = <ID>
+    {  }
+}
