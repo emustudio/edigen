@@ -20,35 +20,13 @@ package edigen.decoder.tree;
 import edigen.SemanticException;
 import edigen.decoder.TreeNode;
 import edigen.decoder.Visitor;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * The root node of the instruction decoder generator tree.
  * @author Matúš Sulír
  */
 public class Decoder extends TreeNode {
-    
-    private Map<String, Rule> rules = new HashMap<String, Rule>();
-    
-    /**
-     * Adds a new rule to the decoder as a child.
-     * @param rule the rule object
-     */
-    public void addRule(Rule rule) {
-        rules.put(rule.getName(), rule);
-        addChild(rule);
-    }
-    
-    /**
-     * Returns a rule identified by the particular name.
-     * @param name the rule name
-     * @return the rule object
-     */
-    public Rule getRuleByName(String name) {
-        return rules.get(name);
-    }
-    
+
     /**
      * Returns the starting rule.
      * 
@@ -62,6 +40,7 @@ public class Decoder extends TreeNode {
     /**
      * Accepts the visitor.
      * @param visitor the visitor object
+     * @throws SemanticException depends on the specific visitor
      */
     @Override
     public void accept(Visitor visitor) throws SemanticException {

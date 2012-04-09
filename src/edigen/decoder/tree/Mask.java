@@ -30,6 +30,7 @@ import edigen.util.BitSequence;
 public class Mask extends TreeNode {
     
     private BitSequence bits;
+    private Integer start;
     
     /**
      * Constructs the mask.
@@ -46,6 +47,24 @@ public class Mask extends TreeNode {
     public BitSequence getBits() {
         return this.bits;
     }
+
+    /**
+     * Returns the starting offset relative to the variant start.
+     * 
+     * The result is null if it is not yet determined.
+     * @return the starting offset, in bits
+     */
+    public Integer getStart() {
+        return start;
+    }
+
+    /**
+     * Sets the starting offset relative to the variant start.
+     * @param start the starting offset, in bits
+     */
+    public void setStart(int start) {
+        this.start = start;
+    }
     
     /**
      * Returns a mask ANDed with an another mask.
@@ -59,6 +78,7 @@ public class Mask extends TreeNode {
     /**
      * Accepts the visitor.
      * @param visitor the visitor object
+     * @throws SemanticException depends on the specific visitor
      */
     @Override
     public void accept(Visitor visitor) throws SemanticException {

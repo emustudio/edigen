@@ -97,6 +97,7 @@ public class DecoderGenerator {
      */
     private void transform() throws SemanticException {
         Visitor[] transforms = {
+            new ResolveNamesVisitor(),
             new JoinVisitor(),
             new SplitVisitor(),
             new MoveVariantVisitor(),
@@ -165,7 +166,7 @@ public class DecoderGenerator {
             template.setVariable("package_spec", "");
         
         template.setVariable("decoder_class", settings.get("decoder_class"));
-        template.setVariable("root_rule", decoder.getRootRule().getName());
+        template.setVariable("root_rule", decoder.getRootRule().getMethodName());
         
         Writer fields = new StringWriter();
         decoder.accept(new GenerateFieldsVisitor(fields));

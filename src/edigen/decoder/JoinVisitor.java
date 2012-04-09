@@ -34,31 +34,19 @@ public class JoinVisitor extends Visitor {
 
     private BitSequence maskBits;
     private BitSequence patternBits;
-    private String variantReturn;
     
     /**
      * Traverses all children nodes and adds one mask and pattern as a result
      * of joining.
      * @param variant the variant node
-     * @throws SemanticException when the returning subrule is not found on the
-     *         right side
+     * @throws SemanticException never
      */
     @Override
     public void visit(Variant variant) throws SemanticException {
         maskBits = new BitSequence();
         patternBits = new BitSequence();
         
-        if (variant.getReturnSubrule() != null)
-            variantReturn = variant.getReturnSubrule().getName();
-        else
-            variantReturn = null;
-        
         variant.acceptChildren(this);
-        
-        if (variantReturn != null && variant.getReturnSubrule().getStart() == null) {
-            throw new SemanticException("Returning subrule " + variantReturn +
-                    " was not found on the right side of the variant");
-        }
         
         variant.addChild(new Mask(maskBits));
         variant.addChild(new Pattern(patternBits));
@@ -87,9 +75,8 @@ public class JoinVisitor extends Visitor {
      * because these bits will not be checked against a pattern during
      * decoding.</p>
      * 
-     * <p>If the subrule has the same name as the subrule which the parent
-     * variant returns, it is assocated with the variant and removed from the
-     * tree.</p>
+     * <p>If the subrule does not refer to a rule (it is used only to return
+     * a value), it is removed from the tree.</p>
      * @param subrule the subrule node
      */
     @Override
@@ -103,9 +90,7 @@ public class JoinVisitor extends Visitor {
             patternBits.append(new BitSequence(bitCount, false));
         }
         
-        if (variantReturn != null && subrule.getName().equals(variantReturn)) {
-            ((Variant) subrule.getParent()).setReturnSubrule(subrule);
+        if (subrule.getRule() == null)
             subrule.remove();
-        }
     }
 }

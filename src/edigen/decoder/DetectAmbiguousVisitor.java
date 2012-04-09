@@ -117,7 +117,7 @@ public class DetectAmbiguousVisitor extends Visitor {
                     for (TreeNode pattern2 : mask2.getChildren()) {
                         if (isAmbiguous((Pattern) pattern1, (Pattern) pattern2, commonMask))
                             throw new SemanticException("Ambiguous variants "
-                                + "detected in rule \"" + currentRule.getName() + "\"");
+                                + "detected in rule \"" + currentRule.getLabel() + '"');
                     }
                 }
             }

@@ -58,6 +58,7 @@ public class Pattern extends TreeNode {
     /**
      * Accepts the visitor.
      * @param visitor the visitor object
+     * @throws SemanticException depends on the specific visitor
      */
     @Override
     public void accept(Visitor visitor) throws SemanticException {

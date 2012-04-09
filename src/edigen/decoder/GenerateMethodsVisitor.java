@@ -61,14 +61,17 @@ public class GenerateMethodsVisitor extends Visitor {
         currentRule = rule;
         isDefaultCase = false;
         
-        put("private void " + currentRule.getName() + "(int start) throws InvalidInstructionException {");
-        put("int position = start;");
+        String secondParameter = rule.hasOnlyOneName() ? "" : ", int rule";
+        
+        put("private void " + currentRule.getMethodName() + "(int start"
+                + secondParameter + ") throws InvalidInstructionException {");
         rule.acceptChildren(this);
         put("}", true);
     }
 
     /**
-     * Writes the <code>switch</code> statement (if the mask is not zero-only).
+     * Writes the unit reading code and if the mask is not zero-only, also
+     * writes the <code>switch</code> statement.
      * @param mask the mask node
      * @throws SemanticException never
      */
@@ -77,8 +80,8 @@ public class GenerateMethodsVisitor extends Visitor {
         boolean isZero = mask.getBits().containsOnly(false);
         
         if (!isDefaultCase) {
-            put("unit = read(position, " + mask.getBits().getLength() + ");");
-            put("position += " + mask.getBits().getLength() + ";", true);
+            put("unit = read(start + " + mask.getStart()
+                    + ", " + mask.getBits().getLength() + ");", true);
         }
         
         isDefaultCase = false;
@@ -115,7 +118,7 @@ public class GenerateMethodsVisitor extends Visitor {
     }
 
     /**
-     * Writes the assignment for the recognized variant.
+     * Writes the code for the recognized variant.
      * @param variant the variant node
      * @throws SemanticException never
      */
@@ -129,17 +132,32 @@ public class GenerateMethodsVisitor extends Visitor {
         else if (subrule != null)
             value = "getValue(start + " + subrule.getStart() + ", " + subrule.getLength() + ")";
         
-        put("instruction.addRule(" + currentRule.getCode() + ", " + value + ");");
+        String field = "rule";
+        
+        if (currentRule.hasOnlyOneName())
+            field = currentRule.getFieldName(currentRule.getNames().get(0));
+        
+        put("instruction.addRule(" + field + ", " + value + ");");
         variant.acceptChildren(this);
     }
 
     /**
      * Writes the method invocation.
+     * 
+     * If the rule has multiple names, one method is associated with multiple
+     * rule names. So the particular field (rule name) must be passed as an
+     * argument.
      * @param subrule the subrule node
      */
     @Override
     public void visit(Subrule subrule) {
-        put(subrule.getName() + "(start + " + subrule.getStart() + ");");
+        String fieldToWrite = "";
+        
+        if (!subrule.getRule().hasOnlyOneName())
+            fieldToWrite = ", " + subrule.getFieldName();
+        
+        put(subrule.getRule().getMethodName() + "(start + " + subrule.getStart()
+                + fieldToWrite + ");");
     }
     
     /**

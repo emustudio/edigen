@@ -105,53 +105,51 @@ Decoder Start():
 Decoder DecoderPart():
 {
     Decoder decoder;
-    List<Rule> rules;
+    Rule rule;
 }
 {
     { decoder = new Decoder(); }
     (
-        rules = DecoderRule()
-        {
-            for (Rule rule : rules)
-                decoder.addRule(rule);
-        }
+        rule = DecoderRule()
+        { decoder.addChild(rule); }
         <SEMICOLON>
     )+
     { return decoder; }
 }
 
-List<Rule> DecoderRule():
+Rule DecoderRule():
 {
-    List<Rule> rules;
+    List<String> names;
     List<Variant> variants;
+    Rule rule;
 }
 {
-    rules = RuleNameSet()
+    names = RuleNameSet()
     <EQUALS>
     variants = VariantSet()
     {
-        for (Rule rule : rules)
-            for (Variant variant : variants)
-                rule.addChild(variant);
+        rule = new Rule(names);
+        for (Variant variant : variants)
+            rule.addChild(variant);
         
-        return rules;
+        return rule;
     }
 }
 
-List<Rule> RuleNameSet():
+List<String> RuleNameSet():
 {
     String name;
-    List<Rule> rules = new ArrayList<Rule>();
+    List<String> names = new ArrayList<String>();
 }
 {
     name = RuleName()
-    { rules.add(new Rule(name)); }
+    { names.add(name); }
     (
         <COMMA>
         name = RuleName()
-        { rules.add(new Rule(name)); }
+        { names.add(name); }
     )*
-    { return rules; }
+    { return names; }
 }
 
 String RuleName():
@@ -187,7 +185,7 @@ Variant Variant():
 {
     [LOOKAHEAD(2) (
         value = ReturnSubRule()
-            { variant.setReturnSubrule(new Subrule(new Rule(value))); }
+            { variant.setReturnSubrule(new Subrule(value)); }
         | value = ReturnString()
             { variant.setReturnString(value); }
     ) <COLON>]
@@ -241,9 +239,9 @@ Subrule SubRule():
     <RIGHT_PAR>]
     {
         if (length == null)
-            return new Subrule(new Rule(name));
+            return new Subrule(name);
         else
-            return new Subrule(new Rule(name), length);
+            return new Subrule(name, length);
     }
 }
 

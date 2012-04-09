@@ -42,9 +42,11 @@ public class SplitVisitor extends Visitor {
     /**
      * Splits the mask and pattern and adds the splitted pieces to the variant.
      * 
-     * The nodes are placed "vertically" - each pattern is a child of the
+     * <p>The nodes are placed "vertically" - each pattern is a child of the
      * corresponding mask and each mask is a child of the previous pattern
-     * (or variant, if there is no previous pattern).
+     * (or variant, if there is no previous pattern).</p>
+     * 
+     * <p>In addition, starting positions of the masks are set.</p>
      * @param variant the variant node
      * @throws SemanticException never
      */
@@ -59,6 +61,8 @@ public class SplitVisitor extends Visitor {
         
         for (int i = 0; i < masks.length; i++) {
             Mask mask = new Mask(masks[i]);
+            mask.setStart(i * BITS_PER_PIECE);
+            
             Pattern pattern = new Pattern(patterns[i]);
             
             parent.addChild(mask);

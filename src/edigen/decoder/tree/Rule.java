@@ -20,6 +20,10 @@ package edigen.decoder.tree;
 import edigen.SemanticException;
 import edigen.decoder.TreeNode;
 import edigen.decoder.Visitor;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * Instruction decoder rule node.
@@ -27,36 +31,72 @@ import edigen.decoder.Visitor;
  */
 public class Rule extends TreeNode {
     
-    private String name;
+    private List<String> names = new ArrayList<String>();
     
     /**
      * Constructs a rule.
-     * @param name the rule name
+     * @param names the list of all names of this rule
      */
-    public Rule(String name) {
-        this.name = name;
+    public Rule(List<String> names) {
+        this.names = names;
+    }
+
+    /**
+     * Returns a list of all names of this rule.
+     * @return the list of names
+     */
+    public List<String> getNames() {
+        return Collections.unmodifiableList(names);
     }
     
     /**
-     * Returns the name of this rule.
-     * @return the name
+     * Returns true if this rule has only one name (not a list of names
+     * separated by commas).
+     * @return true if the rule has only one name, false otherwise
      */
-    public String getName() {
-        return name;
+    public boolean hasOnlyOneName() {
+        return names.size() == 1;
     }
     
     /**
-     * Returns the rule code which will be used as a name of the constant in the
-     * generated code.
-     * @return the rule code
+     * Returns a name of the method which should be generated for this rule.
+     * @return the method name
      */
-    public String getCode() {
-        return name.toUpperCase();
+    public String getMethodName() {
+        return names.get(0);
+    }
+    
+    /**
+     * Returns a list of field names which should be generated for this rule.
+     * @return the list of field names
+     */
+    public String getFieldName(String ruleName) {
+        return ruleName.toUpperCase();
+    }
+
+    /**
+     * Returns a human-readable label of this rule - a name or a list of names
+     * separated by commas.
+     * @return the label
+     */
+    public String getLabel() {
+        Iterator nameIterator = names.iterator();
+        StringBuilder result = new StringBuilder();
+        
+        while (nameIterator.hasNext()) {
+            result.append(nameIterator.next());
+            
+            if (nameIterator.hasNext())
+                result.append(", ");
+        }
+        
+        return result.toString();
     }
     
     /**
      * Accepts the visitor.
      * @param visitor the visitor object
+     * @throws SemanticException depends on the specific visitor
      */
     @Override
     public void accept(Visitor visitor) throws SemanticException {
@@ -69,6 +109,6 @@ public class Rule extends TreeNode {
      */
     @Override
     public String toString() {
-        return "Rule: " + name;
+        return "Rule: " + getLabel();
     }
 }

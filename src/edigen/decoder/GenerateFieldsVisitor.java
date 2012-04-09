@@ -43,13 +43,15 @@ public class GenerateFieldsVisitor extends Visitor {
     }
 
     /**
-     * Writes the constant for the particular rule.
+     * Writes the constants for the particular rule.
      * @param rule the rule node
      */
     @Override
     public void visit(Rule rule) {
-        printer.writeLine("private static final int " + rule.getCode()
-                + " = " + ruleNumber++  + ";");
+        for (String name : rule.getNames()) {
+            printer.writeLine("private static final int "
+                    + rule.getFieldName(name) + " = " + ruleNumber++  + ";");
+        }
     }
     
 }

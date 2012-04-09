@@ -27,17 +27,18 @@ import edigen.decoder.Visitor;
  */
 public class Subrule extends TreeNode {
     
+    private String name;
+    private Integer start;
+    private Integer length;
     private Rule rule;
-    private Integer start = null;
-    private Integer length = null;
     
     /**
      * Constructs the subrule with the specified length.
-     * @param rule the rule which this subrule refers to
-     * @param length the rule length
+     * @param name the subrule name
+     * @param length the subrule length
      */
-    public Subrule(Rule rule, int length) {
-        this.rule = rule;
+    public Subrule(String name, int length) {
+        this.name = name;
         this.length = length;
     }
     
@@ -45,10 +46,28 @@ public class Subrule extends TreeNode {
      * Constructs the subrule with an unspecified length.
      * 
      * Can be located only at the end of a variant.
-     * @param rule the rule which this subrule refers to
+     * @param name the subrule name
      */
-    public Subrule(Rule rule) {
-        this.rule = rule;
+    public Subrule(String name) {
+        this.name = name;
+    }
+
+    /**
+     * Returns the subrule name, as obtained from the input.
+     * @return the subrule name
+     */
+    public String getName() {
+        return name;
+    }
+    
+    /**
+     * Returns the starting offset relative to the variant start.
+     * 
+     * The result is null if it is not yet determined.
+     * @return the starting offset, in bits
+     */
+    public Integer getStart() {
+        return start;
     }
     
     /**
@@ -57,24 +76,6 @@ public class Subrule extends TreeNode {
      */
     public void setStart(int start) {
         this.start = start;
-    }
-    
-    /**
-     * Returns the subrule name, which is the same as the referred rule's name.
-     * @return 
-     */
-    public String getName() {
-        return rule.getName();
-    }
-    
-    /**
-     * Returns the starting offset.
-     * 
-     * The result is null if it is not yet determined.
-     * @return the starting offset, in bits
-     */
-    public Integer getStart() {
-        return start;
     }
     
     /**
@@ -88,8 +89,38 @@ public class Subrule extends TreeNode {
     }
     
     /**
+     * Returns the rule which this subrule refers to.
+     * 
+     * The result is null if the name was not yet resolved or the subrule
+     * does not refer to any rule.
+     * @return the rule object or null
+     */
+    public Rule getRule() {
+        return rule;
+    }
+    
+    /**
+     * Specifies which rule this subrule refers to.
+     * 
+     * Used during name resolution.
+     * @param rule the rule object
+     */
+    public void setRule(Rule rule) {
+        this.rule = rule;
+    }
+    
+    /**
+     * Returns the field name which should be generated for this subrule.
+     * @return the field name
+     */
+    public String getFieldName() {
+        return rule.getFieldName(name);
+    }
+    
+    /**
      * Accepts the visitor.
      * @param visitor the visitor object
+     * @throws SemanticException depends on the specific visitor
      */
     @Override
     public void accept(Visitor visitor) throws SemanticException {
