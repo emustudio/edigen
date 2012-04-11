@@ -15,26 +15,27 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package edigen.disasm.tree;
+package edigen.tree;
 
 import edigen.SemanticException;
-import edigen.decoder.TreeNode;
-import edigen.decoder.Visitor;
+import edigen.Visitor;
 
 /**
- * The disassembler value node - bound to an instruction decoder rule name.
+ * A node representing a textual instruction format (used in a disassembler).
+ * 
+ * Consists of a format string and a list of values.
  * @author Matúš Sulír
  */
-public class Value extends TreeNode {
+public class Format extends TreeNode {
     
-    private String name;
+    private String formatString;
 
     /**
-     * Constructs the value.
-     * @param name the rule name
+     * Constructs the format node.
+     * @param formatString the format string
      */
-    public Value(String name) {
-        this.name = name;
+    public Format(String formatString) {
+        this.formatString = formatString;
     }
     
     /**
@@ -53,6 +54,6 @@ public class Value extends TreeNode {
      */
     @Override
     public String toString() {
-        return "Value: " + name;
+        return "Format: \"" + formatString + '"';
     }
 }

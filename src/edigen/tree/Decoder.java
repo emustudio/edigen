@@ -15,44 +15,25 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package edigen.decoder.tree;
+package edigen.tree;
 
 import edigen.SemanticException;
-import edigen.decoder.TreeNode;
-import edigen.decoder.Visitor;
-import edigen.util.BitSequence;
+import edigen.Visitor;
 
 /**
- * Pattern node - a sequence of bits used during instruction decoding.
+ * The root node of the instruction decoder subtree.
  * @author Matúš Sulír
  */
-public class Pattern extends TreeNode {
-    
-    private BitSequence bits;
-    
+public class Decoder extends TreeNode {
+
     /**
-     * Constructs a pattern.
-     * @param bits the bit sequence
+     * Returns the starting rule.
+     * 
+     * This is the first rule in the input file.
+     * @return the root rule object
      */
-    public Pattern(BitSequence bits) {
-        this.bits = bits;
-    }
-    
-    /**
-     * Returns the bit sequence.
-     * @return the bit sequence
-     */
-    public BitSequence getBits() {
-        return this.bits;
-    }
-    
-    /**
-     * Returns a pattern ANDed with the specified mask.
-     * @param mask the mask
-     * @return the resulting pattern
-     */
-    public Pattern and(Mask mask) {
-        return new Pattern(bits.and(mask.getBits()));
+    public Rule getRootRule() {
+        return (Rule) getChild(0);
     }
     
     /**
@@ -66,11 +47,11 @@ public class Pattern extends TreeNode {
     }
     
     /**
-     * Returns the pattern as a string in binary notation.
+     * Returns a string representation of the object.
      * @return the string
      */
     @Override
     public String toString() {
-        return "Pattern: " + bits.toString();
+        return "Decoder";
     }
 }

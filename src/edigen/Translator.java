@@ -17,6 +17,7 @@
  */
 package edigen;
 
+import edigen.tree.Specification;
 import static edigen.Setting.*;
 import edigen.decoder.DecoderGenerator;
 import edigen.disasm.DisassemblerGenerator;

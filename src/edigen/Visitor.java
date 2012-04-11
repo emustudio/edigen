@@ -15,10 +15,11 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package edigen.decoder;
+package edigen;
 
+import edigen.tree.TreeNode;
 import edigen.SemanticException;
-import edigen.decoder.tree.*;
+import edigen.tree.*;
 
 /**
  * Generic tree node visitor.
@@ -36,24 +37,40 @@ public abstract class Visitor {
     public void visit(Decoder decoder) throws SemanticException {
         decoder.acceptChildren(this);
     }
-    
-    public void visit(Rule rule) throws SemanticException {
-        rule.acceptChildren(this);
+
+    public void visit(Disassembler disassembler) throws SemanticException {
+        disassembler.acceptChildren(this);
     }
     
-    public void visit(Variant variant) throws SemanticException {
-        variant.acceptChildren(this);
+    public void visit(Format format) throws SemanticException {
+        format.acceptChildren(this);
+    }
+    
+    public void visit(Mask mask) throws SemanticException {
+        mask.acceptChildren(this);
     }
     
     public void visit(Pattern pattern) throws SemanticException {
         pattern.acceptChildren(this);
     }
-
-    public void visit(Mask mask) throws SemanticException {
-        mask.acceptChildren(this);
+    
+    public void visit(Rule rule) throws SemanticException {
+        rule.acceptChildren(this);
+    }
+    
+    public void visit(Specification specification) throws SemanticException {
+        specification.acceptChildren(this);
     }
     
     public void visit(Subrule subrule) throws SemanticException {
         subrule.acceptChildren(this);
+    }
+    
+    public void visit(Value value) throws SemanticException {
+        value.acceptChildren(this);
+    }
+    
+    public void visit(Variant variant) throws SemanticException {
+        variant.acceptChildren(this);
     }
 }

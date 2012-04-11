@@ -15,11 +15,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package edigen.disasm.tree;
+package edigen.tree;
 
 import edigen.SemanticException;
-import edigen.decoder.TreeNode;
-import edigen.decoder.Visitor;
+import edigen.Visitor;
 
 /**
  * The root node of the disassembler subtree.

@@ -23,9 +23,7 @@ options {
 PARSER_BEGIN(Parser)
 package edigen.parser;
 
-import edigen.Specification;
-import edigen.decoder.tree.*;
-import edigen.disasm.tree.*;
+import edigen.tree.*;
 import edigen.util.BitSequence;
 import java.util.*;
 

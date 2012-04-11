@@ -17,7 +17,7 @@
  */
 package edigen;
 
-import edigen.decoder.TreeNode;
+import edigen.tree.TreeNode;
 import edigen.util.Template;
 import java.io.*;
 

@@ -17,10 +17,12 @@
  */
 package edigen.decoder;
 
+import edigen.Visitor;
+import edigen.tree.TreeNode;
 import edigen.SemanticException;
-import edigen.decoder.tree.Mask;
-import edigen.decoder.tree.Pattern;
-import edigen.decoder.tree.Variant;
+import edigen.tree.Mask;
+import edigen.tree.Pattern;
+import edigen.tree.Variant;
 import edigen.util.BitSequence;
 
 /**

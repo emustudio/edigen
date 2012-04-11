@@ -17,11 +17,13 @@
  */
 package edigen.decoder;
 
+import edigen.Visitor;
+import edigen.tree.TreeNode;
 import edigen.SemanticException;
-import edigen.decoder.tree.Decoder;
-import edigen.decoder.tree.Rule;
-import edigen.decoder.tree.Subrule;
-import edigen.decoder.tree.Variant;
+import edigen.tree.Decoder;
+import edigen.tree.Rule;
+import edigen.tree.Subrule;
+import edigen.tree.Variant;
 import java.util.HashMap;
 import java.util.Map;
 

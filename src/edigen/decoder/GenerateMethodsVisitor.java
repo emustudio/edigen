@@ -17,8 +17,14 @@
  */
 package edigen.decoder;
 
+import edigen.Visitor;
+import edigen.tree.Decoder;
+import edigen.tree.Variant;
+import edigen.tree.Mask;
+import edigen.tree.Subrule;
+import edigen.tree.Rule;
+import edigen.tree.Pattern;
 import edigen.SemanticException;
-import edigen.decoder.tree.*;
 import edigen.util.PrettyPrinter;
 import java.io.Writer;
 

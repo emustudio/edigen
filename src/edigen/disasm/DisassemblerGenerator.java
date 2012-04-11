@@ -19,7 +19,7 @@ package edigen.disasm;
 
 import edigen.Generator;
 import edigen.SemanticException;
-import edigen.Specification;
+import edigen.tree.Specification;
 import edigen.util.Template;
 
 /**

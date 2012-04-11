@@ -17,9 +17,10 @@
  */
 package edigen.decoder;
 
+import edigen.Visitor;
 import edigen.Generator;
 import edigen.SemanticException;
-import edigen.decoder.tree.Decoder;
+import edigen.tree.Decoder;
 import edigen.util.Template;
 import java.io.StringWriter;
 import java.io.Writer;

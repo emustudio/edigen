@@ -15,9 +15,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package edigen.decoder;
+package edigen.tree;
 
 import edigen.SemanticException;
+import edigen.Visitor;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -25,11 +26,12 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
- * A node of the customized tree which will be used for transformation and code
- * generation.
+ * A node of an abstract syntax tree (AST).
  * 
- * One node can have an unlimited number of children. Insertion order is
- * preserved.
+ * <p>The AST will be transformed using the visitor design pattern.</p>
+ * 
+ * <p>One node can have an unlimited number of children. Insertion order is
+ * preserved.</p>
  * @author Matúš Sulír
  */
 public abstract class TreeNode {

@@ -15,28 +15,43 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package edigen.disasm.tree;
+package edigen.tree;
 
 import edigen.SemanticException;
-import edigen.decoder.TreeNode;
-import edigen.decoder.Visitor;
+import edigen.Visitor;
+import edigen.util.BitSequence;
 
 /**
- * A node representing a textual instruction format (used in a disassembler).
- * 
- * Consists of a format string and a list of values.
+ * Pattern node - a sequence of bits used during instruction decoding.
  * @author Matúš Sulír
  */
-public class Format extends TreeNode {
+public class Pattern extends TreeNode {
     
-    private String formatString;
-
+    private BitSequence bits;
+    
     /**
-     * Constructs the format node.
-     * @param formatString the format string
+     * Constructs a pattern.
+     * @param bits the bit sequence
      */
-    public Format(String formatString) {
-        this.formatString = formatString;
+    public Pattern(BitSequence bits) {
+        this.bits = bits;
+    }
+    
+    /**
+     * Returns the bit sequence.
+     * @return the bit sequence
+     */
+    public BitSequence getBits() {
+        return this.bits;
+    }
+    
+    /**
+     * Returns a pattern ANDed with the specified mask.
+     * @param mask the mask
+     * @return the resulting pattern
+     */
+    public Pattern and(Mask mask) {
+        return new Pattern(bits.and(mask.getBits()));
     }
     
     /**
@@ -50,11 +65,11 @@ public class Format extends TreeNode {
     }
     
     /**
-     * Returns a string representation of the object.
+     * Returns the pattern as a string in binary notation.
      * @return the string
      */
     @Override
     public String toString() {
-        return "Format: \"" + formatString + '"';
+        return "Pattern: " + bits.toString();
     }
 }

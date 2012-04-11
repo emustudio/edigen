@@ -15,11 +15,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package edigen;
+package edigen.tree;
 
-import edigen.decoder.TreeNode;
-import edigen.decoder.tree.Decoder;
-import edigen.disasm.tree.Disassembler;
+import edigen.SemanticException;
+import edigen.Visitor;
 
 /**
  * The root node of the specification AST.
@@ -38,6 +37,9 @@ public class Specification extends TreeNode {
     public Specification(Decoder decoder, Disassembler disassembler) {
         this.decoder = decoder;
         this.disassembler = disassembler;
+        
+        addChild(decoder);
+        addChild(disassembler);
     }
 
     /**
@@ -56,4 +58,22 @@ public class Specification extends TreeNode {
         return disassembler;
     }
     
+    /**
+     * Accepts the visitor.
+     * @param visitor the visitor object
+     * @throws SemanticException depends on the specific visitor
+     */
+    @Override
+    public void accept(Visitor visitor) throws SemanticException {
+        visitor.visit(this);
+    }
+    
+    /**
+     * Returns a string representation of the object.
+     * @return the string
+     */
+    @Override
+    public String toString() {
+        return "Specification";
+    }
 }

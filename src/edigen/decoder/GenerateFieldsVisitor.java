@@ -17,7 +17,8 @@
  */
 package edigen.decoder;
 
-import edigen.decoder.tree.Rule;
+import edigen.Visitor;
+import edigen.tree.Rule;
 import edigen.util.PrettyPrinter;
 import java.io.Writer;
 
