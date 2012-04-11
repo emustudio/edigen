@@ -17,6 +17,7 @@
  */
 package edigen.ui;
 
+import edigen.Setting;
 import java.util.*;
 
 /**
@@ -27,7 +28,7 @@ public class CommandLine {
 
     private List<Argument> mandatory = new ArrayList<Argument>();
     private Map<String, Argument> optional = new LinkedHashMap<String, Argument>();
-    private Map<String, String> configuration;
+    private Map<Setting, String> configuration;
     
     /**
      * Constructs the command line parser for the given list of possible
@@ -51,8 +52,8 @@ public class CommandLine {
      * @return the configuration object (a set of key-value pairs)
      * @throws CommandLineException when the arguments are invalid
      */
-    public Map<String, String> parse(String[] arguments) throws CommandLineException {
-        configuration = new HashMap<String, String>();
+    public Map<Setting, String> parse(String[] arguments) throws CommandLineException {
+        configuration = new EnumMap<Setting, String>(Setting.class);
         Iterator<Argument> expectedMandatory = mandatory.iterator();
         Iterator<String> allArguments = Arrays.asList(arguments).iterator();
         

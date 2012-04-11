@@ -89,7 +89,7 @@ public class Subrule extends TreeNode {
     }
     
     /**
-     * Returns the rule which this subrule refers to.
+     * Returns the rule to which this subrule refers.
      * 
      * The result is null if the name was not yet resolved or the subrule
      * does not refer to any rule.
@@ -100,7 +100,7 @@ public class Subrule extends TreeNode {
     }
     
     /**
-     * Specifies which rule this subrule refers to.
+     * Specifies to which rule this subrule refers.
      * 
      * Used during name resolution.
      * @param rule the rule object

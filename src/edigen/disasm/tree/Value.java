@@ -15,26 +15,26 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package edigen.decoder.tree;
+package edigen.disasm.tree;
 
 import edigen.SemanticException;
 import edigen.decoder.TreeNode;
 import edigen.decoder.Visitor;
 
 /**
- * The root node of the instruction decoder subtree.
+ * The disassembler value node - bound to an instruction decoder rule name.
  * @author Matúš Sulír
  */
-public class Decoder extends TreeNode {
+public class Value extends TreeNode {
+    
+    private String name;
 
     /**
-     * Returns the starting rule.
-     * 
-     * This is the first rule in the input file.
-     * @return the root rule object
+     * Constructs the value.
+     * @param name the rule name
      */
-    public Rule getRootRule() {
-        return (Rule) getChild(0);
+    public Value(String name) {
+        this.name = name;
     }
     
     /**
@@ -53,6 +53,6 @@ public class Decoder extends TreeNode {
      */
     @Override
     public String toString() {
-        return "Decoder";
+        return "Value: " + name;
     }
 }

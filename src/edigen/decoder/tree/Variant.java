@@ -99,7 +99,7 @@ public class Variant extends TreeNode {
         StringBuilder result = new StringBuilder("Variant");
         
         if (returnType == ReturnType.STRING)
-            result.append(": return \"").append(returnString).append("\"");
+            result.append(": return \"").append(returnString).append('"');
         else if (returnType == ReturnType.SUBRULE)
             result.append(": return ").append(returnSubrule);
         

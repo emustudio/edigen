@@ -17,7 +17,7 @@
  */
 package edigen;
 
-import edigen.decoder.DecoderGenerator;
+import static edigen.Setting.*;
 import edigen.parser.ParseException;
 import edigen.ui.Argument;
 import edigen.ui.CommandLine;
@@ -36,13 +36,18 @@ public class Edigen {
 
     private static final Argument[] ARGUMENTS = {
         new Argument("<specification> - File containing the description of instructions",
-            "specification"),
+            SPECIFICATION),
         new Argument("<decoder_class> - Resulting instruction decoder class name",
-            "decoder_class"),
-        new Argument("o", "Write generated files to <directory>", "output_dir"),
-        new Argument("p", "Make generated classes members of <package>", "package"),
-        new Argument("dt", "Use <template> for instruction decoder instead of the default one", "decoder_template"),
-        new Argument("d", "Enable debug mode", "debug")
+            DECODER_CLASS),
+        new Argument("<disassembler_class> - Resulting disassembler class name",
+            DISASSEMBLER_CLASS),
+        new Argument("o", "Write generated files to <directory>", OUTPUT_DIRECTORY),
+        new Argument("p", "Make generated classes members of <package>", PACKAGE),
+        new Argument("dt", "Use <template> for instruction decoder instead of the default one",
+                DECODER_TEMPLATE),
+        new Argument("at", "Use <template> for disassembler instead of the default one",
+                DISASSEMBLER_TEMPLATE),
+        new Argument("d", "Enable debug mode", DEBUG)
     };
 
     /**
@@ -56,10 +61,10 @@ public class Edigen {
         String help = new Help("java -jar Edigen.jar", commandLine).generate();
         
         try {
-            Map<String, String> configuration = commandLine.parse(args);
+            Map<Setting, String> configuration = commandLine.parse(args);
             
-            DecoderGenerator decoder = new DecoderGenerator(configuration);
-            decoder.generate();
+            Translator generator = new Translator(configuration);
+            generator.translate();
             System.out.println("Instruction decoder successfully generated.");
         } catch (CommandLineException ex) {
             System.out.println("\nError: " + ex.getMessage() + ".\n");

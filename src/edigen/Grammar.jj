@@ -23,12 +23,14 @@ options {
 PARSER_BEGIN(Parser)
 package edigen.parser;
 
+import edigen.Specification;
 import edigen.decoder.tree.*;
+import edigen.disasm.tree.*;
 import edigen.util.BitSequence;
 import java.util.*;
 
 public class Parser {
-    public Decoder parse() throws ParseException {
+    public Specification parse() throws ParseException {
         try {
             return Start();
         } catch(TokenMgrError ex) {
@@ -90,16 +92,17 @@ TOKEN :
 
 
 // Parser grammar
-Decoder Start():
+Specification Start():
 {
     Decoder decoder;
+    Disassembler disasm;
 }
 {
     decoder = DecoderPart()
     <PART_SEPARATOR>
-    DisassemblerPart()
+    disasm = DisassemblerPart()
     <EOF>
-    { return decoder; }
+    { return new Specification(decoder, disasm); }
 }
 
 Decoder DecoderPart():
@@ -281,35 +284,51 @@ Pattern BinConstant():
     { return new Pattern(BitSequence.fromBinary(bin.image)); }
 }
 
-void DisassemblerPart(): {}
+Disassembler DisassemblerPart():
 {
-    (DisassemblerRule() <SEMICOLON>)+
+    Disassembler disasm = new Disassembler();
+    Format format;
+}
+{
+    (
+        format = Format()
+        { disasm.addChild(format); }
+        <SEMICOLON>
+    )+
+    { return disasm; }
 }
 
-void DisassemblerRule(): {}
+Format Format():
 {
-    Format() <EQUALS> ArgumentSet()
+    Format format;
+    String string;
+    Value value;
+}
+{
+    string = FormatString()
+    { format = new Format(string); }
+    <EQUALS>
+    (
+        value = Value()
+        { format.addChild(value); }
+    )+
+    { return format; }
 }
 
-void ArgumentSet(): {}
+String FormatString():
 {
-    (Argument())+
+    Token string;
+}
+{
+    string = <STRING>
+    { return string.image.replace("\"", ""); }
 }
 
-void Format():
+Value Value():
 {
-    Token t;
+    Token name;
 }
 {
-    t = <STRING>
-    {  }
-}
-
-void Argument():
-{
-    Token t;
-}
-{
-    t = <ID>
-    {  }
+    name = <ID>
+    { return new Value(name.image); }
 }

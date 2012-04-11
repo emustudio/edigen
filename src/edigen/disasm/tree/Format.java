@@ -15,26 +15,28 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package edigen.decoder.tree;
+package edigen.disasm.tree;
 
 import edigen.SemanticException;
 import edigen.decoder.TreeNode;
 import edigen.decoder.Visitor;
 
 /**
- * The root node of the instruction decoder subtree.
+ * A node representing a textual instruction format (used in a disassembler).
+ * 
+ * Consists of a format string and a list of values.
  * @author Matúš Sulír
  */
-public class Decoder extends TreeNode {
+public class Format extends TreeNode {
+    
+    private String formatString;
 
     /**
-     * Returns the starting rule.
-     * 
-     * This is the first rule in the input file.
-     * @return the root rule object
+     * Constructs the format node.
+     * @param formatString the format string
      */
-    public Rule getRootRule() {
-        return (Rule) getChild(0);
+    public Format(String formatString) {
+        this.formatString = formatString;
     }
     
     /**
@@ -53,6 +55,6 @@ public class Decoder extends TreeNode {
      */
     @Override
     public String toString() {
-        return "Decoder";
+        return "Format: \"" + formatString + '"';
     }
 }

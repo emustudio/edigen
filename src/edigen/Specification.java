@@ -15,44 +15,45 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package edigen.decoder.tree;
+package edigen;
 
-import edigen.SemanticException;
 import edigen.decoder.TreeNode;
-import edigen.decoder.Visitor;
+import edigen.decoder.tree.Decoder;
+import edigen.disasm.tree.Disassembler;
 
 /**
- * The root node of the instruction decoder subtree.
+ * The root node of the specification AST.
  * @author Matúš Sulír
  */
-public class Decoder extends TreeNode {
+public class Specification extends TreeNode {
+    
+    private Decoder decoder;
+    private Disassembler disassembler;
 
     /**
-     * Returns the starting rule.
-     * 
-     * This is the first rule in the input file.
-     * @return the root rule object
+     * Constructs the specification node.
+     * @param decoder the decoder node
+     * @param disassembler the disassembler node
      */
-    public Rule getRootRule() {
-        return (Rule) getChild(0);
+    public Specification(Decoder decoder, Disassembler disassembler) {
+        this.decoder = decoder;
+        this.disassembler = disassembler;
+    }
+
+    /**
+     * Returns the instruction decoder node.
+     * @return the decoder
+     */
+    public Decoder getDecoder() {
+        return decoder;
+    }
+
+    /**
+     * Returns the disassembler node.
+     * @return the disassembler node
+     */
+    public Disassembler getDisassembler() {
+        return disassembler;
     }
     
-    /**
-     * Accepts the visitor.
-     * @param visitor the visitor object
-     * @throws SemanticException depends on the specific visitor
-     */
-    @Override
-    public void accept(Visitor visitor) throws SemanticException {
-        visitor.visit(this);
-    }
-    
-    /**
-     * Returns a string representation of the object.
-     * @return the string
-     */
-    @Override
-    public String toString() {
-        return "Decoder";
-    }
 }

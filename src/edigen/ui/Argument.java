@@ -17,6 +17,7 @@
  */
 package edigen.ui;
 
+import edigen.Setting;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -52,14 +53,14 @@ public class Argument {
     private String option;
     private String value;
     private String description;
-    private String key;
+    private Setting key;
 
     /**
      * Constructs an unnamed mandatory argument.
      * @param description the description used in the help text
      * @param key the key to which the recognized value will be later assigned
      */
-    public Argument(String description, String key) {
+    public Argument(String description, Setting key) {
         type = Type.MANDATORY;
         option = "";
         
@@ -80,7 +81,7 @@ public class Argument {
      * @param description the description used in the help text
      * @param key the key to which the recognized value will be later assigned
      */
-    public Argument(String option, String description, String key) {
+    public Argument(String option, String description, Setting key) {
         Matcher matcher = HELP_VALUE.matcher(description);
         
         if (matcher.find()) {
@@ -135,7 +136,7 @@ public class Argument {
      * Returns the key to which the recognized value will be later assigned.
      * @return the key
      */
-    public String getKey() {
+    public Setting getKey() {
         return key;
     }
 }
