@@ -1,0 +1,65 @@
+%auto_gen_warning
+%package_spec
+
+/**
+ * The disassembler.
+ */
+class %disasm_class extends SimpleDisassembler {
+
+    private IMemoryContext memory;
+    private IDecoder decoder;
+
+    /**
+     * The constructor.
+     * @param memory the memory context which will be used to read instructions
+     * @param decoder the decoder to use to decode instructions
+     */
+    public %disasm_class(IMemoryContext memory, IDecoder decoder) {
+        this.memory = memory;
+        this.decoder = decoder;
+    }
+    
+    /**
+     * Disassembles an instruction.
+     * @param memoryLocation the starting address of the instruction
+     * @return the disassembled instruction
+     */
+    @Override
+    public CPUInstruction disassemble(int memoryLocation) {
+        String mnemonic;
+        String code;
+        
+        try {
+            Instruction instruction = decoder.decode(memoryLocation);
+            mnemonic = "";
+            
+            StringBuilder codeBuilder = new StringBuilder();
+            
+            for (byte number : instruction.getContent()) {
+                codeBuilder.append(String.format("%02X ", number));
+            }
+            
+            code = codeBuilder.toString();
+        } catch (InvalidInstructionException ex) {
+            mnemonic = "unknown";
+            code = String.format("%02X", (Byte) memory.read(memoryLocation));
+        }
+        
+        return new CPUInstruction(memoryLocation, mnemonic, code);
+    }
+    
+    /**
+     * Returns an address of the instruction located right after the current
+     * instruction.
+     * @param memoryLocation the starting address of the current instruction
+     * @return the starting address of the next instruction
+     */
+    @Override
+    public int getNextInstructionLocation(int memoryLocation) {
+        try {
+            return decoder.decode(memoryLocation).getEndLocation() + 1;
+        } catch (InvalidInstructionException ex) {
+            return memoryLocation + 1;
+        }
+    }
+}

@@ -17,12 +17,12 @@
  */
 package edigen;
 
-import edigen.tree.Specification;
 import static edigen.Setting.*;
 import edigen.decoder.DecoderGenerator;
 import edigen.disasm.DisassemblerGenerator;
 import edigen.parser.ParseException;
 import edigen.parser.Parser;
+import edigen.tree.Specification;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -66,7 +66,7 @@ public class Translator {
             if (settings.containsKey(DEBUG))
                 specification.dump(DEBUG_STREAM);
 
-            Generator decoder = new DecoderGenerator(specification.getDecoder(),
+            Generator decoder = new DecoderGenerator(specification,
                     settings.get(DECODER_CLASS));
             decoder.setTemplateFile(settings.get(DECODER_TEMPLATE));
             

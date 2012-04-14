@@ -38,7 +38,6 @@ public abstract class Generator {
      * Constructs the part of the generator.
      * @param defaultTemplate the path in the JAR file to the template used if
      *        no specific template is configured
-     * @param className the name of the class to generate
      */
     protected Generator(String defaultTemplate, String className) {
         this.defaultTemplate = defaultTemplate;
@@ -122,8 +121,6 @@ public abstract class Generator {
             template.setVariable("package_spec", "package " + packageName + ";");
         else
             template.setVariable("package_spec", "");
-        
-        template.setVariable("decoder_class", className);
     }
     
     /**

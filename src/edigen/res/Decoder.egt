@@ -1,6 +1,8 @@
 %auto_gen_warning
 %package_spec
 
+import java.util.Arrays;
+
 /**
  * The instruction decoder.
  */
@@ -10,7 +12,7 @@ class %decoder_class implements IDecoder {
     private byte unit;
     private byte[] instructionBytes = new byte[128];
     private int bytesRead;
-    private Instruction instruction = new Instruction();
+    private Instruction instruction;
     
     %decoder_fields
     
@@ -23,7 +25,7 @@ class %decoder_class implements IDecoder {
     }
     
     /**
-     * Decodes one instruction.
+     * Decodes an instruction.
      * @param memoryPosition the address of the start of the instruction
      * @return the decoded instruction object
      * @throws InvalidInstructionException when decoding is not successful
@@ -32,11 +34,13 @@ class %decoder_class implements IDecoder {
     public Instruction decode(int memoryPosition) throws InvalidInstructionException {
         this.memoryPosition = memoryPosition;
         bytesRead = 0;
-        instruction.reset();
+
+        instruction = new Instruction(memoryPosition);
         %root_rule(0);
+        instruction.setContent(Arrays.copyOfRange(instructionBytes, 0, bytesRead));
         return instruction;
     }
-    
+
     /**
      * Reads at most one unit (byte) of the current instruction.
      * @param start the number of bits from the start of the current instruction

@@ -17,10 +17,11 @@
  */
 package edigen.decoder;
 
-import edigen.Visitor;
 import edigen.Generator;
 import edigen.SemanticException;
+import edigen.Visitor;
 import edigen.tree.Decoder;
+import edigen.tree.Specification;
 import edigen.util.Template;
 import java.io.StringWriter;
 import java.io.Writer;
@@ -32,16 +33,21 @@ import java.io.Writer;
  */
 public class DecoderGenerator extends Generator {
 
+    private Specification specification;
     private Decoder decoder;
+    private String className;
 
     /**
      * Constructs the instruction decoder generator.
-     * @param decoder the decoder node
+     * @param specification the specification node
      * @param className the name of the resulting class
      */
-    public DecoderGenerator(Decoder decoder, String className) {
+    public DecoderGenerator(Specification specification, String className) {
         super("/edigen/res/Decoder.egt", className);
-        this.decoder = decoder;
+        
+        this.specification = specification;
+        this.decoder = specification.getDecoder();
+        this.className = className;
     }
     
     /**
@@ -50,8 +56,9 @@ public class DecoderGenerator extends Generator {
      */
     @Override
     public void transform() throws SemanticException {
+        specification.accept(new ResolveNamesVisitor());
+        
         Visitor[] transforms = {
-            new ResolveNamesVisitor(),
             new JoinVisitor(),
             new SplitVisitor(),
             new MoveVariantVisitor(),
@@ -75,6 +82,7 @@ public class DecoderGenerator extends Generator {
     protected void fillTemplate(Template template) {
         super.fillTemplate(template);
         
+        template.setVariable("decoder_class", className);
         template.setVariable("root_rule", decoder.getRootRule().getMethodName());
         
         try {

@@ -19,6 +19,7 @@ package edigen.disasm;
 
 import edigen.Generator;
 import edigen.SemanticException;
+import edigen.Visitor;
 import edigen.tree.Specification;
 import edigen.util.Template;
 
@@ -29,6 +30,7 @@ import edigen.util.Template;
 public class DisassemblerGenerator extends Generator {
 
     private Specification specification;
+    private String className;
 
     /**
      * Constructs the disassembler generator.
@@ -37,7 +39,9 @@ public class DisassemblerGenerator extends Generator {
      */
     public DisassemblerGenerator(Specification specification, String className) {
         super("/edigen/res/Disassembler.egt", className);
+        
         this.specification = specification;
+        this.className = className;
     }
     
     /**
@@ -46,7 +50,7 @@ public class DisassemblerGenerator extends Generator {
      */
     @Override
     public void transform() throws SemanticException {
-        
+
     }
 
     /**
@@ -56,6 +60,8 @@ public class DisassemblerGenerator extends Generator {
     @Override
     protected void fillTemplate(Template template) {
         super.fillTemplate(template);
+        
+        template.setVariable("disasm_class", className);
     }
     
 }

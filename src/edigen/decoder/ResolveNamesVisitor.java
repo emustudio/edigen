@@ -17,13 +17,9 @@
  */
 package edigen.decoder;
 
-import edigen.Visitor;
-import edigen.tree.TreeNode;
 import edigen.SemanticException;
-import edigen.tree.Decoder;
-import edigen.tree.Rule;
-import edigen.tree.Subrule;
-import edigen.tree.Variant;
+import edigen.Visitor;
+import edigen.tree.*;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -88,6 +84,11 @@ public class ResolveNamesVisitor extends Visitor {
         
         if (returnSubrule != null && subrule.getName().equals(returnSubrule.getName()))
             returnSubrule = subrule;
+    }
+
+    @Override
+    public void visit(Value value) {
+        value.setRule(rules.get(value.getName()));
     }
     
 }

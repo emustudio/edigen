@@ -27,6 +27,7 @@ import edigen.Visitor;
 public class Value extends TreeNode {
     
     private String name;
+    private Rule rule;
 
     /**
      * Constructs the value.
@@ -34,6 +35,18 @@ public class Value extends TreeNode {
      */
     public Value(String name) {
         this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public Rule getRule() {
+        return rule;
+    }
+
+    public void setRule(Rule rule) {
+        this.rule = rule;
     }
     
     /**
