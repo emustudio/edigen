@@ -17,13 +17,9 @@
  */
 package edigen.decoder;
 
-import edigen.Visitor;
-import edigen.tree.TreeNode;
 import edigen.SemanticException;
-import edigen.tree.Mask;
-import edigen.tree.Pattern;
-import edigen.tree.Rule;
-import edigen.tree.Variant;
+import edigen.Visitor;
+import edigen.tree.*;
 
 /**
  * A visitor which moves the variant nodes to the bottom of the tree.

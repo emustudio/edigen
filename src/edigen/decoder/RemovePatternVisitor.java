@@ -17,10 +17,10 @@
  */
 package edigen.decoder;
 
-import edigen.Visitor;
-import edigen.tree.TreeNode;
 import edigen.SemanticException;
+import edigen.Visitor;
 import edigen.tree.Mask;
+import edigen.tree.TreeNode;
 
 /**
  * A visitor which removes patterns which are children of zero-only masks.

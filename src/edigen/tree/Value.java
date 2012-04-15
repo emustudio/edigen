@@ -37,16 +37,36 @@ public class Value extends TreeNode {
         this.name = name;
     }
 
+    /**
+     * Returns the name, as obtained from the input.
+     * @return the name
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Returns the rule associated with this value.
+     * @return the rule object
+     */
     public Rule getRule() {
         return rule;
     }
 
+    /**
+     * Sets the rule associated with this value.
+     * @param rule the rule object
+     */
     public void setRule(Rule rule) {
         this.rule = rule;
+    }
+    
+    /**
+     * Returns the field name which should be generated for this value.
+     * @return the field name
+     */
+    public String getFieldName() {
+        return rule.getFieldName(name);
     }
     
     /**

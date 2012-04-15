@@ -17,8 +17,8 @@
  */
 package edigen.decoder;
 
-import edigen.Visitor;
 import edigen.SemanticException;
+import edigen.Visitor;
 import edigen.tree.Mask;
 import edigen.tree.Pattern;
 import edigen.tree.Subrule;

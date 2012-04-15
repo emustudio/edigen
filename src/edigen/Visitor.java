@@ -17,8 +17,6 @@
  */
 package edigen;
 
-import edigen.tree.TreeNode;
-import edigen.SemanticException;
 import edigen.tree.*;
 
 /**
