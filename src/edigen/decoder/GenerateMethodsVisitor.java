@@ -17,14 +17,9 @@
  */
 package edigen.decoder;
 
-import edigen.Visitor;
-import edigen.tree.Decoder;
-import edigen.tree.Variant;
-import edigen.tree.Mask;
-import edigen.tree.Subrule;
-import edigen.tree.Rule;
-import edigen.tree.Pattern;
 import edigen.SemanticException;
+import edigen.Visitor;
+import edigen.tree.*;
 import edigen.util.PrettyPrinter;
 import java.io.Writer;
 
@@ -130,20 +125,23 @@ public class GenerateMethodsVisitor extends Visitor {
      */
     @Override
     public void visit(Variant variant) throws SemanticException {
-        String value = "null";
-        Subrule subrule = variant.getReturnSubrule();
+        if (variant.returns()) {
+            String value;
+            
+            if (variant.getReturnString() != null)
+                value = "\"" + variant.getReturnString() + "\"";
+            else
+                value = "getValue(start + " + variant.getReturnSubrule().getStart()
+                        + ", " + variant.getReturnSubrule().getLength() + ")";
+
+            String field = "rule";
+
+            if (currentRule.hasOnlyOneName())
+                field = currentRule.getFieldName(currentRule.getNames().get(0));
+
+            put("instruction.addRule(" + field + ", " + value + ");");
+        }
         
-        if (variant.getReturnString() != null)
-            value = "\"" + variant.getReturnString() + "\"";
-        else if (subrule != null)
-            value = "getValue(start + " + subrule.getStart() + ", " + subrule.getLength() + ")";
-        
-        String field = "rule";
-        
-        if (currentRule.hasOnlyOneName())
-            field = currentRule.getFieldName(currentRule.getNames().get(0));
-        
-        put("instruction.addRule(" + field + ", " + value + ");");
         variant.acceptChildren(this);
     }
 

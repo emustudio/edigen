@@ -17,23 +17,26 @@
  */
 package edigen.decoder;
 
+import edigen.SemanticException;
 import edigen.Visitor;
 import edigen.tree.Rule;
+import edigen.tree.Variant;
 import edigen.util.PrettyPrinter;
 import java.io.Writer;
 
 /**
  * A visitor which generates Java source code of the instruction decoder fields
- * for all rules.
+ * for rules.
  * 
- * Each rule is given a unique integral constant which can be later used in
- * a disassembler or an emulator.
+ * Each rule (which has at least one returning variant) is given a unique
+ * integral constant which can be later used in a disassembler or an emulator.
  * @author Matúš Sulír
  */
 public class GenerateFieldsVisitor extends Visitor {
 
     private PrettyPrinter printer;
-    int ruleNumber = 0;
+    private int ruleNumber = 0;
+    private boolean hasReturningVariant;
 
     /**
      * Constucts the visitor.
@@ -46,13 +49,29 @@ public class GenerateFieldsVisitor extends Visitor {
     /**
      * Writes the constants for the particular rule.
      * @param rule the rule node
+     * @throws SemanticException never
      */
     @Override
-    public void visit(Rule rule) {
-        for (String name : rule.getNames()) {
-            printer.writeLine("private static final int "
-                    + rule.getFieldName(name) + " = " + ruleNumber++  + ";");
+    public void visit(Rule rule) throws SemanticException {
+        hasReturningVariant = false;
+        rule.acceptChildren(this);
+        
+        if (hasReturningVariant) {
+            for (String name : rule.getNames()) {
+                printer.writeLine("private static final int "
+                        + rule.getFieldName(name) + " = " + ruleNumber++  + ";");
+            }
         }
+    }
+
+    /**
+     * Sets the flag if the variant returns something.
+     * @param variant the variant node
+     */
+    @Override
+    public void visit(Variant variant) {
+        if (variant.returns())
+            hasReturningVariant = true;
     }
     
 }

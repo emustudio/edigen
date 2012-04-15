@@ -80,6 +80,14 @@ public class Variant extends TreeNode {
     }
     
     /**
+     * Returns true if the variant returns a string or a subrule.
+     * @return true if the variant returns, false otherwise
+     */
+    public boolean returns() {
+        return returnType != ReturnType.NOTHING;
+    }
+    
+    /**
      * Accepts the visitor.
      * @param visitor the visitor object
      * @throws SemanticException depends on the specific visitor
