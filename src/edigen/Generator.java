@@ -59,6 +59,14 @@ public abstract class Generator {
     }
 
     /**
+     * Returns the name of the package to which the generated class will belong.
+     * @return the package name (using the dot notation)
+     */
+    public String getPackageName() {
+        return packageName;
+    }
+
+    /**
      * Sets the package to which the generated class will belong.
      * @param packageName the package name (using the dot notation)
      */

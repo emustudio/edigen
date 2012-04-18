@@ -37,6 +37,14 @@ public class Format extends TreeNode {
     public Format(String formatString) {
         this.formatString = formatString;
     }
+
+    /**
+     * Returns the format string.
+     * @return the string
+     */
+    public String getFormatString() {
+        return formatString;
+    }
     
     /**
      * Accepts the visitor.

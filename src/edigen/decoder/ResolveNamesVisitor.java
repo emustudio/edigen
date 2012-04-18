@@ -86,6 +86,10 @@ public class ResolveNamesVisitor extends Visitor {
             returnSubrule = subrule;
     }
 
+    /**
+     * Associates the value with the rule.
+     * @param value the value node
+     */
     @Override
     public void visit(Value value) {
         value.setRule(rules.get(value.getName()));

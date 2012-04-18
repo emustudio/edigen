@@ -1,13 +1,64 @@
 %auto_gen_warning
 %package_spec
 
+import static %decoder_full_class.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 /**
  * The disassembler.
  */
 class %disasm_class extends SimpleDisassembler {
 
+    /**
+     * An instruction mnemonic format string with associated values.
+     */
+    private static class Format {
+        private String format;
+        private int[] values;
+
+        public Format(String format, int[] values) {
+            this.format = format;
+            this.values = values;
+        }
+
+        public String getFormat() {
+            return format;
+        }
+
+        public int[] getValues() {
+            return values;
+        }
+    }
+
+    private static final Map<Set<Integer>, Format> formatMap;
+
     private IMemoryContext memory;
     private IDecoder decoder;
+
+    static {
+        String[] formats = {
+          %disasm_formats
+        };
+        
+        int[][] values = {
+            %disasm_values
+        };
+        
+        formatMap = new HashMap<Set<Integer>, Format>();
+        
+        for (int i = 0; i < formats.length; i++) {
+            Set<Integer> formatValues = new HashSet<Integer>();
+            
+            for (int value : values[i]) {
+                formatValues.add(value);
+            }
+            
+            formatMap.put(formatValues, new Format(formats[i], values[i]));
+        }
+    }
 
     /**
      * The constructor.
@@ -31,7 +82,8 @@ class %disasm_class extends SimpleDisassembler {
         
         try {
             Instruction instruction = decoder.decode(memoryLocation);
-            mnemonic = "";
+            Format format = formatMap.get(instruction.getRuleSet());
+            mnemonic = createMnemonic(format.getFormat(), format.getValues());
             
             StringBuilder codeBuilder = new StringBuilder();
             
@@ -61,5 +113,15 @@ class %disasm_class extends SimpleDisassembler {
         } catch (InvalidInstructionException ex) {
             return memoryLocation + 1;
         }
+    }
+
+    /**
+     * Returns the instruction mnemonic.
+     * @param format the format string
+     * @param values the array of values (used to derermine the order of rules)
+     * @return the instruction mnenomic
+     */
+    private String createMnemonic(String format, int[] values) {
+        return "";
     }
 }

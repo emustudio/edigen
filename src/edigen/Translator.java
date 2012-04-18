@@ -71,7 +71,7 @@ public class Translator {
             decoder.setTemplateFile(settings.get(DECODER_TEMPLATE));
             
             Generator disassembler = new DisassemblerGenerator(specification,
-                    settings.get(DISASSEMBLER_CLASS));
+                    settings.get(DISASSEMBLER_CLASS), settings.get(DECODER_CLASS));
             disassembler.setTemplateFile(settings.get(DISASSEMBLER_TEMPLATE));
             
             for (Generator generator : new Generator[] {decoder, disassembler}) {

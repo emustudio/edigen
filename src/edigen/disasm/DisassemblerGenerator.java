@@ -19,8 +19,11 @@ package edigen.disasm;
 
 import edigen.Generator;
 import edigen.SemanticException;
+import edigen.tree.Disassembler;
 import edigen.tree.Specification;
 import edigen.util.Template;
+import java.io.StringWriter;
+import java.io.Writer;
 
 /**
  * The disassembler generator.
@@ -29,18 +32,24 @@ import edigen.util.Template;
 public class DisassemblerGenerator extends Generator {
 
     private Specification specification;
-    private String className;
+    private Disassembler disassembler;
+    private String disassemblerClass;
+    private String decoderClass;
 
     /**
      * Constructs the disassembler generator.
      * @param specification the specification node
-     * @param className the name of the resulting class
+     * @param disassemblerClass the name of the resulting class
+     * @param decoderClass the name of the associated decoder class
      */
-    public DisassemblerGenerator(Specification specification, String className) {
-        super("/edigen/res/Disassembler.egt", className);
+    public DisassemblerGenerator(Specification specification,
+            String disassemblerClass, String decoderClass) {
+        super("/edigen/res/Disassembler.egt", disassemblerClass);
         
         this.specification = specification;
-        this.className = className;
+        this.disassembler = specification.getDisassembler();
+        this.disassemblerClass = disassemblerClass;
+        this.decoderClass = decoderClass;
     }
     
     /**
@@ -60,7 +69,26 @@ public class DisassemblerGenerator extends Generator {
     protected void fillTemplate(Template template) {
         super.fillTemplate(template);
         
-        template.setVariable("disasm_class", className);
+        template.setVariable("disasm_class", disassemblerClass);
+        
+        String packageName = "";
+        
+        if (getPackageName() != null)
+            packageName = getPackageName() + ".";
+        
+        template.setVariable("decoder_full_class", packageName + decoderClass);
+        
+        try {
+            Writer formats = new StringWriter();
+            disassembler.accept(new GenerateFormatsVisitor(formats));
+            template.setVariable("disasm_formats", formats.toString());
+            
+            Writer values = new StringWriter();
+            disassembler.accept(new GenerateValuesVisitor(values));
+            template.setVariable("disasm_values", values.toString());
+        } catch (SemanticException ex) {
+            // code generation does not produce semantic errors
+        }
     }
     
 }

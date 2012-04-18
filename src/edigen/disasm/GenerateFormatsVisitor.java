@@ -15,63 +15,58 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package edigen.decoder;
+package edigen.disasm;
 
 import edigen.SemanticException;
 import edigen.Visitor;
-import edigen.tree.Rule;
-import edigen.tree.Variant;
+import edigen.tree.Disassembler;
+import edigen.tree.Format;
+import edigen.tree.TreeNode;
 import edigen.util.PrettyPrinter;
 import java.io.Writer;
+import java.util.Iterator;
 
 /**
- * A visitor which generates Java source code of the instruction decoder fields
- * for rules.
- * 
- * Each rule (which has at least one returning variant) is given a unique
- * integral constant which can be later used in a disassembler or an emulator.
+ * A visitor which generates the code of the array of formats.
  * @author Matúš Sulír
  */
-public class GenerateFieldsVisitor extends Visitor {
-
+public class GenerateFormatsVisitor extends Visitor {
+    
     private PrettyPrinter printer;
-    private int ruleNumber = 0;
-    private boolean hasReturningVariant;
+    private String formatString;
 
     /**
      * Constucts the visitor.
      * @param writer the output stream to write the code to
      */
-    public GenerateFieldsVisitor(Writer writer) {
+    public GenerateFormatsVisitor(Writer writer) {
         this.printer = new PrettyPrinter(writer);
     }
 
     /**
-     * Writes the constants for the particular rule.
-     * @param rule the rule node
+     * Writes the formats separated by commas.
+     * @param disassembler the disassembler node
      * @throws SemanticException never
      */
     @Override
-    public void visit(Rule rule) throws SemanticException {
-        hasReturningVariant = false;
-        rule.acceptChildren(this);
+    public void visit(Disassembler disassembler) throws SemanticException {
+        Iterator<TreeNode> formats = disassembler.getChildren().iterator();
         
-        if (hasReturningVariant) {
-            for (String name : rule.getNames()) {
-                printer.writeLine("public static final int "
-                        + rule.getFieldName(name) + " = " + ruleNumber++  + ";");
-            }
+        while (formats.hasNext()) {
+            formats.next().accept(this);
+            
+            String separator = formats.hasNext() ? ", " : "";
+            printer.writeLine(formatString + separator);
         }
     }
 
     /**
-     * Sets the flag if the variant returns something.
-     * @param variant the variant node
+     * Saves the format string in the quotes into the variable.
+     * @param format the format node 
      */
     @Override
-    public void visit(Variant variant) {
-        if (variant.returns())
-            hasReturningVariant = true;
+    public void visit(Format format) {
+        formatString = '"' + format.getFormatString() + '"';
     }
     
 }
