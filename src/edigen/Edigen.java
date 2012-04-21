@@ -65,7 +65,7 @@ public class Edigen {
             
             Translator generator = new Translator(configuration);
             generator.translate();
-            System.out.println("Instruction decoder successfully generated.");
+            System.out.println("Decoder and disassembler successfully generated.");
         } catch (CommandLineException ex) {
             System.out.println("\nError: " + ex.getMessage() + ".\n");
             System.out.print(help);
