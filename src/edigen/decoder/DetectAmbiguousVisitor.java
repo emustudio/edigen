@@ -30,11 +30,18 @@ import java.util.List;
 /**
  * A visitor which checks for ambiguous variants.
  * 
- * <p>This check must be applied after the grouping transformation.</p>
+ * <p>There are two types of ambiguity.</p>
  * 
- * <p>Two variants of one rule R are ambiguous if and only if there exists a
- * node N of type Rule (equivalent to R) or Pattern (an indirect child of R)
- * such that:
+ * <p>Path ambiguity means that for some rule, given a unit of input (usually a
+ * byte), the decoder is not able to decide which one (and only one) execution
+ * path to choose without reading more units or walking up the switch-case tree
+ * later and choosing an another path (or none at all). Ambiguity is dangerous
+ * because it can cause unintended behavior not discovered until the generated
+ * decoder is run.</p>
+ * 
+ * <p>Two variants of one rule R have an ambiguous path if and only if there
+ * exists a node N of type Rule (equivalent to R) or Pattern (an indirect child
+ * of R) such that:
  * <ul>
  *  <li>There exist two Mask nodes M1, M2, both direct children of N, such that:
  *  <ul>
@@ -46,18 +53,19 @@ import java.util.List;
  * </ul>
  * </p>
  * 
- * <p>Ambiguity means that for some rule, given a unit of input (usually a
- * byte), the decoder is not able to decide which one (and only one) execution
- * path to choose without reading more units or walking up the switch-case tree
- * later and choosing an another path (or not at all). Ambiguity is dangerous
- * because it can cause unintended behavior not discovered until the generated
- * decoder is run.</p>
+ * <p>Variant ambiguity means that one pattern has more than one child
+ * variant.</p>
  * 
- * <p>This is not a transformation; the tree is left unmodified.</p>
+ * <p>This visitor is not a transformation; the tree is left unmodified. It
+ * must be applied after the grouping transformation.</p>
+ * 
+ * <p></p>
  * @author Matúš Sulír
  */
 public class DetectAmbiguousVisitor extends Visitor {
 
+    private static final String MESSAGE = "Ambiguous variants "
+        + "detected in rule \"%s\"";
     private Rule currentRule;
     private List<Mask> masks = new ArrayList<Mask>();
     
@@ -70,7 +78,7 @@ public class DetectAmbiguousVisitor extends Visitor {
     @Override
     public void visit(Rule rule) throws SemanticException {
         currentRule = rule;
-        detect(rule);
+        detectPath(rule);
         traverseSubtrees(rule);
     }
 
@@ -91,20 +99,21 @@ public class DetectAmbiguousVisitor extends Visitor {
      */
     @Override
     public void visit(Pattern pattern) throws SemanticException {
-        detect(pattern);
+        detectVariant(pattern);
+        detectPath(pattern);
         traverseSubtrees(pattern);
     }
     
     /**
-     * Detects the ambiguity under the node specified.
+     * Detects the path ambiguity under the node specified.
      * 
      * All combinations without repetition of the child masks are tried. For all
      * of these, all pattern pairs made of the first mask's children and the
      * second mask's children are checked.
      * @param node the node object
-     * @throws SemanticException when an ambiguity is detected 
+     * @throws SemanticException when the path ambiguity is detected 
      */
-    private void detect(TreeNode node) throws SemanticException {
+    private void detectPath(TreeNode node) throws SemanticException {
         masks.clear();
         node.acceptChildren(this);
         
@@ -118,8 +127,8 @@ public class DetectAmbiguousVisitor extends Visitor {
                 for (TreeNode pattern1 : mask1.getChildren()) {
                     for (TreeNode pattern2 : mask2.getChildren()) {
                         if (isAmbiguous((Pattern) pattern1, (Pattern) pattern2, commonMask))
-                            throw new SemanticException("Ambiguous variants "
-                                + "detected in rule \"" + currentRule.getLabel() + '"');
+                            throw new SemanticException(String.format(MESSAGE,
+                                    currentRule.getLabel()));
                     }
                 }
             }
@@ -153,4 +162,14 @@ public class DetectAmbiguousVisitor extends Visitor {
         }
     }
     
+    /**
+     * Detects the variant ambiguity under the specified pattern.
+     * @param pattern the pattern node
+     * @throws SemanticException when the variant ambiguity is detected
+     */
+    private void detectVariant(Pattern pattern) throws SemanticException {
+        if (pattern.childCount() > 1) {
+            throw new SemanticException(String.format(MESSAGE, currentRule.getLabel()));
+        }
+    }
 }

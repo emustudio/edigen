@@ -63,9 +63,6 @@ public class Translator {
             Parser p = new Parser(input);
             Specification specification = p.parse();
 
-            if (settings.containsKey(DEBUG))
-                specification.dump(DEBUG_STREAM);
-
             Generator decoder = new DecoderGenerator(specification,
                     settings.get(DECODER_CLASS));
             decoder.setTemplateFile(settings.get(DECODER_TEMPLATE));

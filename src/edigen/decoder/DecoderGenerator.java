@@ -57,6 +57,7 @@ public class DecoderGenerator extends Generator {
     @Override
     public void transform() throws SemanticException {
         specification.accept(new ResolveNamesVisitor());
+        dump(specification);
         
         Visitor[] transforms = {
             new JoinVisitor(),

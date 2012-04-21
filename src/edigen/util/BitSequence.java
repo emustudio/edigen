@@ -194,25 +194,33 @@ public class BitSequence {
     /**
      * Splits the sequence into shorter sequences of equal length.
      * 
-     * If it is necessary, the last sequence in the returned array will contain
-     * less than 8 * bytesPerPiece bits.
+     * <p>If it is necessary, the last sequence in the returned array will
+     * contain less than 8 * bytesPerPiece bits.</p>
+     * 
+     * <p>For a zero-length sequence, an array containing one empty sequence is
+     * returned.</p>
      * @param bitsPerPiece the number of bits in each sequence
      * @return the array of shorter sequences
      */
     public BitSequence[] split(int bitsPerPiece) {
         int count = (int) Math.ceil((double) length / bitsPerPiece);
-        BitSequence[] sequences = new BitSequence[count];
         
-        for (int piece = 0; piece < count; piece++) {
-            sequences[piece] = new BitSequence();
-            int start = piece * bitsPerPiece;
-            int end = start + bitsPerPiece;
-            
-            for (int bit = start; bit < end && bit < length; bit++)
-                sequences[piece].append(get(bit));
+        if (count == 0) {
+            return new BitSequence[] {new BitSequence()};
+        } else {
+            BitSequence[] sequences = new BitSequence[count];
+
+            for (int piece = 0; piece < count; piece++) {
+                sequences[piece] = new BitSequence();
+                int start = piece * bitsPerPiece;
+                int end = start + bitsPerPiece;
+
+                for (int bit = start; bit < end && bit < length; bit++)
+                    sequences[piece].append(get(bit));
+            }
+
+            return sequences;
         }
-        
-        return sequences;
     }
     
     /**
@@ -319,6 +327,9 @@ public class BitSequence {
      * @return the hexadecimal string, in lowercase
      */
     public String toHexadecimal() {
+        if (length == 0)
+            return "";
+        
         int padBitCount = NIBBLE_LENGTH - (length % NIBBLE_LENGTH);
         
         if (padBitCount == NIBBLE_LENGTH)
