@@ -53,20 +53,21 @@ public class DisassemblerGenerator extends Generator {
     }
     
     /**
-     * Transforms the AST to the form suitable for code generation.
+     * Transforms the AST and/or checks for semantic errors.
      * @throws SemanticException when a semantic error occurs
      */
     @Override
     public void transform() throws SemanticException {
-
+        disassembler.accept(new SemanticCheckVisitor());
     }
 
     /**
      * Fills the template with variables and the generated code.
      * @param template the template object
+     * @throws SemanticException never
      */
     @Override
-    protected void fillTemplate(Template template) {
+    protected void fillTemplate(Template template) throws SemanticException {
         super.fillTemplate(template);
         
         template.setVariable("disasm_class", disassemblerClass);
@@ -78,17 +79,13 @@ public class DisassemblerGenerator extends Generator {
         
         template.setVariable("decoder_full_class", packageName + decoderClass);
         
-        try {
-            Writer formats = new StringWriter();
-            disassembler.accept(new GenerateFormatsVisitor(formats));
-            template.setVariable("disasm_formats", formats.toString());
-            
-            Writer values = new StringWriter();
-            disassembler.accept(new GenerateValuesVisitor(values));
-            template.setVariable("disasm_values", values.toString());
-        } catch (SemanticException ex) {
-            // code generation does not produce semantic errors
-        }
+        Writer formats = new StringWriter();
+        disassembler.accept(new GenerateFormatsVisitor(formats));
+        template.setVariable("disasm_formats", formats.toString());
+
+        Writer values = new StringWriter();
+        disassembler.accept(new GenerateValuesVisitor(values));
+        template.setVariable("disasm_values", values.toString());
     }
     
 }

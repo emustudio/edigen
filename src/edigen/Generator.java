@@ -120,8 +120,9 @@ public abstract class Generator {
     /**
      * Sets the variables used in the template file.
      * @param template the template object
+     * @throws SemanticException on template filling / code generation failure
      */
-    protected void fillTemplate(Template template) {
+    protected void fillTemplate(Template template) throws SemanticException {
         template.setVariable("auto_gen_warning",
                 "/* Auto-generated file. Do not modify. */");
         

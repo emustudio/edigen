@@ -37,7 +37,7 @@ public class ResolveNamesVisitor extends Visitor {
     private Subrule returnSubrule;
 
     /**
-     * First saves all rule names and then traverses the whole tree.
+     * First saves all rule names and then traverses the rule subtrees.
      * @param decoder the decoder node
      * @throws SemanticException never
      */
@@ -50,13 +50,19 @@ public class ResolveNamesVisitor extends Visitor {
     }
 
     /**
-     * Fills the map of rule names to rules.
+     * Adds item(s) to the map from rule names to rules.
      * @param rule the rule node
+     * @throws SemanticException if the rule was already defined
      */
     @Override
-    public void visit(Rule rule) {
+    public void visit(Rule rule) throws SemanticException {
         for (String name : rule.getNames()) {
-            rules.put(name, rule);
+            if (!rules.containsKey(name)) {
+                rules.put(name, rule);
+            } else {
+                throw new SemanticException("Rule \"" + name
+                        + "\" is defined multiple times");
+            }
         }
     }
 
@@ -89,10 +95,18 @@ public class ResolveNamesVisitor extends Visitor {
     /**
      * Associates the value with the rule.
      * @param value the value node
+     * @throws SemanticException if the value refers to a nonexistent rule
      */
     @Override
-    public void visit(Value value) {
-        value.setRule(rules.get(value.getName()));
+    public void visit(Value value) throws SemanticException {
+        String name = value.getName();
+        Rule rule = rules.get(name);
+        
+        if (rule != null) {
+            value.setRule(rule);
+        } else {
+            throw new SemanticException("Disassembler value \""
+                    + name + "\" refers to a nonexistent rule");
+        }
     }
-    
 }

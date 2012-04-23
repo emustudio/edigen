@@ -63,7 +63,11 @@ class %disasm_class extends SimpleDisassembler {
         try {
             Instruction instruction = decoder.decode(memoryLocation);
             MnemonicFormat format = formatMap.get(instruction.getRuleSet());
-            mnemonic = createMnemonic(instruction, format);
+
+            if (format == null)
+                mnemonic = "undisassemblable";
+            else
+                mnemonic = createMnemonic(instruction, format);
             
             StringBuilder codeBuilder = new StringBuilder();
             
@@ -97,9 +101,9 @@ class %disasm_class extends SimpleDisassembler {
 
     /**
      * Returns the instruction mnemonic.
-     * 
-     * 
-     * @return the instruction mnenomic
+     * @param instruction the decoded instruction
+     * @param format the formatting string + rule codes
+     * @return the instruction mnemonic
      */
     private String createMnemonic(Instruction instruction, MnemonicFormat format) {
         StringBuilder mnemonic = new StringBuilder(format.getFormat());
@@ -119,6 +123,13 @@ class %disasm_class extends SimpleDisassembler {
         return mnemonic.toString();
     }
     
+    /**
+     * Transforms the bytes into a meaningful string using the formatting
+     * character.
+     * @param format the formatting character ('s' for a string, etc.)
+     * @param value the array of bytes
+     * @return the resulting string
+     */
     private String format(char format, byte[] value) {
         switch (format) {
             case 'c':
@@ -138,8 +149,8 @@ class %disasm_class extends SimpleDisassembler {
             case 's':
                 return new String(value);
             case 'x':
-                String form = "%0" + 2 * value.length + "x";
-                return String.format(form, new BigInteger(value));
+                String formatString = "%0" + 2 * value.length + "x";
+                return String.format(formatString, new BigInteger(value));
             case 'X':
                 return format('x', value).toUpperCase();
             case '%':

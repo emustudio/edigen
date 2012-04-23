@@ -78,25 +78,22 @@ public class DecoderGenerator extends Generator {
     /**
      * Fills the template with variables and the generated code.
      * @param template the template object
+     * @throws SemanticException never
      */
     @Override
-    protected void fillTemplate(Template template) {
+    protected void fillTemplate(Template template) throws SemanticException {
         super.fillTemplate(template);
         
         template.setVariable("decoder_class", className);
         template.setVariable("root_rule", decoder.getRootRule().getMethodName());
-        
-        try {
-            Writer fields = new StringWriter();
-            decoder.accept(new GenerateFieldsVisitor(fields));
-            template.setVariable("decoder_fields", fields.toString());
 
-            Writer methods = new StringWriter();
-            decoder.accept(new GenerateMethodsVisitor(methods));
-            template.setVariable("decoder_methods", methods.toString());
-        } catch (SemanticException ex) {
-            // code generation does not produce semantic errors
-        }
+        Writer fields = new StringWriter();
+        decoder.accept(new GenerateFieldsVisitor(fields));
+        template.setVariable("decoder_fields", fields.toString());
+
+        Writer methods = new StringWriter();
+        decoder.accept(new GenerateMethodsVisitor(methods));
+        template.setVariable("decoder_methods", methods.toString());
     }
     
 }

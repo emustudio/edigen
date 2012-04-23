@@ -36,7 +36,7 @@ public class GenerateFieldsVisitor extends Visitor {
 
     private PrettyPrinter printer;
     private int ruleNumber = 0;
-    private boolean hasReturningVariant;
+    private boolean ruleReturns;
 
     /**
      * Constucts the visitor.
@@ -53,10 +53,10 @@ public class GenerateFieldsVisitor extends Visitor {
      */
     @Override
     public void visit(Rule rule) throws SemanticException {
-        hasReturningVariant = false;
+        ruleReturns = false;
         rule.acceptChildren(this);
         
-        if (hasReturningVariant) {
+        if (ruleReturns) {
             for (String name : rule.getNames()) {
                 printer.writeLine("public static final int "
                         + rule.getFieldName(name) + " = " + ruleNumber++  + ";");
@@ -71,7 +71,7 @@ public class GenerateFieldsVisitor extends Visitor {
     @Override
     public void visit(Variant variant) {
         if (variant.returns())
-            hasReturningVariant = true;
+            ruleReturns = true;
     }
     
 }
