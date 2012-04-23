@@ -44,7 +44,7 @@ public class DisassemblerGenerator extends Generator {
      */
     public DisassemblerGenerator(Specification specification,
             String disassemblerClass, String decoderClass) {
-        super("/edigen/res/Disassembler.egt", disassemblerClass);
+        super("/Disassembler.egt", disassemblerClass);
         
         this.specification = specification;
         this.disassembler = specification.getDisassembler();

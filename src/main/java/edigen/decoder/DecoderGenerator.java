@@ -43,7 +43,7 @@ public class DecoderGenerator extends Generator {
      * @param className the name of the resulting class
      */
     public DecoderGenerator(Specification specification, String className) {
-        super("/edigen/res/Decoder.egt", className);
+        super("/Decoder.egt", className);
         
         this.specification = specification;
         this.decoder = specification.getDecoder();

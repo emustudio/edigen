@@ -1,4 +1,2 @@
-/nbproject/private/
-/build/
-/dist/
-/src/edigen/parser/
+nbactions.xml
+/target/

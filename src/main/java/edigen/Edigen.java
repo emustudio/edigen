@@ -58,7 +58,7 @@ public class Edigen {
     public static void main(String[] args) {
         System.out.println("Edigen - Emulator Disassembler Generator");
         CommandLine commandLine = new CommandLine(ARGUMENTS);
-        String help = new Help("java -jar Edigen.jar", commandLine).generate();
+        String help = new Help("java -jar edigen.jar", commandLine).generate();
         
         try {
             Map<Setting, String> configuration = commandLine.parse(args);

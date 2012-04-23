@@ -44,8 +44,4 @@ Input file example
 Notes for developers
 --------------------
 
-To build Edigen yourself from source, you need to download [JavaCC](http://javacc.java.net/). Then add this line to your `nbproject/private/private.properties` file:
-
-	javacc.dir=Directory containing javacc.jar
-
-Files in the `src/edigen/parser/` directory are automatically generated. Please do not edit them manually.
+The project now uses Maven 3. Dependencies (like JavaCC) are automatically downloaded.
