@@ -126,20 +126,23 @@ public class GenerateMethodsVisitor extends Visitor {
     @Override
     public void visit(Variant variant) throws SemanticException {
         if (variant.returns()) {
+            String field = "rule";
             String value;
             
-            if (variant.getReturnString() != null)
-                value = "\"" + variant.getReturnString() + "\"";
-            else
-                value = "getValue(start + " + variant.getReturnSubrule().getStart()
-                        + ", " + variant.getReturnSubrule().getLength() + ")";
-
-            String field = "rule";
-
             if (currentRule.hasOnlyOneName())
                 field = currentRule.getFieldName(currentRule.getNames().get(0));
 
-            put("instruction.addRule(" + field + ", " + value + ");");
+            if (variant.getReturnString() != null) {
+                value = variant.getFieldName() + ", \""
+                        + variant.getReturnString() + "\"";
+            } else {
+                int start = variant.getReturnSubrule().getStart();
+                int length = variant.getReturnSubrule().getLength();
+                
+                value = String.format("getValue(start + %d, %d)", start, length);
+            }
+            
+            put(String.format("instruction.addRule(%s, %s);", field, value));
         }
         
         variant.acceptChildren(this);

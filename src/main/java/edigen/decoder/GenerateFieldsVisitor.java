@@ -19,24 +19,28 @@ package edigen.decoder;
 
 import edigen.SemanticException;
 import edigen.Visitor;
+import edigen.tree.Decoder;
 import edigen.tree.Rule;
 import edigen.tree.Variant;
 import edigen.util.PrettyPrinter;
 import java.io.Writer;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 /**
  * A visitor which generates Java source code of the instruction decoder fields
- * for rules.
+ * for rules and values.
  * 
- * Each rule (which has at least one returning variant) is given a unique
- * integral constant which can be later used in a disassembler or an emulator.
+ * Each rule (which has at least one returning variant) and string-returning
+ * variant is given a unique integral constant which can be later used in a
+ * disassembler and emulator.
  * @author Matúš Sulír
  */
 public class GenerateFieldsVisitor extends Visitor {
 
     private PrettyPrinter printer;
-    private int ruleNumber = 0;
     private boolean ruleReturns;
+    private Set<String> fields = new LinkedHashSet<String>();
 
     /**
      * Constucts the visitor.
@@ -47,7 +51,23 @@ public class GenerateFieldsVisitor extends Visitor {
     }
 
     /**
-     * Writes the constants for the particular rule.
+     * Writes the constants.
+     * @param decoder the decoder node
+     * @throws SemanticException never
+     */
+    @Override
+    public void visit(Decoder decoder) throws SemanticException {
+        decoder.acceptChildren(this);
+        int ruleNumber = 1;
+        
+        for (String field : fields) {
+            printer.writeLine("public static final int "
+                    + field + " = " + ruleNumber++  + ";");
+        }
+    }
+
+    /**
+     * Adds the field names for the particular rule to the list.
      * @param rule the rule node
      * @throws SemanticException never
      */
@@ -58,18 +78,21 @@ public class GenerateFieldsVisitor extends Visitor {
         
         if (ruleReturns) {
             for (String name : rule.getNames()) {
-                printer.writeLine("public static final int "
-                        + rule.getFieldName(name) + " = " + ruleNumber++  + ";");
+                fields.add(rule.getFieldName(name));
             }
         }
     }
 
     /**
-     * Sets the flag if the variant returns something.
+     * Adds the field to the list and sets the flag if the variant returns
+     * something.
      * @param variant the variant node
      */
     @Override
     public void visit(Variant variant) {
+        if (variant.getFieldName() != null)
+            fields.add(variant.getFieldName());
+        
         if (variant.returns())
             ruleReturns = true;
     }

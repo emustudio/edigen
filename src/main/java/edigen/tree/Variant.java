@@ -19,6 +19,7 @@ package edigen.tree;
 
 import edigen.SemanticException;
 import edigen.Visitor;
+import java.util.regex.Pattern;
 
 /**
  * Rule variant node.
@@ -34,6 +35,9 @@ public class Variant extends TreeNode {
         STRING,
         SUBRULE
     }
+    
+    private static final Pattern LEADING_DIGITS = Pattern.compile("\\d.*");
+    private static final Pattern NON_WORD = Pattern.compile("\\W");
     
     private ReturnType returnType = ReturnType.NOTHING;
     private String returnString;
@@ -88,6 +92,17 @@ public class Variant extends TreeNode {
     }
     
     /**
+     * Returns the generated field name if the variant returns a string.
+     * @return the field name, or null if the variant does not return a string
+     */
+    public String getFieldName() {
+        if (returnType == ReturnType.STRING)
+            return makeIdentifierName(returnString);
+        else
+            return null;
+    }
+    
+    /**
      * Accepts the visitor.
      * @param visitor the visitor object
      * @throws SemanticException depends on the specific visitor
@@ -111,5 +126,21 @@ public class Variant extends TreeNode {
             result.append(": return ").append(returnSubrule);
         
         return result.toString();
+    }
+    
+    /**
+     * Makes a valid Java identifier name from the string.
+     * @param string the string
+     * @return the identifier name
+     */
+    private String makeIdentifierName(String string) {
+        string = string.trim().toUpperCase();
+        
+        if  (LEADING_DIGITS.matcher(string).matches())
+            string = '_' + string;
+        
+        string = string.replace(' ', '_');
+        
+        return NON_WORD.matcher(string).replaceAll("_");
     }
 }
