@@ -71,13 +71,7 @@ public class DisassemblerGenerator extends Generator {
         super.fillTemplate(template);
         
         template.setVariable("disasm_class", disassemblerClass);
-        
-        String packageName = "";
-        
-        if (getPackageName() != null)
-            packageName = getPackageName() + ".";
-        
-        template.setVariable("decoder_full_class", packageName + decoderClass);
+        template.setVariable("decoder_class", decoderClass);
         
         Writer formats = new StringWriter();
         disassembler.accept(new GenerateFormatsVisitor(formats));

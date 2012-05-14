@@ -1,26 +1,30 @@
-%auto_gen_warning
-%package_spec
+%auto_gen_warning%
+package %package%.impl;
 
+import emulib.plugins.cpu.IDecoder;
+import emulib.plugins.cpu.Instruction;
+import emulib.plugins.cpu.InvalidInstructionException;
+import emulib.plugins.memory.IMemoryContext;
 import java.util.Arrays;
 
 /**
  * The instruction decoder.
  */
-class %decoder_class implements IDecoder {
+public class %decoder_class% implements IDecoder {
     private IMemoryContext memory;
     private int memoryPosition;
     private byte unit;
-    private byte[] instructionBytes = new byte[128];
+    private byte[] instructionBytes = new byte[1024];
     private int bytesRead;
     private Instruction instruction;
     
-    %decoder_fields
+    %decoder_fields%
     
     /**
      * The constructor.
      * @param memory the memory context which will be used to read instructions
      */
-    public %decoder_class(IMemoryContext memory) {
+    public %decoder_class%(IMemoryContext memory) {
         this.memory = memory;
     }
     
@@ -36,7 +40,7 @@ class %decoder_class implements IDecoder {
         bytesRead = 0;
 
         instruction = new Instruction(memoryPosition);
-        %root_rule(0);
+        %root_rule%(0);
         instruction.setContent(Arrays.copyOfRange(instructionBytes, 0, bytesRead));
         return instruction;
     }
@@ -49,19 +53,19 @@ class %decoder_class implements IDecoder {
      */
     private byte read(int start, int length) {
         if (start + length > 8 * bytesRead) {
-            instructionBytes[bytesRead++] = (Byte) memory.read(memoryPosition++);
+            instructionBytes[bytesRead++] = ((Short) memory.read(memoryPosition++)).byteValue();
         }
         
         int startByte = start / 8;
         int startOffset = start % 8;
-        byte startMask = (byte) (~0 >>> (8 - startOffset));
+        byte startMask = (byte) (0xFF >>> startOffset);
 
         int endByte = (start + length) / 8;
         int endOffset = (startOffset + length) % 8;
-        byte endMask = (byte) (~0 << (8 - endOffset));
+        byte endMask = (byte) (0xFF << (8 - endOffset));
         
         byte result = (byte) ((instructionBytes[startByte] & startMask) << endOffset);
-        return (byte) (result | (instructionBytes[endByte] & endMask) >> (8 - endOffset));
+        return (byte) (result | (instructionBytes[endByte] & endMask) >>> (8 - endOffset));
     }
 
     /**
@@ -83,5 +87,5 @@ class %decoder_class implements IDecoder {
         return result;
     }
     
-    %decoder_methods
+    %decoder_methods%
 }

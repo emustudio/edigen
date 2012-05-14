@@ -42,7 +42,7 @@ public class Edigen {
         new Argument("<disassembler_class> - Resulting disassembler class name",
             DISASSEMBLER_CLASS),
         new Argument("o", "Write generated files to <directory>", OUTPUT_DIRECTORY),
-        new Argument("p", "Make generated classes members of <package>", PACKAGE),
+        new Argument("p", "Make generated classes members of <package>.impl and <package>.gui", PACKAGE),
         new Argument("dt", "Use <template> for instruction decoder instead of the default one",
                 DECODER_TEMPLATE),
         new Argument("at", "Use <template> for disassembler instead of the default one",
@@ -59,6 +59,7 @@ public class Edigen {
         System.out.println("Edigen - Emulator Disassembler Generator");
         CommandLine commandLine = new CommandLine(ARGUMENTS);
         String help = new Help("java -jar edigen.jar", commandLine).generate();
+        boolean success = false;
         
         try {
             Map<Setting, String> configuration = commandLine.parse(args);
@@ -66,8 +67,13 @@ public class Edigen {
             Translator generator = new Translator(configuration);
             generator.translate();
             System.out.println("Decoder and disassembler successfully generated.");
+            success = true;
         } catch (CommandLineException ex) {
-            System.out.println("\nError: " + ex.getMessage() + ".\n");
+            if (args.length == 0)
+                success = true;
+            else
+                System.out.println("\nError: " + ex.getMessage() + ".\n");
+            
             System.out.print(help);
         } catch (FileNotFoundException ex) {
             System.out.println("Could not open file: " + ex.getMessage());
@@ -77,6 +83,9 @@ public class Edigen {
             System.out.println(ex.getMessage());
         } catch (SemanticException ex) {
             System.out.println("Error: " + ex.getMessage() + ".");
+        } finally {
+            if (!success)
+                System.exit(1);
         }
     }
 }

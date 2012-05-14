@@ -1,7 +1,9 @@
-%auto_gen_warning
-%package_spec
+%auto_gen_warning%
+package %package%.gui;
 
-import static %decoder_full_class.*;
+import static %package%.impl.%decoder_class%.*;
+import emulib.plugins.cpu.*;
+import emulib.plugins.memory.IMemoryContext;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
@@ -12,7 +14,28 @@ import java.util.Set;
 /**
  * The disassembler.
  */
-class %disasm_class extends SimpleDisassembler {
+public class %disasm_class% extends SimpleDisassembler {
+    /**
+    * An instruction mnemonic format string with associated values.
+    */
+    private static class MnemonicFormat {
+        private String format;
+        private int[] values;
+
+        public MnemonicFormat(String format, int[] values) {
+            this.format = format;
+            this.values = values;
+        }
+
+        public String getFormat() {
+            return format;
+        }
+
+        public int[] getValues() {
+            return values;
+        }
+    }
+
     private static final Map<Set<Integer>, MnemonicFormat> formatMap;
 
     private IMemoryContext memory;
@@ -20,11 +43,11 @@ class %disasm_class extends SimpleDisassembler {
 
     static {
         String[] formats = {
-          %disasm_formats
+          %disasm_formats%
         };
         
         int[][] values = {
-            %disasm_values
+            %disasm_values%
         };
         
         formatMap = new HashMap<Set<Integer>, MnemonicFormat>();
@@ -45,7 +68,7 @@ class %disasm_class extends SimpleDisassembler {
      * @param memory the memory context which will be used to read instructions
      * @param decoder the decoder to use to decode instructions
      */
-    public %disasm_class(IMemoryContext memory, IDecoder decoder) {
+    public %disasm_class%(IMemoryContext memory, IDecoder decoder) {
         this.memory = memory;
         this.decoder = decoder;
     }

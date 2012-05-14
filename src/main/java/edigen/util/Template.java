@@ -50,8 +50,8 @@ public class Template {
     private static final String VARIABLE_NAME = "([A-Za-z_]\\w*)";
     private static final Pattern VARIABLE_NAME_PATTERN = Pattern.compile(VARIABLE_NAME);
     private static final Pattern BLOCK_VARIABLE
-            = Pattern.compile("(\\s*)%" + VARIABLE_NAME + "(\\s*)");
-    private static final Pattern INLINE_VARIABLE = Pattern.compile("%" + VARIABLE_NAME);
+            = Pattern.compile("(\\s*)%" + VARIABLE_NAME + "%(\\s*)");
+    private static final Pattern INLINE_VARIABLE = Pattern.compile("%" + VARIABLE_NAME + "%");
     private static final Pattern LINE_START = Pattern.compile("^", Pattern.MULTILINE);
     
     private BufferedReader template;
