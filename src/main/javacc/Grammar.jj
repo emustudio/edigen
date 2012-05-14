@@ -51,7 +51,7 @@ PARSER_END(Parser)
     " " | "\n" | "\r" | "\t"
 }
 
-// Operators
+// Special characters
 TOKEN :
 {
     <EQUALS: "=">
@@ -68,19 +68,8 @@ TOKEN :
     <ID: (["A"-"Z", "a"-"z", "_"])+ (["A"-"Z", "a"-"z", "_", "0"-"9"])*>
   | <STRING: "\"" (~["\"", "\n", "\r"])* "\"">
   | <HEX_NUMBER: "0x" (["0"-"9", "A"-"F", "a"-"f"])+>
+  | <DEC_NUMBER: "(" (["1"-"9"])+ (["0"-"9"])* ")">
   | <BIN_NUMBER: ("0" | "1")+>
-}
-
-// Decimal numbers can be located only inside parentheses
-TOKEN :
-{
-    <LEFT_PAR: "("> : IN_PARENTHESES
-}
-
-<IN_PARENTHESES> TOKEN :
-{
-    <RIGHT_PAR: ")"> : DEFAULT
-  | <DEC_NUMBER: (["1"-"9"])+ (["0"-"9"])*>
 }
 
 <*> TOKEN :
@@ -96,14 +85,14 @@ Specification Start():
     Disassembler disasm;
 }
 {
-    decoder = DecoderPart()
+    decoder = Decoder()
     <PART_SEPARATOR>
-    disasm = DisassemblerPart()
+    disasm = Disassembler()
     <EOF>
     { return new Specification(decoder, disasm); }
 }
 
-Decoder DecoderPart():
+Decoder Decoder():
 {
     Decoder decoder;
     Rule rule;
@@ -111,14 +100,13 @@ Decoder DecoderPart():
 {
     { decoder = new Decoder(); }
     (
-        rule = DecoderRule()
+        rule = Rule()
         { decoder.addChild(rule); }
-        <SEMICOLON>
     )+
     { return decoder; }
 }
 
-Rule DecoderRule():
+Rule Rule():
 {
     List<String> names;
     List<Variant> variants;
@@ -128,6 +116,7 @@ Rule DecoderRule():
     names = RuleNameSet()
     <EQUALS>
     variants = VariantSet()
+    <SEMICOLON>
     {
         rule = new Rule(names);
         for (Variant variant : variants)
@@ -184,48 +173,39 @@ Variant Variant():
     String value;
 }
 {
-    [LOOKAHEAD(2) (
-        value = ReturnSubRule()
-            { variant.setReturnSubrule(new Subrule(value)); }
-        | value = ReturnString()
-            { variant.setReturnString(value); }
-    ) <COLON>]
-    PatternSet(variant)
+    ( LOOKAHEAD(2) (
+        Return(variant)
+        <COLON>
+    ) )?
+    ( Pattern(variant) )+
     { return variant; }
 }
 
-String ReturnSubRule():
+void Return(Variant variant):
 {
-    Token name;
+    Token value;
+    String string;
 }
 {
-    name = <ID>
-    { return name.image; }
-}
-
-String ReturnString():
-{
-    Token string;
-}
-{
-    string = <STRING>
-    { return string.image.replace("\"", ""); }
+    value = <ID>
+        { variant.setReturnSubrule(new Subrule(value.image)); }
+    | value = <STRING>
+        {
+            string = value.image.substring(1, value.image.length() - 1);
+            variant.setReturnString(string);
+        }
 }
 
-void PatternSet(Variant variant):
+void Pattern(Variant variant):
 {
     Subrule subrule;
     Pattern constant;
 }
 {
-    (
-        subrule = SubRule()
-            { variant.addChild(subrule); }
-        | constant = HexConstant()
-            { variant.addChild(constant); }
-        | constant = BinConstant()
-            { variant.addChild(constant); }
-    )+
+    subrule = SubRule()
+        { variant.addChild(subrule); }
+    | constant = Constant()
+        { variant.addChild(constant); }
 }
 
 Subrule SubRule():
@@ -235,9 +215,7 @@ Subrule SubRule():
 }
 {
     name = SubRuleName()
-    [<LEFT_PAR>
-        length = SubRuleLength()
-    <RIGHT_PAR>]
+    ( length = SubRuleLength() )?
     {
         if (length == null)
             return new Subrule(name);
@@ -258,31 +236,30 @@ String SubRuleName():
 Integer SubRuleLength():
 {
     Token length;
+    String numberString;
 }
 {
     length = <DEC_NUMBER>
-    { return Integer.parseInt(length.image); }
+    {
+        numberString = length.image.substring(1, length.image.length() - 1);
+        return Integer.parseInt(numberString);
+    }
 }
 
-Pattern HexConstant():
+Pattern Constant():
 {
-    Token hex;
+    BitSequence bits;
+    Token constant;
 }
 {
-    hex = <HEX_NUMBER>
-    { return new Pattern(BitSequence.fromHexadecimal(hex.image.substring(2))); }
-}
-
-Pattern BinConstant():
-{
-    Token bin;
-}
-{
-    bin = <BIN_NUMBER>
-    { return new Pattern(BitSequence.fromBinary(bin.image)); }
+    ( constant = <HEX_NUMBER>
+        { bits = BitSequence.fromHexadecimal(constant.image.substring(2)); }
+    | constant = <BIN_NUMBER>
+        { bits = BitSequence.fromBinary(constant.image); } )
+    { return new Pattern(bits); }
 }
 
-Disassembler DisassemblerPart():
+Disassembler Disassembler():
 {
     Disassembler disasm = new Disassembler();
     Format format;
@@ -291,7 +268,6 @@ Disassembler DisassemblerPart():
     (
         format = Format()
         { disasm.addChild(format); }
-        <SEMICOLON>
     )+
     { return disasm; }
 }
@@ -300,16 +276,13 @@ Format Format():
 {
     Format format;
     String string;
-    Value value;
 }
 {
     string = FormatString()
     { format = new Format(string); }
     <EQUALS>
-    (
-        value = Value()
-        { format.addChild(value); }
-    )+
+    ValueSet(format)
+    <SEMICOLON>
     { return format; }
 }
 
@@ -320,6 +293,17 @@ String FormatString():
 {
     string = <STRING>
     { return string.image.replace("\"", ""); }
+}
+
+void ValueSet(Format format):
+{
+    Value value;
+}
+{
+    (
+        value = Value()
+        { format.addChild(value); }
+    )+
 }
 
 Value Value():

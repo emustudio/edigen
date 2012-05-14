@@ -18,6 +18,7 @@
 package edigen.util;
 
 import java.util.BitSet;
+import java.util.regex.Pattern;
 
 /**
  * A sequence of bits with defined but modifiable length.
@@ -32,6 +33,8 @@ import java.util.BitSet;
 public class BitSequence {
     
     private static final int NIBBLE_LENGTH = 4;
+    private static final Pattern BIN_NUMBER = Pattern.compile("[01]+");
+    private static final Pattern HEX_NUMBER = Pattern.compile("[0-9a-fA-F]+");
     
     private int length;
     private BitSet bitSet;
@@ -77,7 +80,7 @@ public class BitSequence {
      * @throws NumberFormatException if the input contains invalid characters
      */
     public static BitSequence fromBinary(String binaryString) {
-        if (!binaryString.matches("[01]+"))
+        if (!BIN_NUMBER.matcher(binaryString).matches())
             throw new NumberFormatException("Invalid binary number.");
         
         int length = binaryString.length();
@@ -102,7 +105,7 @@ public class BitSequence {
      * @throws NumberFormatException if the input contains invalid characters
      */
     public static BitSequence fromHexadecimal(String hexString) {
-        if (!hexString.matches("[0-9a-fA-F]+"))
+        if (!HEX_NUMBER.matcher(hexString).matches())
             throw new NumberFormatException("Invalid hexadecimal number.");
         
         int digitCount = hexString.length();

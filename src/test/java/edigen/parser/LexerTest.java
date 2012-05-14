@@ -17,10 +17,10 @@
  */
 package edigen.parser;
 
-import org.junit.Test;
+import static edigen.parser.ParserConstants.*;
 import java.io.StringReader;
-import static org.junit.Assert.*;
-import static edigen.parser.Parser.*;
+import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
 /**
  * The lexical analyzer test case.
@@ -100,10 +100,9 @@ public class LexerTest {
      */
     @Test
     public void testNumbers() {
-        String input = "0110 0xFF 0x1A2 (123) ( 10 )";
-        int[] kinds = {BIN_NUMBER, HEX_NUMBER, HEX_NUMBER,
-            LEFT_PAR, DEC_NUMBER, RIGHT_PAR, LEFT_PAR, DEC_NUMBER, RIGHT_PAR};
-        String[] images = {"0110", "0xFF", "0x1A2", "(", "123", ")", "(", "10", ")"};
+        String input = "0110 0xFF 0x1A2 (123) ";
+        int[] kinds = {BIN_NUMBER, HEX_NUMBER, HEX_NUMBER, DEC_NUMBER};
+        String[] images = {"0110", "0xFF", "0x1A2", "(123)"};
         
         testTokens(input, kinds, images);
     }
