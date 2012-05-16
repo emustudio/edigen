@@ -34,7 +34,8 @@ import java.util.Map;
 public class ResolveNamesVisitor extends Visitor {
     
     private Map<String, Rule> rules = new HashMap<String, Rule>();
-    private Subrule returnSubrule;
+    private String searchedSubrule;
+    private Subrule foundSubrule;
 
     /**
      * First saves all rule names and then traverses the rule subtrees.
@@ -67,29 +68,52 @@ public class ResolveNamesVisitor extends Visitor {
     }
 
     /**
-     * Associates the subrule with the variant which returns it.
+     * Associates the variant with the subrule which it returns.
      * @param variant the variant node
-     * @throws SemanticException never
+     * @throws SemanticException if the variant returns nonexistent subrule
      */
     @Override
     public void visit(Variant variant) throws SemanticException {
-        returnSubrule = variant.getReturnSubrule();
+        if (variant.getReturnSubrule() == null)
+            searchedSubrule = null;
+        else
+            searchedSubrule = variant.getReturnSubrule().getName();
+        
+        foundSubrule = null;
         variant.acceptChildren(this);
         
-        if (returnSubrule != null)
-            variant.setReturnSubrule(returnSubrule);
+        if (searchedSubrule != null) {
+            if (foundSubrule != null)
+                variant.setReturnSubrule(foundSubrule);
+            else
+                throw new SemanticException("Variant returns nonexistent subrule \""
+                        + searchedSubrule + '"');
+        }
     }
 
     /**
      * Associates the subrule with the rule.
      * @param subrule the subrule node
+     * @throws SemanticException on subrule-related semantic errors
      */
     @Override
-    public void visit(Subrule subrule) {
-        subrule.setRule(rules.get(subrule.getName()));
-        
-        if (returnSubrule != null && subrule.getName().equals(returnSubrule.getName()))
-            returnSubrule = subrule;
+    public void visit(Subrule subrule) throws SemanticException {
+        if (searchedSubrule != null && subrule.getLength() != null
+                && subrule.getName().equals(searchedSubrule)) {
+            if (foundSubrule == null)
+                foundSubrule = subrule;
+            else
+                throw new SemanticException("Subrule \"" + searchedSubrule
+                        + "\" is present multiple times in a variant which returns it");
+        } else {
+            Rule rule = rules.get(subrule.getName());
+            
+            if (rule != null)
+                subrule.setRule(rule);
+            else
+                throw new SemanticException("Subrule \"" + subrule.getName()
+                        + "\" refers to a nonexistent rule");
+        }
     }
 
     /**
