@@ -79,7 +79,7 @@ public class DisassemblerGenerator extends Generator {
         
         template.setVariable("disasm_class", disassemblerClass);
         template.setVariable("decoder_class", decoderClass);
-        template.setVariable("big_endian", bigEndian ? "true" : "false");
+        template.setVariable("little_endian", bigEndian ? "false" : "true");
         
         Writer formats = new StringWriter();
         disassembler.accept(new GenerateFormatsVisitor(formats));

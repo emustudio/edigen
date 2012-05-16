@@ -1,8 +1,8 @@
 %auto_gen_warning%
 package %package%.impl;
 
+import emulib.plugins.cpu.DecodedInstruction;
 import emulib.plugins.cpu.IDecoder;
-import emulib.plugins.cpu.Instruction;
 import emulib.plugins.cpu.InvalidInstructionException;
 import emulib.plugins.memory.IMemoryContext;
 import java.util.Arrays;
@@ -16,7 +16,7 @@ public class %decoder_class% implements IDecoder {
     private byte unit;
     private byte[] instructionBytes = new byte[1024];
     private int bytesRead;
-    private Instruction instruction;
+    private DecodedInstruction instruction;
     
     %decoder_fields%
     
@@ -35,11 +35,11 @@ public class %decoder_class% implements IDecoder {
      * @throws InvalidInstructionException when decoding is not successful
      */
     @Override
-    public Instruction decode(int memoryPosition) throws InvalidInstructionException {
+    public DecodedInstruction decode(int memoryPosition) throws InvalidInstructionException {
         this.memoryPosition = memoryPosition;
         bytesRead = 0;
 
-        instruction = new Instruction();
+        instruction = new DecodedInstruction();
         %root_rule%(0);
         instruction.setImage(Arrays.copyOfRange(instructionBytes, 0, bytesRead));
         return instruction;
