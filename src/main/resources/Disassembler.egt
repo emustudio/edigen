@@ -36,6 +36,7 @@ public class %disasm_class% extends SimpleDisassembler {
         }
     }
 
+    private static final boolean bigEndian = %big_endian%;
     private static final Map<Set<Integer>, MnemonicFormat> formatMap;
 
     private IMemoryContext memory;
@@ -158,22 +159,25 @@ public class %disasm_class% extends SimpleDisassembler {
     private String format(char format, byte[] value) {
         switch (format) {
             case 'c':
-                String string = new String(value);
+                String string = new String(toBigEndian(value));
                 return (string.length() != 0) ? string.substring(0, 1) : "?";
             case 'd':
-                return new BigInteger(value).toString();
+                return new BigInteger(toBigEndian(value)).toString();
             case 'f':
+                ByteBuffer buffer = ByteBuffer.wrap(toBigEndian(value));
+                
                 switch (value.length) {
                     case 4:
-                        return Float.toString(ByteBuffer.wrap(value).getFloat());
+                        return Float.toString(buffer.getFloat());
                     case 8:
-                        return Double.toString(ByteBuffer.wrap(value).getDouble());
+                        return Double.toString(buffer.getDouble());
                     default:
                         return "NaN";
                 }
             case 's':
                 return new String(value);
             case 'x':
+                value = toBigEndian(value);
                 String formatString = "%0" + 2 * value.length + "x";
                 return String.format(formatString, new BigInteger(value));
             case 'X':
@@ -182,6 +186,27 @@ public class %disasm_class% extends SimpleDisassembler {
                 return "%";
             default:
                 return Character.toString(format);
+        }
+    }
+    
+    /**
+     * If the disassembler endianness is set to little-endian, converts the data
+     * to big-endian (BE) by reversing all bytes - to allow the value to be
+     * properly displayed (Java uses BE).
+     * @param data the data
+     * @return the bytes in reversed order; or the original array if the
+     *         disassembler endianness is set to BE
+     */
+    private byte[] toBigEndian(byte[] data) {
+        if (!bigEndian) {
+            byte[] result = new byte[data.length];
+
+            for (int i = 0; i < result.length; i++)
+                result[i] = data[data.length - i - 1];
+
+            return result;
+        } else {
+            return data;
         }
     }
 }

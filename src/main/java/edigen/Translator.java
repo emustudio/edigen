@@ -63,13 +63,14 @@ public class Translator {
             Parser p = new Parser(input);
             Specification specification = p.parse();
 
-            Generator decoder = new DecoderGenerator(specification,
+            DecoderGenerator decoder = new DecoderGenerator(specification,
                     settings.get(DECODER_CLASS));
             decoder.setTemplateFile(settings.get(DECODER_TEMPLATE));
             
-            Generator disassembler = new DisassemblerGenerator(specification,
+            DisassemblerGenerator disassembler = new DisassemblerGenerator(specification,
                     settings.get(DISASSEMBLER_CLASS), settings.get(DECODER_CLASS));
             disassembler.setTemplateFile(settings.get(DISASSEMBLER_TEMPLATE));
+            disassembler.setEndian(settings.containsKey(BIG_ENDIAN));
             
             for (Generator generator : new Generator[] {decoder, disassembler}) {
                 generator.setPackageName(settings.get(PACKAGE));

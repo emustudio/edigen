@@ -31,10 +31,10 @@ import java.io.Writer;
  */
 public class DisassemblerGenerator extends Generator {
 
-    private Specification specification;
     private Disassembler disassembler;
     private String disassemblerClass;
     private String decoderClass;
+    private boolean bigEndian = false;
 
     /**
      * Constructs the disassembler generator.
@@ -46,7 +46,6 @@ public class DisassemblerGenerator extends Generator {
             String disassemblerClass, String decoderClass) {
         super("/Disassembler.egt", disassemblerClass);
         
-        this.specification = specification;
         this.disassembler = specification.getDisassembler();
         this.disassemblerClass = disassemblerClass;
         this.decoderClass = decoderClass;
@@ -62,6 +61,14 @@ public class DisassemblerGenerator extends Generator {
     }
 
     /**
+     * Sets the disassembler data endianness (default is little).
+     * @param bigEndian true for big endian, false for little endian
+     */
+    public void setEndian(boolean bigEndian) {
+        this.bigEndian = bigEndian;
+    }
+    
+    /**
      * Fills the template with variables and the generated code.
      * @param template the template object
      * @throws SemanticException never
@@ -72,6 +79,7 @@ public class DisassemblerGenerator extends Generator {
         
         template.setVariable("disasm_class", disassemblerClass);
         template.setVariable("decoder_class", decoderClass);
+        template.setVariable("big_endian", bigEndian ? "true" : "false");
         
         Writer formats = new StringWriter();
         disassembler.accept(new GenerateFormatsVisitor(formats));

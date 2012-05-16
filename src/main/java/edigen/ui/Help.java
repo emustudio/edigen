@@ -58,7 +58,7 @@ public class Help {
             help.append(' ').append(argument.getValue());
         }
         
-        help.append(" [options...]\n");
+        help.append(" [options...]\n\n");
         
         for (Argument argument : commandLine.getMandatoryArguments()) {
             help.append(' ').append(argument.getDescription()).append('\n');

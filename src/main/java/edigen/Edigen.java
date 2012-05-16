@@ -41,13 +41,14 @@ public class Edigen {
             DECODER_CLASS),
         new Argument("<disassembler_class> - Resulting disassembler class name",
             DISASSEMBLER_CLASS),
-        new Argument("o", "Write generated files to <directory>", OUTPUT_DIRECTORY),
-        new Argument("p", "Make generated classes members of <package>.impl and <package>.gui", PACKAGE),
-        new Argument("dt", "Use <template> for instruction decoder instead of the default one",
-                DECODER_TEMPLATE),
         new Argument("at", "Use <template> for disassembler instead of the default one",
                 DISASSEMBLER_TEMPLATE),
-        new Argument("d", "Enable debug mode", DEBUG)
+        new Argument("b", "Set disassembler endianness to big-endian (default is little)", BIG_ENDIAN),
+        new Argument("d", "Enable debug mode", DEBUG),
+        new Argument("dt", "Use <template> for instruction decoder instead of the default one",
+                DECODER_TEMPLATE),
+        new Argument("o", "Write generated files to <directory>", OUTPUT_DIRECTORY),
+        new Argument("p", "Make generated classes members of <package>.impl and <package>.gui", PACKAGE)
     };
 
     /**
