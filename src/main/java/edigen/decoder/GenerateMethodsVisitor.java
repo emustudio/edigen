@@ -133,8 +133,8 @@ public class GenerateMethodsVisitor extends Visitor {
                 field = currentRule.getFieldName(currentRule.getNames().get(0));
 
             if (variant.getReturnString() != null) {
-                value = variant.getFieldName() + ", \""
-                        + variant.getReturnString() + "\"";
+                value = '"' + variant.getReturnString() + "\", "
+                        + variant.getFieldName();
             } else {
                 int start = variant.getReturnSubrule().getStart();
                 int length = variant.getReturnSubrule().getLength();
@@ -142,7 +142,7 @@ public class GenerateMethodsVisitor extends Visitor {
                 value = String.format("getValue(start + %d, %d)", start, length);
             }
             
-            put(String.format("instruction.addRule(%s, %s);", field, value));
+            put(String.format("instruction.add(%s, %s);", field, value));
         }
         
         variant.acceptChildren(this);

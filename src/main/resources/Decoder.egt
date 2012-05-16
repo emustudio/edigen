@@ -39,9 +39,9 @@ public class %decoder_class% implements IDecoder {
         this.memoryPosition = memoryPosition;
         bytesRead = 0;
 
-        instruction = new Instruction(memoryPosition);
+        instruction = new Instruction();
         %root_rule%(0);
-        instruction.setContent(Arrays.copyOfRange(instructionBytes, 0, bytesRead));
+        instruction.setImage(Arrays.copyOfRange(instructionBytes, 0, bytesRead));
         return instruction;
     }
 

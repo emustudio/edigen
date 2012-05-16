@@ -85,7 +85,7 @@ public class %disasm_class% extends SimpleDisassembler {
         
         try {
             Instruction instruction = decoder.decode(memoryLocation);
-            MnemonicFormat format = formatMap.get(instruction.getRuleSet());
+            MnemonicFormat format = formatMap.get(instruction.getKeys());
 
             if (format == null)
                 mnemonic = "undisassemblable";
@@ -94,7 +94,7 @@ public class %disasm_class% extends SimpleDisassembler {
             
             StringBuilder codeBuilder = new StringBuilder();
             
-            for (byte number : instruction.getContent()) {
+            for (byte number : instruction.getImage()) {
                 codeBuilder.append(String.format("%02X ", number));
             }
             
@@ -116,7 +116,7 @@ public class %disasm_class% extends SimpleDisassembler {
     @Override
     public int getNextInstructionLocation(int memoryLocation) {
         try {
-            return decoder.decode(memoryLocation).getEndLocation() + 1;
+            return memoryLocation + decoder.decode(memoryLocation).getLength() + 1;
         } catch (InvalidInstructionException ex) {
             return memoryLocation + 1;
         }
@@ -134,11 +134,13 @@ public class %disasm_class% extends SimpleDisassembler {
         
         for (int ruleCode : format.getValues()) {
             position = mnemonic.indexOf("%", position);
-            
             if (position == -1 || position == mnemonic.length())
                 break;
             
-            byte[] value = instruction.getValue(ruleCode);
+            byte[] value = instruction.getBits(ruleCode);
+            if (value == null)
+                value = instruction.getString(ruleCode).getBytes();
+            
             String replaced = format(mnemonic.charAt(position + 1), value); 
             mnemonic.replace(position, position += 2, replaced);
         }
