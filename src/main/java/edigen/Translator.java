@@ -70,7 +70,6 @@ public class Translator {
             DisassemblerGenerator disassembler = new DisassemblerGenerator(specification,
                     settings.get(DISASSEMBLER_CLASS), settings.get(DECODER_CLASS));
             disassembler.setTemplateFile(settings.get(DISASSEMBLER_TEMPLATE));
-            disassembler.setEndian(settings.containsKey(BIG_ENDIAN));
             
             for (Generator generator : new Generator[] {decoder, disassembler}) {
                 generator.setPackageName(settings.get(PACKAGE));

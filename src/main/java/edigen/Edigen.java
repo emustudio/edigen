@@ -43,7 +43,6 @@ public class Edigen {
             DISASSEMBLER_CLASS),
         new Argument("at", "Use <template> for disassembler instead of the default one",
                 DISASSEMBLER_TEMPLATE),
-        new Argument("b", "Set disassembler endianness to big-endian (default is little)", BIG_ENDIAN),
         new Argument("d", "Enable debug mode", DEBUG),
         new Argument("dt", "Use <template> for instruction decoder instead of the default one",
                 DECODER_TEMPLATE),
