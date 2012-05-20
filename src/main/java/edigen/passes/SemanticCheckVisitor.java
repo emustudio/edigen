@@ -19,9 +19,7 @@ package edigen.passes;
 
 import edigen.SemanticException;
 import edigen.Visitor;
-import edigen.nodes.Format;
-import edigen.nodes.Value;
-import edigen.nodes.Variant;
+import edigen.nodes.*;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -34,8 +32,70 @@ public class SemanticCheckVisitor extends Visitor {
     
     private Set<Set<String>> formatSet = new HashSet<Set<String>>();
     private Set<String> valueSet = new HashSet<String>();
-    private boolean ruleReturns;
+    private boolean variantReturns;
+    private Set<String> returningRules = new HashSet<String>();
+    private Subrule subruleWithoutLength;
 
+    /**
+     * Adds the rule to the set of returning rules if one of its variants
+     * return.
+     * @param rule the rule node
+     * @throws SemanticException on semantic error
+     */
+    @Override
+    public void visit(Rule rule) throws SemanticException {
+        variantReturns = false;
+        rule.acceptChildren(this);
+        
+        if (variantReturns) {
+            for (String name : rule.getNames())
+                returningRules.add(name);
+        }
+    }
+
+    /**
+     * Sets the flag if the variant returns something and starts checking for
+     * subrule errors.
+     * 
+     * The subrule without length must occur only at the end of the variant.
+     * @param variant the variant node
+     * @throws SemanticException on subrule error
+     */
+    @Override
+    public void visit(Variant variant) throws SemanticException {
+        if (variant.returns())
+            variantReturns = true;
+        
+        subruleWithoutLength = null;
+        variant.acceptChildren(this);
+    }
+
+    /**
+     * Checks whether a subrule without length was already defined in this
+     * variant.
+     * @param pattern the pattern node
+     * @throws SemanticException if a subrule without length was defined
+     */
+    @Override
+    public void visit(Pattern pattern) throws SemanticException {
+        checkSubruleWithoutLength();
+    }
+
+    /**
+     * Checks whether a subrule without length was already defined in this
+     * variant and sets the flag if this subrule does not have a specified
+     * length.
+     * @param subrule the surule node
+     * @throws SemanticException if a subrule without length was defined
+     */
+    @Override
+    public void visit(Subrule subrule) throws SemanticException {
+        checkSubruleWithoutLength();
+        
+        if (subrule.getLength() == null)
+            subruleWithoutLength = subrule;
+    }
+    
     /**
      * Finds out whether the particular set of rules was not already used.
      * 
@@ -79,25 +139,26 @@ public class SemanticCheckVisitor extends Visitor {
      */
     @Override
     public void visit(Value value) throws SemanticException {
-        ruleReturns = false;
-        value.getRule().accept(this);
-        
-        if (ruleReturns) {
+        if (returningRules.contains(value.getName())) {
             valueSet.add(value.getName());
         } else {
             throw new SemanticException("Rule \"" + value.getName() + "\" never"
                     + " returns a value, but is used in the disassembler");
         }
     }
-
-    /**
-     * Sets the flag if the variant returns something.
-     * @param variant the variant node
-     */
-    @Override
-    public void visit(Variant variant) {
-        if (variant.returns())
-            ruleReturns = true;
-    }
     
+    /**
+     * Checks whether a subrule without length was already defined in this
+     * variant.
+     * @throws SemanticException if a subrule without length was already defined
+     */
+    private void checkSubruleWithoutLength() throws SemanticException {
+        if (subruleWithoutLength != null) {
+            String name = subruleWithoutLength.getName();
+            String message = "Subrule \"" + name + "\" does not have"
+            + " a specified length and is not contained at the variant end";
+            
+            throw new SemanticException(message);
+        }
+    }
 }

@@ -203,20 +203,20 @@ void Pattern(Variant variant):
     Pattern constant;
 }
 {
-    subrule = SubRule()
+    subrule = Subrule()
         { variant.addChild(subrule); }
     | constant = Constant()
         { variant.addChild(constant); }
 }
 
-Subrule SubRule():
+Subrule Subrule():
 {
     String name;
     Integer length = null;
 }
 {
-    name = SubRuleName()
-    ( length = SubRuleLength() )?
+    name = SubruleName()
+    ( length = SubruleLength() )?
     {
         if (length == null)
             return new Subrule(name);
@@ -225,7 +225,7 @@ Subrule SubRule():
     }
 }
 
-String SubRuleName():
+String SubruleName():
 {
     Token name;
 }
@@ -234,7 +234,7 @@ String SubRuleName():
     { return name.image; }
 }
 
-Integer SubRuleLength():
+Integer SubruleLength():
 {
     Token length;
     String numberString;
