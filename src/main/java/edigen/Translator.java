@@ -18,11 +18,14 @@
 package edigen;
 
 import static edigen.Setting.*;
-import edigen.decoder.DecoderGenerator;
-import edigen.disasm.DisassemblerGenerator;
+import edigen.generation.DecoderGenerator;
+import edigen.generation.DisassemblerGenerator;
+import edigen.generation.Generator;
+import edigen.nodes.Specification;
+import edigen.nodes.TreeNode;
 import edigen.parser.ParseException;
 import edigen.parser.Parser;
-import edigen.tree.Specification;
+import edigen.passes.*;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -60,28 +63,67 @@ public class Translator {
         
         try {
             input = new BufferedReader(new FileReader(settings.get(SPECIFICATION)));
-            Parser p = new Parser(input);
-            Specification specification = p.parse();
-
-            DecoderGenerator decoder = new DecoderGenerator(specification,
-                    settings.get(DECODER_CLASS));
-            decoder.setTemplateFile(settings.get(DECODER_TEMPLATE));
+            Parser parser = new Parser(input);
+            Specification specification = parser.parse();
+            transform(specification);
             
-            DisassemblerGenerator disassembler = new DisassemblerGenerator(specification,
-                    settings.get(DISASSEMBLER_CLASS), settings.get(DECODER_CLASS));
-            disassembler.setTemplateFile(settings.get(DISASSEMBLER_TEMPLATE));
+            DecoderGenerator decoderGenerator = new DecoderGenerator(
+                    specification.getDecoder(),
+                    settings.get(DECODER_CLASS)
+            );
             
-            for (Generator generator : new Generator[] {decoder, disassembler}) {
+            DisassemblerGenerator disassemblerGenerator = new DisassemblerGenerator(
+                    specification.getDisassembler(),
+                    settings.get(DISASSEMBLER_CLASS),
+                    settings.get(DECODER_CLASS)
+            );
+            
+            decoderGenerator.setTemplateFile(settings.get(DECODER_TEMPLATE));
+            disassemblerGenerator.setTemplateFile(settings.get(DISASSEMBLER_TEMPLATE));
+            
+            Generator[] generators = {decoderGenerator, disassemblerGenerator};
+            
+            for (Generator generator : generators) {
                 generator.setPackageName(settings.get(PACKAGE));
                 generator.setOutputDirectory(settings.get(OUTPUT_DIRECTORY));
-                generator.setDebugStream(settings.containsKey(DEBUG) ? DEBUG_STREAM : null);
-                
-                generator.transform();
                 generator.generate();
             }
         } finally {
             if (input != null)
                 input.close();
         }
+    }
+    
+    /**
+     * Transforms the tree to the form suitable for code generation.
+     * @param specification the root AST node
+     * @throws SemanticException when a semantic error occurs
+     */
+    private void transform(Specification specification) throws SemanticException {
+        Visitor[] transforms = {
+            new ResolveNamesVisitor(),
+            new SemanticCheckVisitor(),
+            new JoinVisitor(),
+            new SplitVisitor(),
+            new MoveVariantsVisitor(),
+            new GroupVisitor(),
+            new DetectAmbiguousVisitor(),
+            new MoveMasksVisitor(),
+            new RemovePatternsVisitor()
+        };
+
+        for (Visitor visitor : transforms) {
+            specification.accept(visitor);
+            dump(specification);
+        }
+    }
+    
+    /**
+     * Dumps the current AST if debugging is turned on.
+     * @param rootNode the node where to start dumping
+     */
+    private void dump(TreeNode rootNode) {
+        if (settings.containsKey(DEBUG))
+            rootNode.dump(DEBUG_STREAM);
     }
 }

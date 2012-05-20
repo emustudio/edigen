@@ -23,9 +23,10 @@ options {
 PARSER_BEGIN(Parser)
 package edigen.parser;
 
-import edigen.tree.*;
-import edigen.util.BitSequence;
-import java.util.*;
+import edigen.misc.BitSequence;
+import edigen.nodes.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Parser {
     public Specification parse() throws ParseException {

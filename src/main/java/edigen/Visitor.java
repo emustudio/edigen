@@ -17,7 +17,7 @@
  */
 package edigen;
 
-import edigen.tree.*;
+import edigen.nodes.*;
 
 /**
  * Generic tree node visitor.
