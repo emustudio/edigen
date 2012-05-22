@@ -66,7 +66,7 @@ public class GroupVisitor extends Visitor {
     /**
      * If the current task is to save bits, saves them and returns the control;
      * otherwise groups the pattern's children and thus continues the traversal.
-     * @param mask the pattern node
+     * @param pattern the pattern node
      * @throws SemanticException never 
      */
     @Override

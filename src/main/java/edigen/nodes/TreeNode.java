@@ -109,6 +109,7 @@ public abstract class TreeNode {
      * Subclasses should override this method in order to support the visitor
      * design pattern properly.
      * @param visitor the visitor object
+     * @throws SemanticException depends on situation 
      */
     public void accept(Visitor visitor) throws SemanticException {
         visitor.visit(this);
@@ -117,6 +118,7 @@ public abstract class TreeNode {
     /**
      * Sequentially calls the {@link #accept(Visitor)} method for all children.
      * @param visitor the visitor object
+     * @throws SemanticException depends on situation
      */
     public void acceptChildren(Visitor visitor) throws SemanticException {
         for (TreeNode child : getChildren())

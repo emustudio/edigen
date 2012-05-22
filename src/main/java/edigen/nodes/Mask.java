@@ -67,7 +67,7 @@ public class Mask extends TreeNode {
     
     /**
      * Returns a mask ANDed with an another mask.
-     * @param mask the second mask
+     * @param other the second mask
      * @return the resulting mask
      */
     public Mask and(Mask other) {

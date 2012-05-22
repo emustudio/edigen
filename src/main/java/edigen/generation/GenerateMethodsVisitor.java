@@ -41,16 +41,6 @@ public class GenerateMethodsVisitor extends Visitor {
     public GenerateMethodsVisitor(Writer output) {
         this.printer = new PrettyPrinter(output);
     }
-
-    /**
-     * Writes the class skeleton.
-     * @param decoder the decoder node
-     * @throws SemanticException never
-     */
-    @Override
-    public void visit(Decoder decoder) throws SemanticException {
-        decoder.acceptChildren(this);
-    }
     
     /**
      * Writes the method definition.

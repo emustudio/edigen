@@ -66,8 +66,10 @@ public class Rule extends TreeNode {
     }
     
     /**
-     * Returns a list of field names which should be generated for this rule.
-     * @return the list of field names
+     * Returns a field name which should be generated for this rule (key).
+     * @param ruleName the particular rule name (one rule can have multiple
+     *        names - keys)
+     * @return the name of a constant for the given key
      */
     public String getFieldName(String ruleName) {
         return ruleName.toUpperCase();

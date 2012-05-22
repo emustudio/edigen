@@ -42,8 +42,17 @@ public class Argument {
      * parameters.</p>
      */
     public enum Type {
+        /**
+         * A mandatory argument.
+         */
         MANDATORY,
+        /**
+         * An argument with one value (for example <tt>-v value</tt>).
+         */
         VALUE,
+        /**
+         * An argument without any value (a flag, e.g. <tt>-f</tt>).
+         */
         FLAG
     }
     
