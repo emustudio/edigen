@@ -40,7 +40,7 @@ public class Help {
      * @return the help text
      */
     public String generate() {
-        StringBuilder help = new StringBuilder("Usage: ");
+        StringBuilder help = new StringBuilder("Usage:\n ");
         help.append(executionCommand);
         
         generateMandatory(help);

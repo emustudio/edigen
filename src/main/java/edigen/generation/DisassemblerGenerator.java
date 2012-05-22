@@ -30,22 +30,20 @@ import java.io.Writer;
 public class DisassemblerGenerator extends Generator {
 
     private Disassembler disassembler;
-    private String disassemblerClass;
-    private String decoderClass;
+    private String decoderName;
 
     /**
      * Constructs the disassembler generator.
      * @param disassembler the disassembler node
-     * @param disassemblerClass the name of the resulting class
-     * @param decoderClass the name of the associated decoder class
+     * @param disassemblerName the resulting package + class name
+     * @param decoderName the package + class name of the decoder
      */
     public DisassemblerGenerator(Disassembler disassembler,
-            String disassemblerClass, String decoderClass) {
-        super("/Disassembler.egt", disassemblerClass);
+            String disassemblerName, String decoderName) {
+        super("/Disassembler.edt", disassemblerName);
         
         this.disassembler = disassembler;
-        this.disassemblerClass = disassemblerClass;
-        this.decoderClass = decoderClass;
+        this.decoderName = decoderName;
     }
     
     /**
@@ -57,8 +55,9 @@ public class DisassemblerGenerator extends Generator {
     protected void fillTemplate(Template template) throws SemanticException {
         super.fillTemplate(template);
         
-        template.setVariable("disasm_class", disassemblerClass);
-        template.setVariable("decoder_class", decoderClass);
+        template.setVariable("disasm_package", getPackageName());
+        template.setVariable("disasm_class", getClassName());
+        template.setVariable("decoder_name", decoderName);
         
         Writer formats = new StringWriter();
         disassembler.accept(new GenerateFormatsVisitor(formats));

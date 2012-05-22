@@ -1,7 +1,7 @@
 %auto_gen_warning%
-package %package%.gui;
+package %disasm_package%;
 
-import static %package%.impl.%decoder_class%.*;
+import static %decoder_name%.*;
 import emulib.plugins.cpu.*;
 import emulib.plugins.memory.IMemoryContext;
 import java.math.BigInteger;

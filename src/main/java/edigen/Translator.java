@@ -20,9 +20,7 @@ package edigen;
 import static edigen.Setting.*;
 import edigen.generation.DecoderGenerator;
 import edigen.generation.DisassemblerGenerator;
-import edigen.generation.Generator;
 import edigen.nodes.Specification;
-import edigen.nodes.TreeNode;
 import edigen.parser.ParseException;
 import edigen.parser.Parser;
 import edigen.passes.*;
@@ -53,7 +51,7 @@ public class Translator {
     }
     
     /**
-     * Performs the translation process.
+     * Reads the input file, transforms the tree and generates the code.
      * @throws IOException when the file can not be read / written
      * @throws ParseException when the input file can not be parsed
      * @throws SemanticException when there is a semantic error in the input file
@@ -67,27 +65,22 @@ public class Translator {
             Specification specification = parser.parse();
             transform(specification);
             
-            DecoderGenerator decoderGenerator = new DecoderGenerator(
+            DecoderGenerator decoder = new DecoderGenerator(
                     specification.getDecoder(),
-                    settings.get(DECODER_CLASS)
+                    settings.get(DECODER_NAME)
             );
+            decoder.setOutputDirectory(settings.get(DECODER_DIRECTORY));
+            decoder.setTemplateFile(settings.get(DECODER_TEMPLATE));
+            decoder.generate();
             
-            DisassemblerGenerator disassemblerGenerator = new DisassemblerGenerator(
+            DisassemblerGenerator disassembler = new DisassemblerGenerator(
                     specification.getDisassembler(),
-                    settings.get(DISASSEMBLER_CLASS),
-                    settings.get(DECODER_CLASS)
+                    settings.get(DISASSEMBLER_NAME),
+                    settings.get(DECODER_NAME)
             );
-            
-            decoderGenerator.setTemplateFile(settings.get(DECODER_TEMPLATE));
-            disassemblerGenerator.setTemplateFile(settings.get(DISASSEMBLER_TEMPLATE));
-            
-            Generator[] generators = {decoderGenerator, disassemblerGenerator};
-            
-            for (Generator generator : generators) {
-                generator.setPackageName(settings.get(PACKAGE));
-                generator.setOutputDirectory(settings.get(OUTPUT_DIRECTORY));
-                generator.generate();
-            }
+            disassembler.setOutputDirectory(settings.get(DISASSEMBLER_DIRECTORY));
+            disassembler.setTemplateFile(settings.get(DISASSEMBLER_TEMPLATE));
+            disassembler.generate();
         } finally {
             if (input != null)
                 input.close();
@@ -112,18 +105,14 @@ public class Translator {
             new RemovePatternsVisitor()
         };
 
+        if (settings.containsKey(DEBUG))
+            System.out.println("Debug mode is on. Tree dump:\n");
+        
         for (Visitor visitor : transforms) {
             specification.accept(visitor);
-            dump(specification);
+            
+            if (settings.containsKey(DEBUG))
+                specification.dump(DEBUG_STREAM);
         }
-    }
-    
-    /**
-     * Dumps the current AST if debugging is turned on.
-     * @param rootNode the node where to start dumping
-     */
-    private void dump(TreeNode rootNode) {
-        if (settings.containsKey(DEBUG))
-            rootNode.dump(DEBUG_STREAM);
     }
 }

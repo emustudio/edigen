@@ -22,26 +22,51 @@ import edigen.misc.Template;
 import java.io.*;
 
 /**
- * A generator transforms an abstract syntax tree into an output language.
+ * An output code generator.
  * @author Matúš Sulír
  */
 public abstract class Generator {
     
     private String defaultTemplate;
-    private String className;
+    private String name;
     private String templateFile;
-    private String packageName;
     private String outputDirectory;
 
     /**
      * Constructs the part of the generator.
      * @param defaultTemplate the path in the JAR file to the template used if
      *        no specific template is configured
-     * @param className the name of the generated class
+     * @param name the name of the package + class
      */
-    protected Generator(String defaultTemplate, String className) {
+    protected Generator(String defaultTemplate, String name) {
         this.defaultTemplate = defaultTemplate;
-        this.className = className;
+        this.name = name;
+    }
+    
+    /**
+     * Returns the package name.
+     * @return the package name (using the dot notation)
+     */
+    public String getPackageName() {
+        int dotIndex = name.lastIndexOf('.');
+        
+        if (dotIndex == -1)
+            return "edigen.cpu";
+        else
+            return name.substring(0, dotIndex);
+    }
+    
+    /**
+     * Returns the class name (without the package name).
+     * @return the class name
+     */
+    public String getClassName() {
+        int dotIndex = name.lastIndexOf('.');
+        
+        if (dotIndex == -1)
+            return name;
+        else
+            return name.substring(dotIndex + 1);
     }
     
     /**
@@ -50,22 +75,6 @@ public abstract class Generator {
      */
     public void setTemplateFile(String templateFile) {
         this.templateFile = templateFile;
-    }
-
-    /**
-     * Returns the name of the package to which the generated class will belong.
-     * @return the package name (using the dot notation)
-     */
-    public String getPackageName() {
-        return packageName;
-    }
-
-    /**
-     * Sets the package to which the generated class will belong.
-     * @param packageName the package name (using the dot notation)
-     */
-    public void setPackageName(String packageName) {
-        this.packageName = packageName;
     }
 
     /**
@@ -109,11 +118,6 @@ public abstract class Generator {
     protected void fillTemplate(Template template) throws SemanticException {
         template.setVariable("auto_gen_warning",
                 "/* Auto-generated file. Do not modify. */");
-        
-        if (packageName != null)
-            template.setVariable("package", packageName);
-        else
-            template.setVariable("package", "edigen");
     }
     
     /**
@@ -140,7 +144,7 @@ public abstract class Generator {
      * @throws IOException when the file can not be open for writing
      */
     private BufferedWriter openOutput() throws IOException {
-        String outputFile = className + ".java";
+        String outputFile = getClassName() + ".java";
         File outputPath;
 
         if (outputDirectory != null)

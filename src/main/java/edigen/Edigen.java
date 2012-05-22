@@ -37,21 +37,24 @@ public class Edigen {
     private static final Argument[] ARGUMENTS = {
         new Argument("<specification> - File containing the description of instructions",
             SPECIFICATION),
-        new Argument("<decoder_class> - Resulting instruction decoder class name",
-            DECODER_CLASS),
-        new Argument("<disassembler_class> - Resulting disassembler class name",
-            DISASSEMBLER_CLASS),
+        new Argument("<decoder> - Resulting instruction decoder package + class name",
+            DECODER_NAME),
+        new Argument("<disassembler> - Resulting disassembler package + class name",
+            DISASSEMBLER_NAME),
+        new Argument("ao", "Write generated disassembler file to <directory>",
+            DISASSEMBLER_DIRECTORY),
         new Argument("at", "Use <template> for disassembler instead of the default one",
                 DISASSEMBLER_TEMPLATE),
         new Argument("d", "Enable debug mode", DEBUG),
-        new Argument("dt", "Use <template> for instruction decoder instead of the default one",
-                DECODER_TEMPLATE),
-        new Argument("o", "Write generated files to <directory>", OUTPUT_DIRECTORY),
-        new Argument("p", "Make generated classes members of <package>.impl and <package>.gui", PACKAGE)
+        new Argument("do", "Write generated decoder file to <directory>", DECODER_DIRECTORY),
+        new Argument("dt", "Use <template> for decoder instead of the default one",
+                DECODER_TEMPLATE)
     };
 
     /**
      * The application entry point.
+     * 
+     * Displays information or error messages and calls the translator.
      *
      * @param args the command line arguments
      */
@@ -66,7 +69,7 @@ public class Edigen {
             
             Translator generator = new Translator(configuration);
             generator.translate();
-            System.out.println("Decoder and disassembler successfully generated.");
+            System.out.println("Instruction decoder and disassembler successfully generated.");
             success = true;
         } catch (CommandLineException ex) {
             if (args.length == 0)

@@ -1,5 +1,5 @@
 %auto_gen_warning%
-package %package%.impl;
+package %decoder_package%;
 
 import emulib.plugins.cpu.DecodedInstruction;
 import emulib.plugins.cpu.IDecoder;

@@ -18,17 +18,52 @@
 package edigen;
 
 /**
- * An enumeration of possible program configuration settings, often read from
+ * An enumeration of possible program configuration settings, usually read from
  * the command line.
  * @author Matúš Sulír
  */
 public enum Setting {
+    /**
+     * A specification file.
+     */
     SPECIFICATION,
-    DECODER_CLASS,
-    DISASSEMBLER_CLASS,
+    /**
+     * The package + class name of the generated instruction decoder.
+     */
+    DECODER_NAME,
+    /**
+     * The package + class name of the generated disassembler.
+     */
+    DISASSEMBLER_NAME,
+    /**
+     * An output directory of the generated disassemler file.
+     */
+    DISASSEMBLER_DIRECTORY,
+    /**
+     * The generated disassembler will be a member of this package.
+     */
+    DISASSEMBLER_PACKAGE,
+    /**
+     * The external disassembler template to use (instead of the internal,
+     * default template).
+     */
     DISASSEMBLER_TEMPLATE,
+    /**
+     * If set, the program will run in the debug mode (printing the tree after
+     * each transformation).
+     */
     DEBUG,
-    DECODER_TEMPLATE,
-    OUTPUT_DIRECTORY,
-    PACKAGE
+    /**
+     * An output directory of the generated instruction decoder file.
+     */
+    DECODER_DIRECTORY,
+    /**
+     * The generated decoder will be a member of this package.
+     */
+    DECODER_PACKAGE,
+    /**
+     * The external decoder template to use (instead of the internal,
+     * default template).
+     */
+    DECODER_TEMPLATE
 }
