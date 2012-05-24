@@ -21,7 +21,9 @@ import edigen.SemanticException;
 import edigen.Visitor;
 import edigen.nodes.*;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * A visitor which creates associactions between objects accoring to their names
@@ -34,6 +36,7 @@ import java.util.Map;
 public class ResolveNamesVisitor extends Visitor {
     
     private Map<String, Rule> rules = new HashMap<String, Rule>();
+    private Set<String> ruleFieldNames = new HashSet<String>();
     private String searchedSubrule;
     private Subrule foundSubrule;
 
@@ -60,6 +63,14 @@ public class ResolveNamesVisitor extends Visitor {
         for (String name : rule.getNames()) {
             if (!rules.containsKey(name)) {
                 rules.put(name, rule);
+                String field = rule.getFieldName(name);
+                
+                if (!ruleFieldNames.contains(field)) {
+                    ruleFieldNames.add(field);
+                } else {
+                    throw new SemanticException("Rule field \"" + field
+                            + "\" is generated multiple times");
+                }
             } else {
                 throw new SemanticException("Rule \"" + name
                         + "\" is defined multiple times");
