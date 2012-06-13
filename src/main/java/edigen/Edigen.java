@@ -52,24 +52,17 @@ public class Edigen {
     };
 
     /**
-     * The application entry point.
+     * The application entry point used when running the program from the
+     * command line.
      * 
      * Displays information or error messages and calls the translator.
-     *
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        System.out.println("Edigen - Emulator Disassembler Generator");
-        CommandLine commandLine = new CommandLine(ARGUMENTS);
-        String help = new Help("java -jar edigen.jar", commandLine).generate();
         boolean success = false;
         
         try {
-            Map<Setting, String> configuration = commandLine.parse(args);
-            
-            Translator generator = new Translator(configuration);
-            generator.translate();
-            System.out.println("Instruction decoder and disassembler successfully generated.");
+            new Edigen().run(args);
             success = true;
         } catch (CommandLineException ex) {
             if (args.length == 0)
@@ -77,7 +70,8 @@ public class Edigen {
             else
                 System.out.println("\nError: " + ex.getMessage() + ".\n");
             
-            System.out.print(help);
+            Help help = new Help("java -jar edigen.jar", new CommandLine(ARGUMENTS));
+            System.out.print(help.generate());
         } catch (FileNotFoundException ex) {
             System.out.println("Could not open file: " + ex.getMessage());
         } catch (IOException ex) {
@@ -90,5 +84,25 @@ public class Edigen {
             if (!success)
                 System.exit(1);
         }
+    }
+    
+    /**
+     * Runs the generator without calling System.exit() - useful when running
+     * from a Maven plugin.
+     * @param args the arguments
+     * @throws CommandLineException when the arguments are invalid
+     * @throws IOException when an I/O error occurs
+     * @throws ParseException when the input file can not be parsed
+     * @throws SemanticException when the input file is semantically invalid
+     */
+    public void run(String[] args) throws CommandLineException, IOException,
+            ParseException, SemanticException {
+        System.out.println("Edigen - Emulator Disassembler Generator");
+        
+        CommandLine commandLine = new CommandLine(ARGUMENTS);
+        Map<Setting, String> configuration = commandLine.parse(args);
+        new Translator(configuration).translate();
+        
+        System.out.println("Instruction decoder and disassembler successfully generated.");
     }
 }

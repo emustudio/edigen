@@ -3,16 +3,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>edigen</groupId>
-    <version>1.0</version>
+    <artifactId>edigen</artifactId>
+    <version>1.1-SNAPSHOT</version>
     <packaging>jar</packaging>
-
     <name>Edigen</name>
+    <description>Emulator Disassembler Generator</description>
     <url>http://github.com/sulir/edigen</url>
-
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <netbeans.hint.license>gpl20</netbeans.hint.license>
-    </properties>
 
     <dependencies>
         <dependency>
@@ -43,10 +39,7 @@
             <version>5.0</version>
         </dependency>
     </dependencies>
-  
-    <artifactId>edigen</artifactId>
-    <description>Emulator Disassembler Generator</description>
-  
+    
     <build>
         <plugins>
             <plugin>
@@ -86,4 +79,9 @@
             </plugin>
         </plugins>
     </build>
+    
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <netbeans.hint.license>gpl20</netbeans.hint.license>
+    </properties>
 </project>
