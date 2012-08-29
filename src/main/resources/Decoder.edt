@@ -2,16 +2,16 @@
 package %decoder_package%;
 
 import emulib.plugins.cpu.DecodedInstruction;
-import emulib.plugins.cpu.IDecoder;
+import emulib.plugins.cpu.Decoder;
 import emulib.plugins.cpu.InvalidInstructionException;
-import emulib.plugins.memory.IMemoryContext;
+import emulib.plugins.memory.MemoryContext;
 import java.util.Arrays;
 
 /**
  * The instruction decoder.
  */
-public class %decoder_class% implements IDecoder {
-    private IMemoryContext memory;
+public class %decoder_class% implements Decoder {
+    private MemoryContext memory;
     private int memoryPosition;
     private byte unit;
     private byte[] instructionBytes = new byte[1024];
@@ -24,7 +24,7 @@ public class %decoder_class% implements IDecoder {
      * The constructor.
      * @param memory the memory context which will be used to read instructions
      */
-    public %decoder_class%(IMemoryContext memory) {
+    public %decoder_class%(MemoryContext memory) {
         this.memory = memory;
     }
     

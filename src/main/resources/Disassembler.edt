@@ -3,7 +3,7 @@ package %disasm_package%;
 
 import static %decoder_name%.*;
 import emulib.plugins.cpu.*;
-import emulib.plugins.memory.IMemoryContext;
+import emulib.plugins.memory.MemoryContext;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
@@ -14,7 +14,7 @@ import java.util.Set;
 /**
  * The disassembler.
  */
-public class %disasm_class% extends SimpleDisassembler {
+public class %disasm_class% extends AbstractDisassembler {
     /**
     * An instruction mnemonic format string with associated values.
     */
@@ -39,8 +39,7 @@ public class %disasm_class% extends SimpleDisassembler {
     private static final boolean LITTLE_ENDIAN = true;
 
     private static final Map<Set<Integer>, MnemonicFormat> formatMap;
-    private IMemoryContext memory;
-    private IDecoder decoder;
+    private MemoryContext memory;
 
     static {
         String[] formats = {
@@ -69,29 +68,30 @@ public class %disasm_class% extends SimpleDisassembler {
      * @param memory the memory context which will be used to read instructions
      * @param decoder the decoder to use to decode instructions
      */
-    public %disasm_class%(IMemoryContext memory, IDecoder decoder) {
+    public %disasm_class%(MemoryContext memory, Decoder decoder) {
+        super(decoder);
         this.memory = memory;
-        this.decoder = decoder;
     }
     
     /**
      * Disassembles an instruction.
-     * @param memoryLocation the starting address of the instruction
+     * @param memoryPosition the starting address of the instruction
      * @return the disassembled instruction
      */
     @Override
-    public CPUInstruction disassemble(int memoryLocation) {
+    public DisassembledInstruction disassemble(int memoryPosition) {
         String mnemonic;
         String code;
         
         try {
-            DecodedInstruction instruction = decoder.decode(memoryLocation);
+            DecodedInstruction instruction = decoder.decode(memoryPosition);
             MnemonicFormat format = formatMap.get(instruction.getKeys());
 
-            if (format == null)
+            if (format == null) {
                 mnemonic = "undisassemblable";
-            else
+            } else {
                 mnemonic = createMnemonic(instruction, format);
+            }
             
             StringBuilder codeBuilder = new StringBuilder();
             
@@ -102,24 +102,24 @@ public class %disasm_class% extends SimpleDisassembler {
             code = codeBuilder.toString();
         } catch (InvalidInstructionException ex) {
             mnemonic = "unknown";
-            code = String.format("%02X", (Byte) memory.read(memoryLocation));
+            code = String.format("%02X", (Byte) memory.read(memoryPosition));
         }
         
-        return new CPUInstruction(memoryLocation, mnemonic, code);
+        return new DisassembledInstruction(memoryPosition, mnemonic, code);
     }
     
     /**
      * Returns an address of the instruction located right after the current
      * instruction.
-     * @param memoryLocation the starting address of the current instruction
+     * @param memoryPosition the starting address of the current instruction
      * @return the starting address of the next instruction
      */
     @Override
-    public int getNextInstructionLocation(int memoryLocation) {
+    public int getNextInstructionPosition(int memoryPosition) {
         try {
-            return memoryLocation + decoder.decode(memoryLocation).getLength();
+            return memoryPosition + decoder.decode(memoryPosition).getLength();
         } catch (InvalidInstructionException ex) {
-            return memoryLocation + 1;
+            return memoryPosition + 1;
         }
     }
 
@@ -135,12 +135,14 @@ public class %disasm_class% extends SimpleDisassembler {
         
         for (int ruleCode : format.getValues()) {
             position = mnemonic.indexOf("%", position);
-            if (position == -1 || position == mnemonic.length())
+            if (position == -1 || position == mnemonic.length()) {
                 break;
+            }
             
             byte[] value = instruction.getBits(ruleCode, LITTLE_ENDIAN);
-            if (value == null)
+            if (value == null) {
                 value = instruction.getString(ruleCode).getBytes();
+            }
             
             String replaced = format(mnemonic.charAt(position + 1), value); 
             mnemonic.replace(position, position += 2, replaced);
