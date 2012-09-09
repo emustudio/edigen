@@ -77,8 +77,9 @@ public class LexerTest {
      */
     @Test
     public void testOperators() {
-        String input = "= , ;:| %%";
-        int[] expected = {EQUALS, COMMA, SEMICOLON, COLON, OR, PART_SEPARATOR};
+        String input = "= , ;:| %% []";
+        int[] expected = {EQUALS, COMMA, SEMICOLON, COLON, OR, PART_SEPARATOR, 
+            L_BRACE, R_BRACE};
         
         testTokens(input, expected);
     }

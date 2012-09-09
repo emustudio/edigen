@@ -60,6 +60,8 @@ TOKEN :
   | <SEMICOLON: ";">
   | <COLON: ":">
   | <OR: "|">
+  | <L_BRACE: "[">
+  | <R_BRACE: "]">
   | <PART_SEPARATOR: "%%">
 }
 
@@ -212,17 +214,31 @@ void Pattern(Variant variant):
 Subrule Subrule():
 {
     String name;
+    Pattern prePattern = null;
     Integer length = null;
 }
 {
     name = SubruleName()
+    ( prePattern = PrePattern() )?
     ( length = SubruleLength() )?
     {
-        if (length == null)
-            return new Subrule(name);
-        else
-            return new Subrule(name, length);
+        if (length == null) {
+            return new Subrule(name, prePattern);
+        } else {
+            return new Subrule(name, length, prePattern);
+        }
     }
+}
+
+Pattern PrePattern():
+{
+    Pattern pattern;
+}
+{
+    <L_BRACE>
+    pattern = Constant()
+    <R_BRACE>
+    { return pattern; }
 }
 
 String SubruleName():
