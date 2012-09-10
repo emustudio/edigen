@@ -32,7 +32,7 @@ import edigen.nodes.Variant;
  * @author Matúš Sulír
  */
 public class JoinVisitor extends Visitor {
-
+    
     private BitSequence maskBits;
     private BitSequence patternBits;
     
@@ -81,17 +81,35 @@ public class JoinVisitor extends Visitor {
      * @param subrule the subrule node
      */
     @Override
-    public void visit(Subrule subrule) {
+    public void visit(Subrule subrule) throws SemanticException {
         subrule.setStart(maskBits.getLength());
         
         Integer bitCount = subrule.getLength();
+        Pattern prePattern = subrule.getPrePattern();
         
         if (bitCount != null) {
-            maskBits.append(new BitSequence(bitCount, false));
-            patternBits.append(new BitSequence(bitCount, false));
+            if (prePattern != null) {
+                BitSequence prePatternBS = prePattern.getBits();
+                int prePatternLen = prePatternBS.getLength();
+                if (prePatternLen > bitCount) {
+                    throw new SemanticException(subrule, "Pre-pattern length is longer "
+                            + "than expected for subrule " + subrule.getName());
+                }
+                maskBits.append(new BitSequence(prePatternLen, true));
+                patternBits.append(prePatternBS);
+                if (prePatternLen < bitCount) {
+                    int diff = bitCount - prePatternLen;
+                    maskBits.append(new BitSequence(diff, false));
+                    patternBits.append(new BitSequence(diff, false));
+                }
+            } else {
+                maskBits.append(new BitSequence(bitCount, false));
+                patternBits.append(new BitSequence(bitCount, false));
+            }
         }
         
-        if (subrule.getRule() == null)
+        if (subrule.getRule() == null) {
             subrule.remove();
+        }
     }
 }
