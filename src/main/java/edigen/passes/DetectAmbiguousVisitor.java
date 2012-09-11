@@ -125,9 +125,11 @@ public class DetectAmbiguousVisitor extends Visitor {
                 
                 for (TreeNode pattern1 : mask1.getChildren()) {
                     for (TreeNode pattern2 : mask2.getChildren()) {
-                        if (isAmbiguous((Pattern) pattern1, (Pattern) pattern2, commonMask))
-                            throw new SemanticException(String.format(MESSAGE,
-                                    currentRule.getLabel()));
+                        if (isAmbiguous((Pattern) pattern1, (Pattern) pattern2, commonMask)) {
+                            throw new SemanticException(currentRule, String.format(MESSAGE,
+                                    currentRule.getLabel()) + ". " + pattern1
+                                    + " == " + pattern2 + " (" + commonMask + ")");
+                        }
                     }
                 }
             }
@@ -168,7 +170,8 @@ public class DetectAmbiguousVisitor extends Visitor {
      */
     private void detectVariant(Pattern pattern) throws SemanticException {
         if (pattern.childCount() > 1) {
-            throw new SemanticException(String.format(MESSAGE, currentRule.getLabel()));
+            throw new SemanticException(currentRule, String.format(MESSAGE, currentRule.getLabel())
+                    + ". " + pattern.toString());
         }
     }
 }

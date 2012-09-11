@@ -142,7 +142,7 @@ public class SemanticCheckVisitor extends Visitor {
         if (returningRules.contains(value.getName())) {
             valueSet.add(value.getName());
         } else {
-            throw new SemanticException("Rule \"" + value.getName() + "\" never"
+            throw new SemanticException(value, "Rule \"" + value.getName() + "\" never"
                     + " returns a value, but is used in the disassembler");
         }
     }
@@ -158,7 +158,7 @@ public class SemanticCheckVisitor extends Visitor {
             String message = "Subrule \"" + name + "\" does not have"
             + " a specified length and is not contained at the variant end";
             
-            throw new SemanticException(message);
+            throw new SemanticException(subruleWithoutLength, message);
         }
     }
 }
