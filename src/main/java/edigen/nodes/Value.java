@@ -26,7 +26,7 @@ import edigen.Visitor;
  */
 public class Value extends TreeNode {
     
-    private String name;
+    private final String name;
     private Rule rule;
 
     /**

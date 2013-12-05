@@ -62,7 +62,7 @@ import java.io.Writer;
  */
 public class PrettyPrinter {
 
-    private PrintWriter output;
+    private final PrintWriter output;
     private int indentCount = 0;
     private static final String indentString = "    ";
 

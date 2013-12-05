@@ -66,7 +66,7 @@ public class DetectAmbiguousVisitor extends Visitor {
 
     private static final String MESSAGE = "Ambiguity detected in rule \"%s\"";
     private Rule currentRule;
-    private List<Mask> masks = new ArrayList<Mask>();
+    private final List<Mask> masks = new ArrayList<Mask>();
     
     /**
      * Detects possible ambiguity under the rule node and traverses the

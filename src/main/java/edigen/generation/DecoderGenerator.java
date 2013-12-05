@@ -30,7 +30,7 @@ import java.io.Writer;
  */
 public class DecoderGenerator extends Generator {
 
-    private Decoder decoder;
+    private final Decoder decoder;
 
     /**
      * Constructs the instruction decoder generator.

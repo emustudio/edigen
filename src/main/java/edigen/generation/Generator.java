@@ -27,8 +27,8 @@ import java.io.*;
  */
 public abstract class Generator {
     
-    private String defaultTemplate;
-    private String name;
+    private final String defaultTemplate;
+    private final String name;
     private String templateFile;
     private String outputDirectory;
 

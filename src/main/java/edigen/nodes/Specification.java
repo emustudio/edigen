@@ -26,8 +26,8 @@ import edigen.Visitor;
  */
 public class Specification extends TreeNode {
     
-    private Decoder decoder;
-    private Disassembler disassembler;
+    private final Decoder decoder;
+    private final Disassembler disassembler;
 
     /**
      * Constructs the specification node.

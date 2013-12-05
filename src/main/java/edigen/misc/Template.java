@@ -54,9 +54,9 @@ public class Template {
     private static final Pattern INLINE_VARIABLE = Pattern.compile("%" + VARIABLE_NAME + "%");
     private static final Pattern LINE_START = Pattern.compile("^", Pattern.MULTILINE);
     
-    private BufferedReader template;
-    private BufferedWriter output;
-    private Map<String, String> variables = new HashMap<String, String>();
+    private final BufferedReader template;
+    private final BufferedWriter output;
+    private final Map<String, String> variables = new HashMap<String, String>();
     
     /**
      * Constructs a template system.

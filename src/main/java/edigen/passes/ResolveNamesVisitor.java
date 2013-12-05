@@ -35,8 +35,8 @@ import java.util.Set;
  */
 public class ResolveNamesVisitor extends Visitor {
     
-    private Map<String, Rule> rules = new HashMap<String, Rule>();
-    private Set<String> ruleFieldNames = new HashSet<String>();
+    private final Map<String, Rule> rules = new HashMap<String, Rule>();
+    private final Set<String> ruleFieldNames = new HashSet<String>();
     private String searchedSubrule;
     private Subrule foundSubrule;
 

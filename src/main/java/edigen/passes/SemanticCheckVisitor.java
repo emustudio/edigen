@@ -30,10 +30,10 @@ import java.util.Set;
  */
 public class SemanticCheckVisitor extends Visitor {
     
-    private Set<Set<String>> formatSet = new HashSet<Set<String>>();
-    private Set<String> valueSet = new HashSet<String>();
+    private final Set<Set<String>> formatSet = new HashSet<Set<String>>();
+    private final Set<String> valueSet = new HashSet<String>();
     private boolean variantReturns;
-    private Set<String> returningRules = new HashSet<String>();
+    private final Set<String> returningRules = new HashSet<String>();
     private Subrule subruleWithoutLength;
 
     /**

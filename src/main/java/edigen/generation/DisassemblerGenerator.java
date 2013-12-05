@@ -29,8 +29,8 @@ import java.io.Writer;
  */
 public class DisassemblerGenerator extends Generator {
 
-    private Disassembler disassembler;
-    private String decoderName;
+    private final Disassembler disassembler;
+    private final String decoderName;
 
     /**
      * Constructs the disassembler generator.

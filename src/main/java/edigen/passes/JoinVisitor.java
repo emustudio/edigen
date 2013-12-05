@@ -79,6 +79,7 @@ public class JoinVisitor extends Visitor {
      * <p>If the subrule does not refer to a rule (it is used only to return
      * a value), it is removed from the tree.</p>
      * @param subrule the subrule node
+     * @throws edigen.SemanticException when pre-pattern is longer than expected
      */
     @Override
     public void visit(Subrule subrule) throws SemanticException {

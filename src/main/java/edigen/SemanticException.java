@@ -18,8 +18,6 @@
 package edigen;
 
 import edigen.nodes.TreeNode;
-import java.io.PrintWriter;
-import java.io.Writer;
 
 /**
  * This class represents an error found during semantic analysis, for example
@@ -27,8 +25,6 @@ import java.io.Writer;
  * @author Matúš Sulír
  */
 public class SemanticException extends Exception {
-    
-    private TreeNode affectedNode = null;
     
     /**
      * Constructs a semantic exception.
@@ -40,36 +36,11 @@ public class SemanticException extends Exception {
 
     /**
      * Constructs a semantic exception.
-     * @param node affected node
+     * @param node the affected node
      * @param message the message accurately describing the error
      */
     public SemanticException(TreeNode node, String message) {
         super(message);
-        this.affectedNode = node;
-    }
-    
-    private void printIndent(PrintWriter out, int indent) {
-        for (int i = 0; i < indent; i++) {
-            out.print(" ");
-        }
-    }
-    
-    private void printTree(PrintWriter out, TreeNode node, int indent) {
-        printIndent(out, indent);
-        out.println(node.toString());
-        for (TreeNode n : node.getChildren()) {
-            printTree(out, n, indent + 1);
-        }
-    }
-    
-    /**
-     * Print string representation of the affected node. If the node is
-     * not defined, does nothing.
-     */
-    public void printAffectedNode(PrintWriter out) {
-        if (affectedNode != null) {
-            printTree(out, affectedNode, 0);
-        }
     }
     
 }

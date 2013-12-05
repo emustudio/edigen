@@ -40,7 +40,7 @@ public class Translator {
     
     private static final PrintStream DEBUG_STREAM = System.out;
     
-    private Map<Setting, String> settings;
+    private final Map<Setting, String> settings;
 
     /**
      * Constructs the translator.

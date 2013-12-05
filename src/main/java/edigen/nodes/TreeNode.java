@@ -37,7 +37,7 @@ import java.util.Set;
 public abstract class TreeNode {
     
     private TreeNode parent;
-    private Set<TreeNode> children = new LinkedHashSet<TreeNode>();
+    private final Set<TreeNode> children = new LinkedHashSet<TreeNode>();
     
     /**
      * Returns the parent of this node.

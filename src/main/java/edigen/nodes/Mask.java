@@ -28,7 +28,7 @@ import edigen.misc.BitSequence;
  */
 public class Mask extends TreeNode {
     
-    private BitSequence bits;
+    private final BitSequence bits;
     private Integer start;
     
     /**

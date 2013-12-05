@@ -81,8 +81,8 @@ public class MoveMasksVisitor extends Visitor {
                 }
             }
         }
-
-        if (defaultPattern.childCount() != 0)
+        
+        if (defaultPattern.childCount() != 0 && firstMask != null)
             firstMask.addChild(defaultPattern);
         
         node.acceptChildren(this);

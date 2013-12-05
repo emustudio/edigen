@@ -28,7 +28,7 @@ import edigen.Visitor;
  */
 public class Format extends TreeNode {
     
-    private String formatString;
+    private final String formatString;
 
     /**
      * Constructs the format node.

@@ -58,11 +58,11 @@ public class Argument {
     
     private static final Pattern HELP_VALUE = Pattern.compile("<\\w+>");
     
-    private Type type;
-    private String option;
-    private String value;
-    private String description;
-    private Setting key;
+    private final Type type;
+    private final String option;
+    private final String value;
+    private final String description;
+    private final Setting key;
 
     /**
      * Constructs an unnamed mandatory argument.

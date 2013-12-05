@@ -22,8 +22,8 @@ package edigen.ui;
  * @author Matúš Sulír
  */
 public class Help {
-    private String executionCommand;
-    private CommandLine commandLine;
+    private final String executionCommand;
+    private final CommandLine commandLine;
 
     /**
      * Consturcts the help generator.

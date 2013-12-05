@@ -29,23 +29,8 @@ public class Subrule extends TreeNode {
     private String name;
     private Integer start;
     private Integer length;
-    private Pattern prePattern; // forward pattern information
+    private Pattern prePattern;
     private Rule rule;
-    
-    /**
-     * Constructs the subrule with the specified length.
-     * @param name the subrule name
-     * @param length the subrule length
-     */
-    public Subrule(String name, int length) {
-        this(name);
-        this.length = length;
-    }
-    
-    public Subrule(String name, int length, Pattern prePattern) {
-        this(name, prePattern);
-        this.length = length;
-    }
     
     /**
      * Constructs the subrule with an unspecified length.
@@ -54,12 +39,29 @@ public class Subrule extends TreeNode {
      * @param name the subrule name
      */
     public Subrule(String name) {
-        this.name = name;
-        this.prePattern = null;
+        this(name, null);
     }
     
+    /**
+     * Constructs the subrule with the specified pre-pattern.
+     * 
+     * Can be located only at the end of a variant.
+     * @param name the subrule name
+     * @param prePattern the forward pattern information
+     */
     public Subrule(String name, Pattern prePattern) {
-        this(name);
+        this(name, null, prePattern);
+    }
+    
+    /**
+     * Constructs the subrule with the specified length and pre-pattern.
+     * @param name the subrule name
+     * @param length the subrule length
+     * @param prePattern the forward pattern information
+     */
+    public Subrule(String name, Integer length, Pattern prePattern) {
+        this.name = name;
+        this.length = length;
         this.prePattern = prePattern;
     }
     
@@ -110,6 +112,10 @@ public class Subrule extends TreeNode {
         return rule;
     }
     
+    /**
+     * Returns the forward pattern information.
+     * @return the pre-pattern
+     */
     public Pattern getPrePattern() {
         return prePattern;
     }

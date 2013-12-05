@@ -26,8 +26,8 @@ import java.util.*;
  */
 public class CommandLine {
 
-    private List<Argument> mandatory = new ArrayList<Argument>();
-    private Map<String, Argument> optional = new LinkedHashMap<String, Argument>();
+    private final List<Argument> mandatory = new ArrayList<Argument>();
+    private final Map<String, Argument> optional = new LinkedHashMap<String, Argument>();
     private Map<Setting, String> configuration;
     
     /**

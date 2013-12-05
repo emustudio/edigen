@@ -27,7 +27,7 @@ import edigen.misc.BitSequence;
  */
 public class Pattern extends TreeNode {
     
-    private BitSequence bits;
+    private final BitSequence bits;
     
     /**
      * Constructs a pattern.

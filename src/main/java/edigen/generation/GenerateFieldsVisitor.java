@@ -38,9 +38,9 @@ import java.util.Set;
  */
 public class GenerateFieldsVisitor extends Visitor {
 
-    private PrettyPrinter printer;
+    private final PrettyPrinter printer;
     private boolean ruleReturns;
-    private Set<String> fields = new LinkedHashSet<String>();
+    private final Set<String> fields = new LinkedHashSet<String>();
 
     /**
      * Constucts the visitor.

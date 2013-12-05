@@ -32,7 +32,7 @@ import java.util.Iterator;
  */
 public class GenerateFormatsVisitor extends Visitor {
     
-    private PrettyPrinter printer;
+    private final PrettyPrinter printer;
     private String formatString;
 
     /**

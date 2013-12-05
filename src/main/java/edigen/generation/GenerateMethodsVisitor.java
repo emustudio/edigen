@@ -30,7 +30,7 @@ import java.io.Writer;
  */
 public class GenerateMethodsVisitor extends Visitor {
 
-    private PrettyPrinter printer;
+    private final PrettyPrinter printer;
     private Rule currentRule;
     private boolean isDefaultCase = false;
     

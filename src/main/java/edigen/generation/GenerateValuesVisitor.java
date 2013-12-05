@@ -34,7 +34,7 @@ import java.util.Iterator;
  */
 public class GenerateValuesVisitor extends Visitor {
     
-    private PrintWriter writer;
+    private final PrintWriter writer;
     
     /**
      * Constucts the visitor.
