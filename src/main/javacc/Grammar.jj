@@ -111,17 +111,15 @@ Decoder Decoder():
 
 Rule Rule():
 {
-    List<String> names;
-    List<Variant> variants;
     Rule rule;
+    List<Variant> variants;
 }
 {
-    names = RuleNameSet()
+    rule = RuleNameSet()
     <EQUALS>
     variants = VariantSet()
     <SEMICOLON>
     {
-        rule = new Rule(names);
         for (Variant variant : variants)
             rule.addChild(variant);
         
@@ -129,29 +127,29 @@ Rule Rule():
     }
 }
 
-List<String> RuleNameSet():
-{
-    String name;
-    List<String> names = new ArrayList<String>();
-}
-{
-    name = RuleName()
-    { names.add(name); }
-    (
-        <COMMA>
-        name = RuleName()
-        { names.add(name); }
-    )*
-    { return names; }
-}
-
-String RuleName():
+Rule RuleNameSet():
 {
     Token name;
+    List<String> names = new ArrayList<String>();
+    int line;
+    Rule rule;
 }
 {
     name = <ID>
-    { return name.image; }
+    {
+        names.add(name.image);
+        line = name.beginLine;
+    }
+    (
+        <COMMA>
+        name = <ID>
+        { names.add(name.image); }
+    )*
+    {
+        rule = new Rule(names);
+        rule.setLine(line);
+        return rule;
+    }
 }
 
 List<Variant> VariantSet():
@@ -181,7 +179,11 @@ Variant Variant():
         <COLON>
     ) )?
     ( Pattern(variant) )+
-    { return variant; }
+    {
+        if (!variant.returns())
+            variant.setLine(variant.getChild(0).getLine());
+        return variant;
+    }
 }
 
 void Return(Variant variant):
@@ -197,6 +199,9 @@ void Return(Variant variant):
             string = value.image.substring(1, value.image.length() - 1);
             variant.setReturnString(string);
         }
+    {
+        variant.setLine(value.beginLine);
+    }
 }
 
 void Pattern(Variant variant):
@@ -213,20 +218,23 @@ void Pattern(Variant variant):
 
 Subrule Subrule():
 {
-    String name;
+    Token name;
     Pattern prePattern = null;
     Integer length = null;
+    Subrule subrule;
 }
 {
-    name = SubruleName()
+    name = <ID>
     ( prePattern = PrePattern() )?
     ( length = SubruleLength() )?
     {
         if (length == null) {
-            return new Subrule(name, prePattern);
+            subrule = new Subrule(name.image, prePattern);
         } else {
-            return new Subrule(name, length, prePattern);
+            subrule = new Subrule(name.image, length, prePattern);
         }
+        subrule.setLine(name.beginLine);
+        return subrule;
     }
 }
 
@@ -239,15 +247,6 @@ Pattern PrePattern():
     pattern = Constant()
     <R_BRACE>
     { return pattern; }
-}
-
-String SubruleName():
-{
-    Token name;
-}
-{
-    name = <ID>
-    { return name.image; }
 }
 
 Integer SubruleLength():
@@ -267,13 +266,18 @@ Pattern Constant():
 {
     BitSequence bits;
     Token constant;
+    Pattern pattern;
 }
 {
     ( constant = <HEX_NUMBER>
         { bits = BitSequence.fromHexadecimal(constant.image.substring(2)); }
     | constant = <BIN_NUMBER>
         { bits = BitSequence.fromBinary(constant.image); } )
-    { return new Pattern(bits); }
+    {
+        pattern = new Pattern(bits);
+        pattern.setLine(constant.beginLine);
+        return pattern;
+    }
 }
 
 Disassembler Disassembler():
@@ -291,43 +295,33 @@ Disassembler Disassembler():
 
 Format Format():
 {
+    Token string;
     Format format;
-    String string;
 }
 {
-    string = FormatString()
-    { format = new Format(string); }
+    string = <STRING>
+    {
+        format = new Format(string.image.replace("\"", ""));
+        format.setLine(string.beginLine);
+    }
     <EQUALS>
     ValueSet(format)
     <SEMICOLON>
     { return format; }
 }
 
-String FormatString():
-{
-    Token string;
-}
-{
-    string = <STRING>
-    { return string.image.replace("\"", ""); }
-}
-
 void ValueSet(Format format):
 {
+    Token ruleName;
     Value value;
 }
 {
     (
-        value = Value()
-        { format.addChild(value); }
+        ruleName = <ID>
+        {
+            value = new Value(ruleName.image);
+            value.setLine(ruleName.beginLine);
+            format.addChild(value);
+        }
     )+
-}
-
-Value Value():
-{
-    Token name;
-}
-{
-    name = <ID>
-    { return new Value(name.image); }
 }

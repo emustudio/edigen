@@ -38,6 +38,7 @@ public abstract class TreeNode {
     
     private TreeNode parent;
     private final Set<TreeNode> children = new LinkedHashSet<TreeNode>();
+    private Integer line;
     
     /**
      * Returns the parent of this node.
@@ -123,6 +124,26 @@ public abstract class TreeNode {
     public void acceptChildren(Visitor visitor) throws SemanticException {
         for (TreeNode child : getChildren())
             child.accept(visitor);
+    }
+
+    /**
+     * Returns the starting line number in the source file from which this node
+     * was generated.
+     * @return the line number; null if no line was associated with this node
+     */
+    public Integer getLine() {
+        return line;
+    }
+    
+    /**
+     * Sets the starting source line number of this node.
+     * 
+     * It is the starting position of one of the tokens from which this tree
+     * node was generated (usually the first one).
+     * @param line the line number
+     */
+    public void setLine(Integer line) {
+        this.line = line;
     }
     
     /**
