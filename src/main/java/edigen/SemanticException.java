@@ -25,22 +25,15 @@ import edigen.nodes.TreeNode;
  * @author Matúš Sulír
  */
 public class SemanticException extends Exception {
-    
-    /**
-     * Constructs a semantic exception.
-     * @param message the message accurately describing the error
-     */
-    public SemanticException(String message) {
-        super(message);
-    }
 
     /**
      * Constructs a semantic exception.
-     * @param node the affected node
      * @param message the message accurately describing the error
+     * @param node the affected node, used to display a line number
      */
-    public SemanticException(TreeNode node, String message) {
-        super(message);
+    public SemanticException(String message, TreeNode node) {
+        super(((node.getLine() != null) ? "Line " + node.getLine() + ": " : "")
+                + message);
     }
     
 }

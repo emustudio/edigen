@@ -69,11 +69,11 @@ public class ResolveNamesVisitor extends Visitor {
                     ruleFieldNames.add(field);
                 } else {
                     throw new SemanticException("Rule field \"" + field
-                            + "\" is generated multiple times");
+                            + "\" is generated multiple times", rule);
                 }
             } else {
                 throw new SemanticException("Rule \"" + name
-                        + "\" is defined multiple times");
+                        + "\" is defined multiple times", rule);
             }
         }
     }
@@ -97,8 +97,8 @@ public class ResolveNamesVisitor extends Visitor {
             if (foundSubrule != null)
                 variant.setReturnSubrule(foundSubrule);
             else
-                throw new SemanticException("Variant returns nonexistent subrule \""
-                        + searchedSubrule + '"');
+                throw new SemanticException("Variant returns nonexistent"
+                        + " subrule \"" + searchedSubrule + '"', variant);
         }
     }
 
@@ -115,7 +115,8 @@ public class ResolveNamesVisitor extends Visitor {
                 foundSubrule = subrule;
             else
                 throw new SemanticException("Subrule \"" + searchedSubrule
-                        + "\" is present multiple times in a variant which returns it");
+                        + "\" is present multiple times in a variant which"
+                        + " returns it", subrule);
         } else {
             Rule rule = rules.get(subrule.getName());
             
@@ -123,7 +124,7 @@ public class ResolveNamesVisitor extends Visitor {
                 subrule.setRule(rule);
             else
                 throw new SemanticException("Subrule \"" + subrule.getName()
-                        + "\" refers to a nonexistent rule");
+                        + "\" refers to a nonexistent rule", subrule);
         }
     }
 
@@ -141,7 +142,7 @@ public class ResolveNamesVisitor extends Visitor {
             value.setRule(rule);
         } else {
             throw new SemanticException("Disassembler value \""
-                    + name + "\" refers to a nonexistent rule");
+                    + name + "\" refers to a nonexistent rule", value);
         }
     }
 }

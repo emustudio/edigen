@@ -93,8 +93,9 @@ public class JoinVisitor extends Visitor {
                 BitSequence prePatternBS = prePattern.getBits();
                 int prePatternLen = prePatternBS.getLength();
                 if (prePatternLen > bitCount) {
-                    throw new SemanticException(subrule, "Pre-pattern length is longer "
-                            + "than expected for subrule " + subrule.getName());
+                    throw new SemanticException("Pre-pattern length is longer "
+                            + "than expected for subrule " + subrule.getName(),
+                            subrule);
                 }
                 maskBits.append(new BitSequence(prePatternLen, true));
                 patternBits.append(prePatternBS);

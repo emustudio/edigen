@@ -123,7 +123,7 @@ public class SemanticCheckVisitor extends Visitor {
             }
             
             throw new SemanticException("Set of values \"" + values.toString()
-                    + "\" is contained in multiple disassembler formats");
+                    + "\" is contained in multiple disassembler formats", format);
         }
     }
 
@@ -142,8 +142,8 @@ public class SemanticCheckVisitor extends Visitor {
         if (returningRules.contains(value.getName())) {
             valueSet.add(value.getName());
         } else {
-            throw new SemanticException(value, "Rule \"" + value.getName() + "\" never"
-                    + " returns a value, but is used in the disassembler");
+            throw new SemanticException("Rule \"" + value.getName() + "\" never"
+                    + " returns a value, but is used in the disassembler", value);
         }
     }
     
@@ -158,7 +158,7 @@ public class SemanticCheckVisitor extends Visitor {
             String message = "Subrule \"" + name + "\" does not have"
             + " a specified length and is not contained at the variant end";
             
-            throw new SemanticException(subruleWithoutLength, message);
+            throw new SemanticException(message, subruleWithoutLength);
         }
     }
 }
