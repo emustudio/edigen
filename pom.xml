@@ -18,13 +18,13 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-    
+
     <build>
         <extensions>
             <extension>
                 <groupId>org.apache.maven.wagon</groupId>
                 <artifactId>wagon-ssh</artifactId>
-                <version>2.2</version>
+                <version>2.6</version>
             </extension>
         </extensions>
         <plugins>
@@ -44,7 +44,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.5.1</version>
+                <version>3.1</version>
                 <configuration>
                     <source>1.6</source>
                     <target>1.6</target>
@@ -53,7 +53,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>2.4</version>
+                <version>2.5</version>
                 <configuration>
                     <finalName>edigen</finalName>
                     <archive>
@@ -65,7 +65,7 @@
             </plugin>
         </plugins>
     </build>
-    
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <netbeans.hint.license>gpl20</netbeans.hint.license>
@@ -77,5 +77,5 @@
             <name>emuStudio Repository</name>
             <url>sftp://web.sourceforge.net:/home/project-web/emustudio/htdocs/repository</url>
         </repository>
-    </distributionManagement>    
+    </distributionManagement>
 </project>
