@@ -52,6 +52,9 @@ public class %decoder_class% implements Decoder {
      * @return the bits read
      */
     private byte read(int start, int length) {
+        if (length > 8) {
+            throw new IllegalArgumentException("length must be <= 8 bits");
+        }
         if (start + length > 8 * bytesRead) {
             instructionBytes[bytesRead++] = ((Short) memory.read(memoryPosition++)).byteValue();
         }
@@ -63,6 +66,10 @@ public class %decoder_class% implements Decoder {
         int endByte = (start + length) / 8;
         int endOffset = (startOffset + length) % 8;
         byte endMask = (byte) (0xFF << (8 - endOffset));
+
+        if (startByte == endByte) {
+            return (byte)((instructionBytes[startByte] & startMask & endMask) >>> (8 - endOffset));
+        }
         
         byte result = (byte) ((instructionBytes[startByte] & startMask) << endOffset);
         return (byte) (result | (instructionBytes[endByte] & endMask) >>> (8 - endOffset));
