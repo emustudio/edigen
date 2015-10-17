@@ -9,12 +9,13 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
- * The disassembler.
+ * The disassembler implementation.
  */
-public class %disasm_class% extends AbstractDisassembler {
+public class %disasm_class% implements Disassembler {
     /**
     * An instruction mnemonic format string with associated values.
     */
@@ -40,6 +41,7 @@ public class %disasm_class% extends AbstractDisassembler {
 
     private static final Map<Set<Integer>, MnemonicFormat> formatMap;
     private final MemoryContext memory;
+    private final Decoder decoder;
 
     static {
         String[] formats = {
@@ -69,8 +71,8 @@ public class %disasm_class% extends AbstractDisassembler {
      * @param decoder the decoder to use to decode instructions
      */
     public %disasm_class%(MemoryContext memory, Decoder decoder) {
-        super(decoder);
-        this.memory = memory;
+        this.decoder = Objects.requireNonNull(decoder);
+        this.memory = Objects.requireNonNull(memory);
     }
     
     /**
