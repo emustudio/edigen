@@ -4,6 +4,7 @@ package %disasm_package%;
 import static %decoder_name%.*;
 import emulib.plugins.cpu.*;
 import emulib.plugins.memory.MemoryContext;
+import emulib.runtime.RadixUtils;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
@@ -145,7 +146,7 @@ public class %disasm_class% implements Disassembler {
             if (value == null) {
                 value = instruction.getString(ruleCode).getBytes();
             }
-            
+
             String replaced = format(mnemonic.charAt(position + 1), value); 
             mnemonic.replace(position, position += 2, replaced);
         }
@@ -179,10 +180,9 @@ public class %disasm_class% implements Disassembler {
             case 's':
                 return new String(value);
             case 'x':
-                String formatString = "%0" + 2 * value.length + "x";
-                return String.format(formatString, new BigInteger(value));
+                return RadixUtils.convertToRadix(value, 16, !LITTLE_ENDIAN).toLowerCase();
             case 'X':
-                return format('x', value).toUpperCase();
+                return RadixUtils.convertToRadix(value, 16, !LITTLE_ENDIAN);
             case '%':
                 return "%";
             default:
