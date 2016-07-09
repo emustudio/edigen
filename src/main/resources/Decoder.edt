@@ -3,7 +3,7 @@ package %decoder_package%;
 
 import emulib.plugins.cpu.DecodedInstruction;
 import emulib.plugins.cpu.Decoder;
-import emulib.plugins.cpu.InvalidInstructionException;
+import emulib.runtime.exceptions.InvalidInstructionException;
 import emulib.plugins.memory.MemoryContext;
 import java.util.Arrays;
 
