@@ -5,6 +5,7 @@ import static %decoder_name%.*;
 import emulib.plugins.cpu.*;
 import emulib.plugins.memory.MemoryContext;
 import emulib.runtime.RadixUtils;
+import emulib.runtime.exceptions.InvalidInstructionException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
