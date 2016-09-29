@@ -56,7 +56,7 @@ public class %decoder_class% implements Decoder {
             throw new IllegalArgumentException("length must be <= 8 bits");
         }
         if (start + length > 8 * bytesRead) {
-            instructionBytes[bytesRead++] = ((Short) memory.read(memoryPosition++)).byteValue();
+            instructionBytes[bytesRead++] = ((Number) memory.read(memoryPosition++)).byteValue();
         }
         
         int startByte = start / 8;
