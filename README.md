@@ -1,6 +1,6 @@
 Edigen - Emulator Disassembler Generator
 ========================================
-[![Build Status](https://travis-ci.org/sulir/edigen.svg?branch=master)](https://travis-ci.org/sulir/edigen.svg?branch=master)
+[![Build Status](https://travis-ci.org/sulir/edigen.svg?branch=master)](https://travis-ci.org/sulir/edigen)
 
 Edigen is a command-line tool which generates Java source code of:
  * an instruction decoder of an emulator
