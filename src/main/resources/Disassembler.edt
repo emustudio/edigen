@@ -13,33 +13,65 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.UnaryOperator;
 
 /**
  * The disassembler implementation.
  */
 public class %disasm_class% implements Disassembler {
     /**
-    * An instruction mnemonic format string with associated values.
+    * An instruction mnemonic format string with associated parameters.
     */
     private static class MnemonicFormat {
         private final String format;
-        private final int[] values;
+        private final Parameter[] parameters;
 
-        public MnemonicFormat(String format, int[] values) {
+        public MnemonicFormat(String format, Parameter[] parameters) {
             this.format = format;
-            this.values = values;
+            this.parameters = parameters;
         }
 
-        public String getFormat() {
-            return format;
-        }
-
-        public int[] getValues() {
-            return values;
-        }
+        public String getFormat() { return format; }
+        public Parameter[] getParameters() { return parameters; }
     }
 
-    private static final boolean LITTLE_ENDIAN = true;
+    /**
+    * A parameter of a format (a rule and a constant-decoding strategy).
+    */
+    private static class Parameter {
+        private final int ruleCode;
+        private final UnaryOperator<byte[]> strategy;
+
+        public Parameter(int ruleCode, UnaryOperator<byte[]> strategy) {
+            this.ruleCode = ruleCode;
+            this.strategy = strategy;
+        }
+
+        public int getRuleCode() { return ruleCode; }
+        public UnaryOperator<byte[]> getStrategy() { return strategy; }
+    }
+
+    /**
+    * A class with constant-decoding strategies.
+    *
+    * If the value represents a number, a decoding method should return bytes in
+    * the big-endian order since they will be used in Java methods accepting big endian.
+    */
+    private static class Strategy {
+        public static byte[] little_endian(byte[] value) {
+            byte[] result = new byte[value.length];
+
+            for (int i = 0; i < result.length; i++) {
+                result[i] = value[value.length - i - 1];
+            }
+
+            return result;
+        }
+
+        public static byte[] big_endian(byte[] value) {
+            return value;
+        }
+    }
 
     private static final Map<Set<Integer>, MnemonicFormat> formatMap;
     private final MemoryContext memory;
@@ -50,20 +82,20 @@ public class %disasm_class% implements Disassembler {
           %disasm_formats%
         };
         
-        int[][] values = {
-            %disasm_values%
+        Parameter[][] parameters = {
+            %disasm_parameters%
         };
         
         formatMap = new HashMap<Set<Integer>, MnemonicFormat>();
         
         for (int i = 0; i < formats.length; i++) {
-            Set<Integer> formatValues = new HashSet<Integer>();
-            
-            for (int value : values[i]) {
-                formatValues.add(value);
+            Set<Integer> ruleCodes = new HashSet<Integer>();
+
+            for (Parameter parameter : parameters[i]) {
+                ruleCodes.add(parameter.getRuleCode());
             }
-            
-            formatMap.put(formatValues, new MnemonicFormat(formats[i], values[i]));
+
+            formatMap.put(ruleCodes, new MnemonicFormat(formats[i], parameters[i]));
         }
     }
 
@@ -137,15 +169,17 @@ public class %disasm_class% implements Disassembler {
         StringBuilder mnemonic = new StringBuilder(format.getFormat());
         int position = 0;
         
-        for (int ruleCode : format.getValues()) {
+        for (Parameter parameter : format.getParameters()) {
             position = mnemonic.indexOf("%", position);
             if (position == -1 || position == mnemonic.length()) {
                 break;
             }
             
-            byte[] value = instruction.getBits(ruleCode, LITTLE_ENDIAN);
-            if (value == null) {
-                value = instruction.getString(ruleCode).getBytes();
+            byte[] value = instruction.getBits(parameter.getRuleCode());
+            if (value != null) {
+                value = parameter.getStrategy().apply(value);
+            } else {
+                value = instruction.getString(parameter.getRuleCode()).getBytes();
             }
 
             String replaced = format(mnemonic.charAt(position + 1), value); 
@@ -181,9 +215,9 @@ public class %disasm_class% implements Disassembler {
             case 's':
                 return new String(value);
             case 'x':
-                return RadixUtils.convertToRadix(value, 16, !LITTLE_ENDIAN).toLowerCase();
+                return RadixUtils.convertToRadix(value, 16, false).toLowerCase();
             case 'X':
-                return RadixUtils.convertToRadix(value, 16, !LITTLE_ENDIAN);
+                return RadixUtils.convertToRadix(value, 16, false);
             case '%':
                 return "%";
             default:

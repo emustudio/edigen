@@ -64,8 +64,8 @@ public class DisassemblerGenerator extends Generator {
         template.setVariable("disasm_formats", formats.toString());
 
         Writer values = new StringWriter();
-        disassembler.accept(new GenerateValuesVisitor(values));
-        template.setVariable("disasm_values", values.toString());
+        disassembler.accept(new GenerateParametersVisitor(values));
+        template.setVariable("disasm_parameters", values.toString());
     }
     
 }

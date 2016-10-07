@@ -28,6 +28,7 @@ public class Value extends TreeNode {
     
     private final String name;
     private Rule rule;
+    private String strategy = "little_endian";
 
     /**
      * Constructs the value.
@@ -68,7 +69,23 @@ public class Value extends TreeNode {
     public String getFieldName() {
         return rule.getFieldName(name);
     }
-    
+
+    /**
+     * Returns the constant decoding strategy.
+     * @return the strategy name - e.g., "little_endian"
+     */
+    public String getStrategy() {
+        return strategy;
+    }
+
+    /**
+     * Sets the constant decoding strategy.
+     * @param strategy the strategy name - e.g., "big_endian"
+     */
+    public void setStrategy(String strategy) {
+        this.strategy = strategy;
+    }
+
     /**
      * Accepts the visitor.
      * @param visitor the visitor object

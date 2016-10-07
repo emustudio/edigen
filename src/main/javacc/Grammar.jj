@@ -62,6 +62,8 @@ TOKEN :
   | <OR: "|">
   | <L_BRACE: "[">
   | <R_BRACE: "]">
+  | <L_PAREN: "(">
+  | <R_PAREN: ")">
   | <PART_SEPARATOR: "%%">
 }
 
@@ -314,6 +316,7 @@ void ValueSet(Format format):
 {
     Token ruleName;
     Value value;
+    Token strategy;
 }
 {
     (
@@ -323,5 +326,10 @@ void ValueSet(Format format):
             value.setLine(ruleName.beginLine);
             format.addChild(value);
         }
+        (
+            <L_PAREN>
+            strategy = <ID> { value.setStrategy(strategy.image); }
+            <R_PAREN>
+        )?
     )+
 }

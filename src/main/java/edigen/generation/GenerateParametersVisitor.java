@@ -29,10 +29,10 @@ import java.util.Iterator;
 
 /**
  * A visitor which generates the code of the two-dimensional array of
- * disassembler values.
+ * disassembler parameters (i.e., values on the right side of a format).
  * @author Matúš Sulír
  */
-public class GenerateValuesVisitor extends Visitor {
+public class GenerateParametersVisitor extends Visitor {
     
     private final PrintWriter writer;
     
@@ -40,7 +40,7 @@ public class GenerateValuesVisitor extends Visitor {
      * Constucts the visitor.
      * @param writer the output stream to write the code to
      */
-    public GenerateValuesVisitor(Writer writer) {
+    public GenerateParametersVisitor(Writer writer) {
         this.writer = new PrintWriter(writer, true);
     }
 
@@ -57,12 +57,12 @@ public class GenerateValuesVisitor extends Visitor {
             formats.next().accept(this);
             
             if (formats.hasNext())
-                writer.println(", ");
+                writer.println(",");
         }
     }
-    
+
     /**
-     * Writes the list of values separated by commas and enclosed in curly
+     * Writes the list of parameters separated by commas and enclosed in curly
      * brackets.
      * @param format the format node
      * @throws SemanticException never
@@ -75,21 +75,24 @@ public class GenerateValuesVisitor extends Visitor {
         while (values.hasNext()) {
             values.next().accept(this);
             
-            if (values.hasNext())
-                writer.print(", ");
+            if (values.hasNext()) {
+                writer.println(",");
+                writer.print(" ");
+            }
         }
-        
+
         writer.print("}");
     }
 
     /**
-     * Writes the name of the field for the disassembler value.
-     * @param value the value node
+     * Writes the name of the field for the disassembler parameter.
+     * @param value the value node (the parameter)
      * @throws SemanticException never
      */
     @Override
     public void visit(Value value) throws SemanticException {
-        writer.print(value.getFieldName());
+        writer.print("new Parameter(" + value.getFieldName()
+                + ", Strategy::" + value.getStrategy() + ")");
     }
     
 }
