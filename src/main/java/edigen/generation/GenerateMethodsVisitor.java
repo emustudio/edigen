@@ -129,7 +129,7 @@ public class GenerateMethodsVisitor extends Visitor {
                 int start = variant.getReturnSubrule().getStart();
                 int length = variant.getReturnSubrule().getLength();
                 
-                value = String.format("getValue(start + %d, %d)", start, length);
+                value = String.format("readBytes(start + %d, %d)", start, length);
             }
             
             put(String.format("instruction.add(%s, %s);", field, value));

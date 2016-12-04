@@ -36,7 +36,7 @@ import edigen.nodes.Variant;
  */
 public class SplitVisitor extends Visitor {
 
-    private static final int BITS_PER_PIECE = 8;
+    private static final int BITS_PER_PIECE = 32;
     
     private BitSequence maskBits;
     private BitSequence patternBits;
