@@ -97,6 +97,7 @@ public class Translator {
             new ResolveNamesVisitor(),
             new SemanticCheckVisitor(),
             new JoinVisitor(),
+            new SortVisitor(),
             new SplitVisitor(),
             new MoveVariantsVisitor(),
             new GroupVisitor(),

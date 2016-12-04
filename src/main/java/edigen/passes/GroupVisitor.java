@@ -24,7 +24,7 @@ import edigen.nodes.Mask;
 import edigen.nodes.Pattern;
 import edigen.nodes.Rule;
 import edigen.nodes.TreeNode;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -83,7 +83,7 @@ public class GroupVisitor extends Visitor {
      * @throws SemanticException never
      */
     private void group(TreeNode node) throws SemanticException {
-        Map<BitSequence, TreeNode> uniqueChildren = new HashMap<BitSequence, TreeNode>();
+        Map<BitSequence, TreeNode> uniqueChildren = new LinkedHashMap<>();
         
         // group children
         for (TreeNode child : node.getChildren()) {

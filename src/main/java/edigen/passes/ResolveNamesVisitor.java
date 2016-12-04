@@ -20,8 +20,8 @@ package edigen.passes;
 import edigen.SemanticException;
 import edigen.Visitor;
 import edigen.nodes.*;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -35,8 +35,8 @@ import java.util.Set;
  */
 public class ResolveNamesVisitor extends Visitor {
     
-    private final Map<String, Rule> rules = new HashMap<String, Rule>();
-    private final Set<String> ruleFieldNames = new HashSet<String>();
+    private final Map<String, Rule> rules = new LinkedHashMap<>();
+    private final Set<String> ruleFieldNames = new LinkedHashSet<>();
     private String searchedSubrule;
     private Subrule foundSubrule;
 
