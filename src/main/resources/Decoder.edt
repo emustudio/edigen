@@ -1,10 +1,10 @@
 %auto_gen_warning%
 package %decoder_package%;
 
-import emulib.plugins.cpu.DecodedInstruction;
-import emulib.plugins.cpu.Decoder;
-import emulib.runtime.exceptions.InvalidInstructionException;
-import emulib.plugins.memory.MemoryContext;
+import com.github.sulir.emulib.plugins.cpu.DecodedInstruction;
+import com.github.sulir.emulib.plugins.cpu.Decoder;
+import com.github.sulir.emulib.runtime.exceptions.InvalidInstructionException;
+import com.github.sulir.emulib.plugins.memory.MemoryContext;
 import java.util.Arrays;
 
 /**

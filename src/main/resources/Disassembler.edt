@@ -2,10 +2,10 @@
 package %disasm_package%;
 
 import static %decoder_name%.*;
-import emulib.plugins.cpu.*;
-import emulib.plugins.memory.MemoryContext;
-import emulib.runtime.RadixUtils;
-import emulib.runtime.exceptions.InvalidInstructionException;
+import com.github.sulir.emulib.plugins.cpu.*;
+import com.github.sulir.emulib.plugins.memory.MemoryContext;
+import com.github.sulir.emulib.runtime.RadixUtils;
+import com.github.sulir.emulib.runtime.exceptions.InvalidInstructionException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.HashMap;

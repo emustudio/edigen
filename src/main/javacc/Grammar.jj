@@ -21,10 +21,10 @@ options {
 
 
 PARSER_BEGIN(Parser)
-package edigen.parser;
+package com.github.sulir.edigen.parser;
 
-import edigen.misc.BitSequence;
-import edigen.nodes.*;
+import com.github.sulir.edigen.misc.BitSequence;
+import com.github.sulir.edigen.nodes.*;
 import java.util.ArrayList;
 import java.util.List;
 
