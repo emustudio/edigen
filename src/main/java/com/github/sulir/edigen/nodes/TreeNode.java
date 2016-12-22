@@ -19,6 +19,7 @@ package com.github.sulir.edigen.nodes;
 
 import com.github.sulir.edigen.SemanticException;
 import com.github.sulir.edigen.Visitor;
+import sun.reflect.generics.tree.Tree;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -38,7 +39,7 @@ import java.util.Set;
 public abstract class TreeNode {
     
     private TreeNode parent;
-    private final Set<TreeNode> children = new LinkedHashSet<TreeNode>();
+    private final Set<TreeNode> children = new LinkedHashSet<>();
     private Integer line;
     
     /**
@@ -74,7 +75,7 @@ public abstract class TreeNode {
      * @return the iterable collection of all children
      */
     public Iterable<TreeNode> getChildren() {
-        return new ArrayList<TreeNode>(children);
+        return new ArrayList<>(children);
     }
     
     /**
@@ -93,7 +94,17 @@ public abstract class TreeNode {
         child.parent = this;
         children.add(child);
     }
-    
+
+    /**
+     * Adds multiple children to this node, placing them on the end.
+     * @param children the child nodes
+     */
+    public void addChildren(TreeNode... children) {
+        for (TreeNode child : children) {
+            addChild(child);
+        }
+    }
+
     /**
      * Removes this node from the tree.
      * 

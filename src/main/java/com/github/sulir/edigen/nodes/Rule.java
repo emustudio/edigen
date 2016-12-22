@@ -31,14 +31,22 @@ import java.util.List;
  */
 public class Rule extends TreeNode {
     
-    private List<String> names = new ArrayList<String>();
+    private List<String> names = new ArrayList<>();
     
     /**
-     * Constructs a rule.
+     * Constructs a rule with one or more names.
      * @param names the list of all names of this rule
      */
     public Rule(List<String> names) {
         this.names = names;
+    }
+
+    /**
+     * Constructs a rule with one name.
+     * @param name the name of this rule
+     */
+    public Rule(String name) {
+        this.names = Collections.singletonList(name);
     }
 
     /**
