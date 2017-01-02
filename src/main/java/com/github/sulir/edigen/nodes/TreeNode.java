@@ -19,7 +19,6 @@ package com.github.sulir.edigen.nodes;
 
 import com.github.sulir.edigen.SemanticException;
 import com.github.sulir.edigen.Visitor;
-import sun.reflect.generics.tree.Tree;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
