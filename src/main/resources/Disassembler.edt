@@ -194,8 +194,9 @@ public class %disasm_class% implements Disassembler {
                 value = instruction.getString(parameter.getRuleCode()).getBytes();
             }
 
-            String replaced = format(mnemonic.charAt(position + 1), value); 
-            mnemonic.replace(position, position += 2, replaced);
+            String replaced = format(mnemonic.charAt(position + 1), value);
+            mnemonic.replace(position, position + 2, replaced);
+            position += replaced.length();
         }
         
         return mnemonic.toString();
