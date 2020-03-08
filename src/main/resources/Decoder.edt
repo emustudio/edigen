@@ -1,17 +1,19 @@
 %auto_gen_warning%
 package %decoder_package%;
 
-import emulib.plugins.cpu.DecodedInstruction;
-import emulib.plugins.cpu.Decoder;
-import emulib.runtime.exceptions.InvalidInstructionException;
-import emulib.plugins.memory.MemoryContext;
+import net.emustudio.emulib.plugins.cpu.DecodedInstruction;
+import net.emustudio.emulib.plugins.cpu.Decoder;
+import net.emustudio.emulib.plugins.cpu.InvalidInstructionException;
+import net.emustudio.emulib.plugins.memory.MemoryContext;
+
 import java.util.Arrays;
+import java.util.Objects;
 
 /**
  * The instruction decoder.
  */
 public class %decoder_class% implements Decoder {
-    private MemoryContext memory;
+    private MemoryContext<?> memory;
     private int memoryPosition;
     private int unit;
     private byte[] instructionBytes = new byte[1024];
@@ -24,8 +26,8 @@ public class %decoder_class% implements Decoder {
      * The constructor.
      * @param memory the memory context which will be used to read instructions
      */
-    public %decoder_class%(MemoryContext memory) {
-        this.memory = memory;
+    public %decoder_class%(MemoryContext<?> memory) {
+        this.memory = Objects.requireNonNull(memory);
     }
     
     /**

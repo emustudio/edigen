@@ -1,19 +1,16 @@
 %auto_gen_warning%
 package %disasm_package%;
 
-import static %decoder_name%.*;
-import emulib.plugins.cpu.*;
-import emulib.plugins.memory.MemoryContext;
-import emulib.runtime.RadixUtils;
-import emulib.runtime.exceptions.InvalidInstructionException;
+import net.emustudio.emulib.plugins.cpu.*;
+import net.emustudio.emulib.plugins.memory.MemoryContext;
+import net.emustudio.emulib.runtime.helpers.RadixUtils;
+
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.function.UnaryOperator;
+
+import static %decoder_name%.*;
 
 /**
  * The disassembler implementation.
@@ -98,7 +95,7 @@ public class %disasm_class% implements Disassembler {
             %disasm_parameters%
         };
         
-        formatMap = new HashMap<Set<Integer>, MnemonicFormat>();
+        formatMap = new HashMap<>();
         
         for (int i = 0; i < formats.length; i++) {
             Set<Integer> ruleCodes = new HashSet<Integer>();
