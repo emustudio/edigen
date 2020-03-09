@@ -1,5 +1,4 @@
 # Edigen - Emulator Disassembler Generator
-[![Build Status](https://travis-ci.org/sulir/edigen.svg?branch=master)](https://travis-ci.org/sulir/edigen)
 
 Edigen is a command-line tool which generates Java source code of:
  * an instruction decoder of an emulator
@@ -7,11 +6,11 @@ Edigen is a command-line tool which generates Java source code of:
 
 from a text file written in its own domain-specific language.
 
-Writing disassemblers and emulator instruction decoders by hand is tedious and error-prone. The code is often unreadable and unmaintainable. *Edigen* takes a file containing the description of instruction formats, operation codes and mnemonics as an input. It generates Java classes compatible with the [emuStudio](http://github.com/vbmacher/emuStudio) platform, i.e. implementing interfaces from [emuLib](http://github.com/vbmacher/emuLib).
+Writing disassemblers and emulator instruction decoders by hand is tedious and error-prone. The code is often unreadable and unmaintainable. *Edigen* takes a file containing the description of instruction formats, operation codes and mnemonics as an input. It generates Java classes compatible with the [emuStudio](http://github.com/emustudio/emuStudio) platform, i.e. implementing interfaces from [emuLib](http://github.com/emustudio/emuLib).
 
 ## Usage
 
-The best way to use Edigen is through its Maven plugin -- see the [basic example](https://github.com/sulir/edigen-maven-plugin#basic-use) and [reference](https://github.com/sulir/edigen-maven-plugin#reference).
+The best way to use Edigen is through its Maven plugin -- see the [basic example](https://github.com/emustudio/edigen-maven-plugin#basic-use) and [reference](https://github.com/emustudio/edigen-maven-plugin#reference).
 
 An alternative is to manually execute Edigen through a command-line interface. To see all command line options, execute the Edigen JAR without any arguments.
 

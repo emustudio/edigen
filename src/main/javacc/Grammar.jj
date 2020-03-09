@@ -21,10 +21,10 @@ options {
 
 
 PARSER_BEGIN(Parser)
-package com.github.sulir.edigen.parser;
+package net.emustudio.edigen.parser;
 
-import com.github.sulir.edigen.misc.BitSequence;
-import com.github.sulir.edigen.nodes.*;
+import net.emustudio.edigen.misc.BitSequence;
+import net.emustudio.edigen.nodes.*;
 import java.util.ArrayList;
 import java.util.List;
 

@@ -2,13 +2,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.github.sulir</groupId>
+    <groupId>net.emustudio</groupId>
     <artifactId>edigen</artifactId>
     <version>1.2-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>Edigen</name>
     <description>Emulator Disassembler Generator</description>
-    <url>http://github.com/sulir/edigen</url>
+    <url>https://github.com/emustudio/edigen</url>
 
     <licenses>
         <license>
@@ -17,22 +17,15 @@
         </license>
     </licenses>
 
-    <developers>
-        <developer>
-            <id>sulir</id>
-            <name>Matúš Sulír</name>
-        </developer>
-    </developers>
-
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <netbeans.hint.license>gpl20</netbeans.hint.license>
     </properties>
 
     <scm>
-        <connection>scm:git:git://github.com/sulir/edigen.git</connection>
-        <developerConnection>scm:git:ssh://github.com:sulir/edigen.git</developerConnection>
-        <url>https://github.com/sulir/edigen</url>
+        <connection>scm:git:git://github.com/emustudio/edigen.git</connection>
+        <developerConnection>scm:git:ssh://github.com:emustudio/edigen.git</developerConnection>
+        <url>https://github.com/emustudio/edigen</url>
     </scm>
 
     <dependencies>
@@ -141,7 +134,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>com.github.sulir.edigen.Edigen</mainClass>
+                            <mainClass>net.emustudio.edigen.Edigen</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
