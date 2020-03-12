@@ -30,37 +30,34 @@ import java.util.List;
 
 /**
  * A visitor which checks for ambiguous variants.
- * 
- * <p>There are two types of ambiguity.</p>
- * 
- * <p>Path ambiguity means that for some rule, given a unit of input (usually a
+ * <p>
+ * There are two types of ambiguity.
+ * <p>
+ * Path ambiguity means that for some rule, given a unit of input (usually a
  * byte), the decoder is not able to decide which one (and only one) execution
  * path to choose without reading more units or walking up the switch-case tree
  * later and choosing an another path (or none at all). Ambiguity is dangerous
  * because it can cause unintended behavior not discovered until the generated
- * decoder is run.</p>
- * 
- * <p>Two variants of one rule R have an ambiguous path if and only if there
+ * decoder is run.
+ * <p>
+ * Two variants of one rule R have an ambiguous path if and only if there
  * exists a node N of type Rule (equivalent to R) or Pattern (an indirect child
  * of R) such that:
  * <ul>
  *  <li>There exist two Mask nodes M1, M2, both direct children of N, such that:
  *  <ul>
  *   <li>There exist two Pattern nodes P1, P2, where P1 is a direct child of M1
- *       and P2 is a direct child of M2, such that: M1 & M2 & P1 = M1 & M2 & P2.
+ *       and P2 is a direct child of M2, such that: M1 &amp; M2 &amp; P1 = M1 &amp; M2 &amp; P2.
  *   </li>
  *  </ul>
  *  </li>
  * </ul>
- * </p>
- * 
- * <p>Variant ambiguity means that one pattern has more than one child
- * variant.</p>
- * 
- * <p>This visitor is not a transformation; the tree is left unmodified. It
- * must be applied after the grouping transformation.</p>
- * 
- * <p></p>
+ * <p>
+ * Variant ambiguity means that one pattern has more than one child variant.
+ * <p>
+ * This visitor is not a transformation; the tree is left unmodified. It
+ * must be applied after the grouping transformation.
+ *
  * @author Matúš Sulír
  */
 public class DetectAmbiguousVisitor extends Visitor {
@@ -68,10 +65,11 @@ public class DetectAmbiguousVisitor extends Visitor {
     private static final String MESSAGE = "Ambiguity detected in rule \"%s\"";
     private Rule currentRule;
     private final List<Mask> masks = new ArrayList<Mask>();
-    
+
     /**
      * Detects possible ambiguity under the rule node and traverses the
      * children.
+     *
      * @param rule the rule node
      * @throws SemanticException when an ambiguity is detected
      */
@@ -84,6 +82,7 @@ public class DetectAmbiguousVisitor extends Visitor {
 
     /**
      * Adds the mask to the list of child masks.
+     *
      * @param mask the mask node
      */
     @Override
@@ -94,8 +93,9 @@ public class DetectAmbiguousVisitor extends Visitor {
     /**
      * Detects possible ambiguity under the pattern node and traverses the
      * children.
+     *
      * @param pattern the pattern node
-     * @throws SemanticException when an ambiguity is detected 
+     * @throws SemanticException when an ambiguity is detected
      */
     @Override
     public void visit(Pattern pattern) throws SemanticException {
@@ -103,32 +103,33 @@ public class DetectAmbiguousVisitor extends Visitor {
         detectPath(pattern);
         traverseSubtrees(pattern);
     }
-    
+
     /**
      * Detects the path ambiguity under the node specified.
-     * 
+     * <p>
      * All combinations without repetition of the child masks are tried. For all
      * of these, all pattern pairs made of the first mask's children and the
      * second mask's children are checked.
+     *
      * @param node the node object
-     * @throws SemanticException when the path ambiguity is detected 
+     * @throws SemanticException when the path ambiguity is detected
      */
     private void detectPath(TreeNode node) throws SemanticException {
         masks.clear();
         node.acceptChildren(this);
-        
+
         int maskCount = masks.size();
         int firstMaskIndex = 0;
-        
+
         for (Mask mask1 : masks) {
             for (Mask mask2 : masks.subList(++firstMaskIndex, maskCount)) {
                 Mask commonMask = mask1.and(mask2);
-                
+
                 for (TreeNode pattern1 : mask1.getChildren()) {
                     for (TreeNode pattern2 : mask2.getChildren()) {
                         if (isAmbiguous((Pattern) pattern1, (Pattern) pattern2, commonMask)) {
                             String message = String.format(MESSAGE, currentRule.getLabel())
-                                + ": " + pattern1 + ", " + pattern2 + " (" + commonMask + ")";
+                                    + ": " + pattern1 + ", " + pattern2 + " (" + commonMask + ")";
                             throw new SemanticException(message, currentRule);
                         }
                     }
@@ -136,11 +137,12 @@ public class DetectAmbiguousVisitor extends Visitor {
             }
         }
     }
-    
+
     /**
      * Returns true if two patterns are ambiguous.
-     * @param pattern1 the first pattern
-     * @param pattern2 the second pattern
+     *
+     * @param pattern1   the first pattern
+     * @param pattern2   the second pattern
      * @param commonMask the first mask ANDed with the second mask
      * @return true if the patterns are ambiguous, false otherwise
      */
@@ -150,11 +152,12 @@ public class DetectAmbiguousVisitor extends Visitor {
 
         return (commonPattern1.equals(commonPattern2));
     }
-    
+
     /**
      * Accepts all children of the children of the given node.
+     *
      * @param node the parent node
-     * @throws SemanticException when an ambiguity is detected 
+     * @throws SemanticException when an ambiguity is detected
      */
     private void traverseSubtrees(TreeNode node) throws SemanticException {
         for (TreeNode child : node.getChildren()) {
@@ -163,9 +166,10 @@ public class DetectAmbiguousVisitor extends Visitor {
             }
         }
     }
-    
+
     /**
      * Detects the variant ambiguity under the specified pattern.
+     *
      * @param pattern the pattern node
      * @throws SemanticException when the variant ambiguity is detected
      */

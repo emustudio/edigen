@@ -22,7 +22,7 @@ import java.io.Writer;
 
 /**
  * Minimalistic on-the-fly Java source code pretty-printer.
- * 
+ *
  * <p>
  * The input must conform to some limitations, mainly:
  * <ul>
@@ -32,8 +32,6 @@ import java.io.Writer;
  * <li>Each block (like the body of an <code>if</code> or <code>while</code>
  * statement) must be enclosed in brackets.</li>
  * </ul>
- * </p>
- * 
  * <p>
  * Example of a valid input:
  * <pre>
@@ -45,7 +43,7 @@ import java.io.Writer;
  * } else {
  * }
  * </pre>
- * 
+ * <p>
  * This produces the output:
  * <pre>
  * if (something) {
@@ -56,8 +54,7 @@ import java.io.Writer;
  * } else {
  * }
  * </pre>
- * </p>
- * 
+ *
  * @author Matúš Sulír
  */
 public class PrettyPrinter {
@@ -68,6 +65,7 @@ public class PrettyPrinter {
 
     /**
      * Constructs the pretty printer.
+     *
      * @param output the output to write the source code to
      */
     public PrettyPrinter(Writer output) {
@@ -76,15 +74,16 @@ public class PrettyPrinter {
 
     /**
      * Indents the line as necessary and writes it to the output stream.
+     *
      * @param text the line of text
      */
     public void writeLine(String text) {
         if (text.startsWith("}") || text.endsWith(":"))
             unindent();
-        
+
         printIndentation();
         output.println(text);
-        
+
         if (text.endsWith("{") || text.endsWith(":"))
             indent();
     }
@@ -104,7 +103,7 @@ public class PrettyPrinter {
             indentCount--;
         }
     }
-    
+
     /**
      * Writes the curently set indentation to the stream.
      */
