@@ -1,4 +1,5 @@
 # Edigen - Emulator Disassembler Generator
+![Edigen Build](https://github.com/emustudio/edigen/workflows/Edigen%20Build/badge.svg)
 
 Edigen is a command-line tool which generates Java source code of:
  * an instruction decoder of an emulator
