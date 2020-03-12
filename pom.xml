@@ -17,6 +17,19 @@
         </license>
     </licenses>
 
+    <developers>
+        <developer>
+            <id>sulir</id>
+            <name>Matúš Sulír</name>
+            <url>https://github.com/sulir/</url>
+        </developer>
+        <developer>
+            <id>jakubco</id>
+            <name>Peter Jakubčo</name>
+            <url>https://github.com/vbmacher</url>
+        </developer>
+    </developers>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <netbeans.hint.license>gpl20</netbeans.hint.license>
