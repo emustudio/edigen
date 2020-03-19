@@ -102,6 +102,32 @@ public class %disasm_class% implements Disassembler {
             }
             return result;
         }
+
+        public static byte[] shift_left(byte[] value) {
+            byte[] result = new byte[value.length];
+
+            for (int octet = 0; octet < result.length; octet++) {
+                int shifted = (value[octet] << 1) & 0xFF;
+                if (octet + 1 < result.length) {
+                    shifted |= value[octet + 1] >>> 7;
+                }
+                result[octet] = (byte)shifted;
+            }
+            return result;
+        }
+
+        public static byte[] shift_right(byte[] value) {
+            byte[] result = new byte[value.length];
+
+            for (int octet = result.length - 1; octet >= 0; octet--) {
+                int shifted = (value[octet] >>> 1) & 0xFF;
+                if (octet - 1 >= 0) {
+                    shifted |= ((value[octet - 1] & 1) << 7);
+                }
+                result[octet] = (byte)shifted;
+            }
+            return result;
+        }
     }
 
     private static final Map<Set<Integer>, MnemonicFormat> formatMap;
