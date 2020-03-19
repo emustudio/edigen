@@ -112,7 +112,7 @@ instruction = "JMP": line(5)     ignore8(8) 000 ignore16(16) |
               "CMP": 00000       ignore8(8) 011 ignore16(16) |
               "STP": 00000       ignore8(8) 111 ignore16(16);
 
-line = arg: arg(8);
+line = arg: arg(5);
 ignore5 = arg: arg(5);
 ignore8 = arg: arg(8);
 ignore16 = arg: arg(16);
