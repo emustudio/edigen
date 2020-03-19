@@ -92,3 +92,33 @@ By default, these format specifiers are available:
  * `%X` - arbitrarily long unsigned integer, hexadecimal, uppercase
  * `%%` - a percent sign
  
+ The rule-set on the right side of `=` can take decoding strategy as a parameter in brackets `()`. The following
+ decoding strategies are available:
+ 
+ * `bit_reverse` - reverses the bits
+ * `big_endian` - decodes the bits as they are stored in big-endian format
+ * `little_endian` - decodes the bits as they are stored in little-endian format
+ * `absolute` - decodes the bits as stored in 2's complement if they are negative; the negative sign is then thrown away
+ 
+The strategies can be combined. Multiple strategies will be applied in the left-to-right order.
+For example (grammar of [SSEM](http://curation.cs.manchester.ac.uk/computer50/www.computer50.org/mark1/prog98/ssemref.html) machine):
+
+```
+instruction = "JMP": line(5)     ignore8(8) 000 ignore16(16) |
+              "JPR": line(5)     ignore8(8) 100 ignore16(16) |
+              "LDN": line(5)     ignore8(8) 010 ignore16(16) |
+              "STO": line(5)     ignore8(8) 110 ignore16(16) |
+              "SUB": line(5)     ignore8(8) 001 ignore16(16) |
+              "CMP": 00000       ignore8(8) 011 ignore16(16) |
+              "STP": 00000       ignore8(8) 111 ignore16(16);
+
+line = arg: arg(8);
+ignore5 = arg: arg(5);
+ignore8 = arg: arg(8);
+ignore16 = arg: arg(16);
+
+%%
+
+"%s %X" = instruction line(bit_reverse, absolute) ignore8 ignore16;
+"%s" = instruction ignore8 ignore16;
+```
