@@ -4,7 +4,7 @@
 
     <groupId>net.emustudio</groupId>
     <artifactId>edigen</artifactId>
-    <version>1.3-SNAPSHOT</version>
+    <version>1.3</version>
     <packaging>jar</packaging>
     <name>Edigen</name>
     <description>Emulator Disassembler Generator</description>
