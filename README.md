@@ -99,6 +99,10 @@ By default, these format specifiers are available:
  * `big_endian` - decodes the bits as they are stored in big-endian format
  * `little_endian` - decodes the bits as they are stored in little-endian format
  * `absolute` - decodes the bits as stored in 2's complement if they are negative; the negative sign is then thrown away
+ * `shift_left` - shifts the number to the left by 1 bit. Does it in "big endian" way. Meaning bytes `[0] = 1, [1] = 2`
+   will result in `[0] = 2, [1] = 4`
+ * `shift_right` - shifts the number to the right by 1 bit. Dies it in "big endian" way. Meaning bytes `[0] = 1, [1] = 2`
+   will result in `[0] = 0, [1] = 0x81`   
  
 The strategies can be combined. Multiple strategies will be applied in the left-to-right order.
 For example (grammar of [SSEM](http://curation.cs.manchester.ac.uk/computer50/www.computer50.org/mark1/prog98/ssemref.html) machine):
@@ -119,6 +123,6 @@ ignore16 = arg: arg(16);
 
 %%
 
-"%s %X" = instruction line(bit_reverse, absolute) ignore8 ignore16;
+"%s %X" = instruction line(shift_left, shift_left, shift_left, bit_reverse, absolute) ignore8 ignore16;
 "%s" = instruction ignore8 ignore16;
 ```
