@@ -56,77 +56,22 @@ public class %disasm_class% implements Disassembler {
     */
     private static class Strategy {
         public static byte[] little_endian(byte[] value) {
-            byte[] result = new byte[value.length];
-
-            for (int i = 0; i < result.length; i++) {
-                result[i] = value[value.length - i - 1];
-            }
-
-            return result;
+            return DecodingStrategy.reverseBytes(value);
         }
-
         public static byte[] big_endian(byte[] value) {
             return value;
         }
-
         public static byte[] bit_reverse(byte[] value) {
-            byte[] result = new byte[value.length];
-
-            for (int octet = 0; octet < result.length; octet++) {
-                for (int bit = 0; bit < 8; bit++) {
-                    result[octet] |= (value[octet] & (1 << bit)) >>> bit << (8 - bit - 1);
-                }
-            }
-
-            return result;
+            return DecodingStrategy.reverseBits(value);
         }
-
         public static byte[] absolute(byte[] value) {
-            byte[] result = new byte[value.length];
-            if (value.length > 0) {
-                if ((value[0] & 0b10000000) != 0) {
-                    for (int octet = 0; octet < result.length; octet++) {
-                        result[octet] = (byte)(~value[octet] & 0xFF);
-                    }
-                    for (int octet = 0; octet < result.length; octet++) {
-                        if ((short)result[octet] + 1 > (byte)(result[octet] + 1)) {
-                            result[octet] = 0;
-                        } else {
-                            result[octet] = (byte)(result[octet] + 1);
-                            break;
-                        }
-                    }
-                } else {
-                    result = value;
-                }
-            }
-            return result;
+            return DecodingStrategy.absolute(value);
         }
-
         public static byte[] shift_left(byte[] value) {
-            byte[] result = new byte[value.length];
-
-            for (int octet = 0; octet < result.length; octet++) {
-                int shifted = (value[octet] << 1) & 0xFF;
-                if (octet + 1 < result.length) {
-                    shifted |= value[octet + 1] >>> 7;
-                }
-                result[octet] = (byte)shifted;
-            }
-            return result;
+            return DecodingStrategy.shiftLeft(value);
         }
-
         public static byte[] shift_right(byte[] value) {
-            byte[] result = new byte[value.length];
-
-            for (int octet = result.length - 1; octet >= 0; octet--) {
-                int shifted = (value[octet] >>> 1) & 0xFF;
-                if (octet - 1 >= 0) {
-                    shifted |= ((value[octet - 1] & 1) << 7);
-                }
-                result[octet] = (byte)shifted;
-            }
-            return result;
+            return DecodingStrategy.shiftRight(value);
         }
     }
 
