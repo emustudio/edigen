@@ -20,6 +20,10 @@ package net.emustudio.edigen.nodes;
 import net.emustudio.edigen.SemanticException;
 import net.emustudio.edigen.Visitor;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 /**
  * The disassembler value node - bound to an instruction decoder rule name.
  * @author Matúš Sulír
@@ -28,7 +32,7 @@ public class Value extends TreeNode {
     
     private final String name;
     private Rule rule;
-    private String strategy = "little_endian";
+    private List<String> strategies = Collections.singletonList("little_endian");
 
     /**
      * Constructs the value.
@@ -71,19 +75,19 @@ public class Value extends TreeNode {
     }
 
     /**
-     * Returns the constant decoding strategy.
-     * @return the strategy name - e.g., "little_endian"
+     * Returns the constant decoding strategies.
+     * @return list of strategy names - e.g., "little_endian"
      */
-    public String getStrategy() {
-        return strategy;
+    public List<String> getStrategies() {
+        return strategies;
     }
 
     /**
      * Sets the constant decoding strategy.
-     * @param strategy the strategy name - e.g., "big_endian"
+     * @param strategies the strategy name - e.g., "big_endian"
      */
-    public void setStrategy(String strategy) {
-        this.strategy = strategy;
+    public void setStrategies(List<String> strategies) {
+        this.strategies = strategies;
     }
 
     /**

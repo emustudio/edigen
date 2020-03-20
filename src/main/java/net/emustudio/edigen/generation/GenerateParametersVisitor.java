@@ -27,6 +27,8 @@ import net.emustudio.edigen.nodes.Value;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.Iterator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * A visitor which generates the code of the two-dimensional array of
@@ -92,8 +94,10 @@ public class GenerateParametersVisitor extends Visitor {
      */
     @Override
     public void visit(Value value) throws SemanticException {
+        String strategies = value.getStrategies().stream()
+                .map(s -> "Strategy::" + s)
+                .collect(Collectors.joining(","));
         writer.print("new Parameter(" + value.getFieldName()
-                + ", Strategy::" + value.getStrategy() + ")");
+                + ", List.of(" + strategies + "))");
     }
-    
 }

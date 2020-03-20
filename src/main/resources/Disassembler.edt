@@ -37,15 +37,15 @@ public class %disasm_class% implements Disassembler {
     */
     private static class Parameter {
         private final int ruleCode;
-        private final UnaryOperator<byte[]> strategy;
+        private final List<UnaryOperator<byte[]>> strategies;
 
-        public Parameter(int ruleCode, UnaryOperator<byte[]> strategy) {
+        public Parameter(int ruleCode, List<UnaryOperator<byte[]>> strategies) {
             this.ruleCode = ruleCode;
-            this.strategy = strategy;
+            this.strategies = strategies;
         }
 
         public int getRuleCode() { return ruleCode; }
-        public UnaryOperator<byte[]> getStrategy() { return strategy; }
+        public List<UnaryOperator<byte[]>> getStrategies() { return strategies; }
     }
 
     /**
@@ -56,29 +56,22 @@ public class %disasm_class% implements Disassembler {
     */
     private static class Strategy {
         public static byte[] little_endian(byte[] value) {
-            byte[] result = new byte[value.length];
-
-            for (int i = 0; i < result.length; i++) {
-                result[i] = value[value.length - i - 1];
-            }
-
-            return result;
+            return DecodingStrategy.reverseBytes(value);
         }
-
         public static byte[] big_endian(byte[] value) {
             return value;
         }
-
         public static byte[] bit_reverse(byte[] value) {
-            byte[] result = new byte[value.length];
-
-            for (int octet = 0; octet < result.length; octet++) {
-                for (int bit = 0; bit < 8; bit++) {
-                    result[octet] |= (value[octet] & (1 << bit)) >>> bit << (8 - bit - 1);
-                }
-            }
-
-            return result;
+            return DecodingStrategy.reverseBits(value);
+        }
+        public static byte[] absolute(byte[] value) {
+            return DecodingStrategy.absolute(value);
+        }
+        public static byte[] shift_left(byte[] value) {
+            return DecodingStrategy.shiftLeft(value);
+        }
+        public static byte[] shift_right(byte[] value) {
+            return DecodingStrategy.shiftRight(value);
         }
     }
 
@@ -186,7 +179,9 @@ public class %disasm_class% implements Disassembler {
             
             byte[] value = instruction.getBits(parameter.getRuleCode());
             if (value != null) {
-                value = parameter.getStrategy().apply(value);
+                for (UnaryOperator<byte[]> strategy : parameter.getStrategies()) {
+                    value = strategy.apply(value);
+                }
             } else {
                 value = instruction.getString(parameter.getRuleCode()).getBytes();
             }

@@ -317,6 +317,7 @@ void ValueSet(Format format):
     Token ruleName;
     Value value;
     Token strategy;
+    List<String> strategies = new ArrayList<String>();
 }
 {
     (
@@ -328,8 +329,12 @@ void ValueSet(Format format):
         }
         (
             <L_PAREN>
-            strategy = <ID> { value.setStrategy(strategy.image); }
-            <R_PAREN>
+            strategy = <ID> { strategies.add(strategy.image); }
+            (
+              <COMMA>
+              strategy = <ID> { strategies.add(strategy.image); }
+            )*
+            <R_PAREN> { value.setStrategies(strategies); }
         )?
     )+
 }
