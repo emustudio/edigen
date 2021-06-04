@@ -101,7 +101,7 @@ public class SemanticCheckVisitor extends Visitor {
      * Otherwise it would be ambiguous which format to apply when the decoded
      * instruction contained this set of rules.
      * @param format the format node
-     * @throws SemanticException if the set of valus was used in multiple
+     * @throws SemanticException if the set of values was used in multiple
      *         formats
      */
     @Override
