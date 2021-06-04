@@ -22,7 +22,6 @@ import net.emustudio.edigen.Visitor;
 
 /**
  * The root node of the disassembler subtree.
- * @author Matúš Sulír
  */
 public class Disassembler extends TreeNode {
     

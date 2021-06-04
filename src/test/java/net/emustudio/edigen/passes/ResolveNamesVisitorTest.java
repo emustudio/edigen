@@ -24,10 +24,6 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-/**
- * Test of the ResolveNamesVisitor class.
- * @author Matúš Sulír
- */
 public class ResolveNamesVisitorTest {
     private Decoder decoder;
     private Rule rule;

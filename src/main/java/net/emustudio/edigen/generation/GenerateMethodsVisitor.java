@@ -27,7 +27,6 @@ import java.io.Writer;
 /**
  * A visitor which generates Java source code of the instruction decoder methods
  * for all rules.
- * @author Matúš Sulír
  */
 public class GenerateMethodsVisitor extends Visitor {
 

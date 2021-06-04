@@ -33,7 +33,6 @@ import java.util.Set;
  * 
  * <p>One node can have an unlimited number of children. Insertion order is
  * preserved.</p>
- * @author Matúš Sulír
  */
 public abstract class TreeNode {
     

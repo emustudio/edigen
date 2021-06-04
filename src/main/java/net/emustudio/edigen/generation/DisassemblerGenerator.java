@@ -26,7 +26,6 @@ import java.io.Writer;
 
 /**
  * The disassembler generator.
- * @author Matúš Sulír
  */
 public class DisassemblerGenerator extends Generator {
 

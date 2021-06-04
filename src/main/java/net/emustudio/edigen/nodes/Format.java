@@ -24,7 +24,6 @@ import net.emustudio.edigen.Visitor;
  * A node representing a textual instruction format (used in a disassembler).
  * 
  * Consists of a format string and a list of values.
- * @author Matúš Sulír
  */
 public class Format extends TreeNode {
     

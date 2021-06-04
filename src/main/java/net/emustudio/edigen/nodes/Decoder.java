@@ -22,7 +22,6 @@ import net.emustudio.edigen.Visitor;
 
 /**
  * The root node of the instruction decoder subtree.
- * @author Matúš Sulír
  */
 public class Decoder extends TreeNode {
 

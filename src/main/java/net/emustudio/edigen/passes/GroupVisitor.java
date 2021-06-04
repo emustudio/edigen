@@ -33,7 +33,6 @@ import java.util.Map;
  * node.
  * 
  * All children of the original nodes will be attached to the grouped node.
- * @author Matúš Sulír
  */
 public class GroupVisitor extends Visitor {
     

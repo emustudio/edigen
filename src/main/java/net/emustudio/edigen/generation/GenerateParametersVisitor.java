@@ -33,7 +33,6 @@ import java.util.stream.Collectors;
 /**
  * A visitor which generates the code of the two-dimensional array of
  * disassembler parameters (i.e., values on the right side of a format).
- * @author Matúš Sulír
  */
 public class GenerateParametersVisitor extends Visitor {
     

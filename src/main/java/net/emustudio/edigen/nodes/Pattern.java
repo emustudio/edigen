@@ -23,7 +23,6 @@ import net.emustudio.edigen.misc.BitSequence;
 
 /**
  * Pattern node - a sequence of bits used during instruction decoding.
- * @author Matúš Sulír
  */
 public class Pattern extends TreeNode {
     

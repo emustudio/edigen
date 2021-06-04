@@ -24,7 +24,6 @@ import net.emustudio.edigen.misc.BitSequence;
 /**
  * Mask node - a sequence of bits used to filter another sequence during binary
  * pattern matching.
- * @author Matúš Sulír
  */
 public class Mask extends TreeNode {
     

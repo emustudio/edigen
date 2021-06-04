@@ -58,7 +58,6 @@ import java.util.List;
  * This visitor is not a transformation; the tree is left unmodified. It
  * must be applied after the grouping transformation.
  *
- * @author Matúš Sulír
  */
 public class DetectAmbiguousVisitor extends Visitor {
 

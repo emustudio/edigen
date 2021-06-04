@@ -29,7 +29,6 @@ import java.util.Iterator;
 
 /**
  * A visitor which generates the code of the array of disassembler formats.
- * @author Matúš Sulír
  */
 public class GenerateFormatsVisitor extends Visitor {
     

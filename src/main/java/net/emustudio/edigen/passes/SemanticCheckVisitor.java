@@ -27,14 +27,13 @@ import java.util.Set;
 /**
  * A visitor which checks for additional semantic errors (not directly related
  * to name resolution).
- * @author Matúš Sulír
  */
 public class SemanticCheckVisitor extends Visitor {
     
-    private final Set<Set<String>> formatSet = new HashSet<Set<String>>();
-    private final Set<String> valueSet = new HashSet<String>();
+    private final Set<Set<String>> formatSet = new HashSet<>();
+    private final Set<String> valueSet = new HashSet<>();
     private boolean variantReturns;
-    private final Set<String> returningRules = new HashSet<String>();
+    private final Set<String> returningRules = new HashSet<>();
     private Subrule subruleWithoutLength;
 
     /**
@@ -49,8 +48,7 @@ public class SemanticCheckVisitor extends Visitor {
         rule.acceptChildren(this);
         
         if (variantReturns) {
-            for (String name : rule.getNames())
-                returningRules.add(name);
+            returningRules.addAll(rule.getNames());
         }
     }
 
@@ -123,7 +121,7 @@ public class SemanticCheckVisitor extends Visitor {
                 values.append(value);
             }
             
-            throw new SemanticException("Set of values \"" + values.toString()
+            throw new SemanticException("Set of values \"" + values
                     + "\" is contained in multiple disassembler formats", format);
         }
     }

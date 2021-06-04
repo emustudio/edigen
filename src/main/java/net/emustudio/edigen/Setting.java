@@ -20,7 +20,6 @@ package net.emustudio.edigen;
 /**
  * An enumeration of possible program configuration settings, usually read from
  * the command line.
- * @author Matúš Sulír
  */
 public enum Setting {
     /**

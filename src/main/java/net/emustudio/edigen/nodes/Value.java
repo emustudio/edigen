@@ -26,7 +26,6 @@ import java.util.List;
 
 /**
  * The disassembler value node - bound to an instruction decoder rule name.
- * @author Matúš Sulír
  */
 public class Value extends TreeNode {
     

@@ -25,7 +25,6 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * Test of the PrettyPrinter class.
- * @author Matúš Sulír
  */
 public class PrettyPrinterTest {
 

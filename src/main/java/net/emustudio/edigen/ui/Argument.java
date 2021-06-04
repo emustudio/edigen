@@ -28,7 +28,6 @@ import java.util.regex.Pattern;
  * This does not represent a specific argument instance obtained from the user,
  * but information about the possible argument, like his name and description.
  *
- * @author Matúš Sulír
  */
 public class Argument {
 

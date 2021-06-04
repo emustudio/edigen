@@ -27,7 +27,6 @@ import java.util.List;
 
 /**
  * Instruction decoder rule node.
- * @author Matúš Sulír
  */
 public class Rule extends TreeNode {
     

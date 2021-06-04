@@ -29,7 +29,6 @@ import net.emustudio.edigen.nodes.Variant;
  * A visitor which joins multiple patterns of a variant into one mask + pattern.
  * 
  * In addition, it sets starting offsets for subrules.
- * @author Matúš Sulír
  */
 public class JoinVisitor extends Visitor {
     

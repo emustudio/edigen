@@ -33,7 +33,6 @@ import java.util.List;
  *
  * This ensures that the generated decoder will not read bytes beyond
  * the current instruction.
- * @author Matúš Sulír
  */
 public class SortVisitor extends Visitor {
 

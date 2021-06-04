@@ -32,7 +32,6 @@ import net.emustudio.edigen.nodes.Variant;
  * This is necessary to support instructions with variable length, especially
  * instructions with length larger than <code>int</code> or <code>long</code>
  * size.
- * @author Matúš Sulír
  */
 public class SplitVisitor extends Visitor {
 
