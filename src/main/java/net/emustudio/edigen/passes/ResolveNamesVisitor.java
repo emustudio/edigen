@@ -21,22 +21,21 @@ import net.emustudio.edigen.SemanticException;
 import net.emustudio.edigen.Visitor;
 import net.emustudio.edigen.nodes.*;
 
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
- * A visitor which creates associactions between objects accoring to their names
+ * A visitor which creates associations between objects according to their names
  * obtained from the input file.
+ *
+ * Missing implicit subrules are inferred.
  * 
  * Because the AST was constructed in one pass, backward references are not yet
- * solved. This visitor resolves them (along with the backward references). 
- * @author Matúš Sulír
+ * solved. This visitor resolves them (along with the backward references).
  */
 public class ResolveNamesVisitor extends Visitor {
     
     private final Map<String, Rule> rules = new LinkedHashMap<>();
+    private final List<Rule> inferredRules = new ArrayList<>();
     private final Set<String> ruleFieldNames = new LinkedHashSet<>();
     private String searchedSubrule;
     private Subrule foundSubrule;
@@ -52,6 +51,8 @@ public class ResolveNamesVisitor extends Visitor {
         
         for (TreeNode rule : decoder.getChildren())
             rule.acceptChildren(this);
+
+        decoder.addChildren(inferredRules.toArray(new Rule[0]));
     }
 
     /**
@@ -123,9 +124,15 @@ public class ResolveNamesVisitor extends Visitor {
             
             if (rule != null)
                 subrule.setRule(rule);
-            else
+            else if (subrule.getLength() != null) {
+                Rule inferred = inferImplicitRule(subrule);
+                rules.put(subrule.getName(), inferred);
+                inferredRules.add(inferred);
+                subrule.setRule(inferred);
+            } else {
                 throw new SemanticException("Subrule \"" + subrule.getName()
                         + "\" refers to a nonexistent rule", subrule);
+            }
         }
     }
 
@@ -145,5 +152,14 @@ public class ResolveNamesVisitor extends Visitor {
             throw new SemanticException("Disassembler value \""
                     + name + "\" refers to a nonexistent rule", value);
         }
+    }
+
+    private Rule inferImplicitRule(Subrule subrule) {
+        Rule constructed = new Rule(subrule.getName());
+        Variant variant = new Variant();
+        variant.addChild(subrule);
+        variant.setReturnSubrule(subrule);
+        constructed.addChild(variant);
+        return constructed;
     }
 }

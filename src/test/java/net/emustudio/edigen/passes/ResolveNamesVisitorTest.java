@@ -23,6 +23,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * Test of the ResolveNamesVisitor class.
@@ -81,6 +82,15 @@ public class ResolveNamesVisitorTest {
         variant.addChild(new Subrule("nonexistent"));
 
         decoder.accept(new ResolveNamesVisitor());
+    }
+
+    @Test
+    public void testSubruleRefersToNonexistentRuleWithLength() throws SemanticException {
+        Subrule subrule = new Subrule("nonexistent", 10, null);
+        variant.addChild(subrule);
+
+        decoder.accept(new ResolveNamesVisitor());
+        assertNotNull(subrule.getRule());
     }
 
     @Test
