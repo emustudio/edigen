@@ -176,10 +176,8 @@ Variant Variant():
     String value;
 }
 {
-    ( LOOKAHEAD(2) (
-        Return(variant)
-        <COLON>
-    ) )?
+    ( LOOKAHEAD(2) Return(variant)
+    <COLON> )?
     ( Pattern(variant) )+
     {
         if (!variant.returns())
