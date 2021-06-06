@@ -37,7 +37,7 @@ public class Argument {
      * If {@code arg1} is a mandatory argument, {@code -arg2 value2} is a
      * value and {@code -arg3} is a flag, this is an example of a valid
      * command line input:
-     * <pre><kbd>program arg1 -arg2 value2 -arg3</kbd></pre>
+     * <pre>program arg1 -arg2 value2 -arg3</pre>
      * The order of value and flag arguments is irrelevant. Mandatory arguments
      * must occur in the specified order, but they can interleave with other
      * parameters.

@@ -27,17 +27,18 @@ import net.emustudio.edigen.nodes.Variant;
 
 /**
  * A visitor which joins multiple patterns of a variant into one mask + pattern.
- * 
+ * <p>
  * In addition, it sets starting offsets for subrules.
  */
 public class JoinVisitor extends Visitor {
-    
+
     private BitSequence maskBits;
     private BitSequence patternBits;
-    
+
     /**
      * Traverses all children nodes and adds one mask and pattern as a result
      * of joining.
+     *
      * @param variant the variant node
      * @throws SemanticException never
      */
@@ -45,9 +46,9 @@ public class JoinVisitor extends Visitor {
     public void visit(Variant variant) throws SemanticException {
         maskBits = new BitSequence();
         patternBits = new BitSequence();
-        
+
         variant.acceptChildren(this);
-        
+
         variant.addChild(new Mask(maskBits));
         variant.addChild(new Pattern(patternBits));
     }
@@ -56,37 +57,39 @@ public class JoinVisitor extends Visitor {
      * Appends "true" bits to the mask (because these bits will be checked
      * during decoding) and itself to the pattern (these bits should be the
      * result of masking during decoding).
+     *
      * @param pattern the pattern node
      */
     @Override
     public void visit(Pattern pattern) {
         int bitCount = pattern.getBits().getLength();
-        
+
         maskBits.append(new BitSequence(bitCount, true));
         patternBits.append(pattern.getBits());
-        
+
         pattern.remove();
     }
-    
+
     /**
      * Sets the starting offset of the subrule.
-     * 
+     *
      * <p>If the subrule has length specified, adds "false" bits to the mask
      * because these bits will not be checked against a pattern during
      * decoding.</p>
-     * 
+     *
      * <p>If the subrule does not refer to a rule (it is used only to return
      * a value), it is removed from the tree.</p>
+     *
      * @param subrule the subrule node
      * @throws SemanticException when pre-pattern is longer than expected
      */
     @Override
     public void visit(Subrule subrule) throws SemanticException {
         subrule.setStart(maskBits.getLength());
-        
+
         Integer bitCount = subrule.getLength();
         Pattern prePattern = subrule.getPrePattern();
-        
+
         if (bitCount != null) {
             if (prePattern != null) {
                 BitSequence prePatternBS = prePattern.getBits();
@@ -108,7 +111,7 @@ public class JoinVisitor extends Visitor {
                 patternBits.append(new BitSequence(bitCount, false));
             }
         }
-        
+
         if (subrule.getRule() == null) {
             subrule.remove();
         }
