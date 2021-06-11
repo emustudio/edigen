@@ -26,7 +26,6 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * The lexical analyzer test case.
- * @author Matúš Sulír
  */
 public class LexerTest {
 

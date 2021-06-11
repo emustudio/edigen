@@ -36,7 +36,6 @@ import static net.emustudio.edigen.Setting.*;
  * A translator from the input file in the domain specific language (processor
  * specification) to two output files (instruction decoder and disassembler)
  * in the Java language.
- * @author Matúš Sulír
  */
 public class Translator {
     

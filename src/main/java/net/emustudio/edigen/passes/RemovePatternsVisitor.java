@@ -27,7 +27,6 @@ import net.emustudio.edigen.nodes.TreeNode;
  * 
  * This represents the fact that masks containing only zeroes do not require
  * comparing with the pattern because the result is always true.
- * @author Matúš Sulír
  */
 public class RemovePatternsVisitor extends Visitor {
 

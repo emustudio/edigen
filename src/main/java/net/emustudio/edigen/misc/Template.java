@@ -43,7 +43,6 @@ import java.util.regex.Pattern;
  * its value as-is.</p>
  * 
  * <p>Unset variables found in the template are left unmodified.</p>
- * @author Matúš Sulír
  */
 public class Template {
     

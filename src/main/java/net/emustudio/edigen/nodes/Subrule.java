@@ -22,7 +22,6 @@ import net.emustudio.edigen.Visitor;
 
 /**
  * A subrule is a rule name contained in a variant.
- * @author Matúš Sulír
  */
 public class Subrule extends TreeNode {
     

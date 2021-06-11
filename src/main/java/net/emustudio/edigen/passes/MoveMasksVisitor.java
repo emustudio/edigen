@@ -32,7 +32,6 @@ import net.emustudio.edigen.nodes.TreeNode;
  * 
  * This is necessary to represent the fact that if no pattern matches an input,
  * the next mask (an its associated patterns) is tried.
- * @author Matúš Sulír
  */
 public class MoveMasksVisitor extends Visitor {
 

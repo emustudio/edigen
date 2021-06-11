@@ -27,7 +27,6 @@ import java.io.Writer;
 /**
  * The instruction decoder generator.
  *
- * @author Matúš Sulír
  */
 public class DecoderGenerator extends Generator {
 

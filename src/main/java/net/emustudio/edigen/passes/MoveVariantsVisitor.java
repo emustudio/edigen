@@ -23,7 +23,6 @@ import net.emustudio.edigen.nodes.*;
 
 /**
  * A visitor which moves the variant nodes to the bottom of the tree.
- * @author Matúš Sulír
  */
 public class MoveVariantsVisitor extends Visitor {
 

@@ -22,7 +22,6 @@ import net.emustudio.edigen.Visitor;
 
 /**
  * The root node of the specification AST.
- * @author Matúš Sulír
  */
 public class Specification extends TreeNode {
     

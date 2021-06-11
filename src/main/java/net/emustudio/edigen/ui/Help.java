@@ -19,7 +19,6 @@ package net.emustudio.edigen.ui;
 
 /**
  * The command line help text generator.
- * @author Matúš Sulír
  */
 public class Help {
     private final String executionCommand;

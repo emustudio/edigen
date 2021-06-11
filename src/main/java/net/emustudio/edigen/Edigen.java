@@ -32,7 +32,6 @@ import static net.emustudio.edigen.Setting.*;
 /**
  * The main application class.
  *
- * @author Matúš Sulír
  */
 public class Edigen {
 

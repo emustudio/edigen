@@ -25,7 +25,6 @@ import net.emustudio.edigen.nodes.*;
  * The subclasses can override needed methods to implement the expected
  * behavior when visiting the particular node. Unoverriden methods will have
  * the default behavior, which is to accept all children.
- * @author Matúš Sulír
  */
 public abstract class Visitor {
     public void visit(TreeNode node) throws SemanticException {

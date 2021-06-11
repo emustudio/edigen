@@ -27,7 +27,6 @@ import java.util.regex.Pattern;
  * 
  * One of the instruction decoder's task is to find out which variant of the
  * particular rule matches against the part of the decoded instruction.
- * @author Matúš Sulír
  */
 public class Variant extends TreeNode {
     

@@ -31,8 +31,7 @@ import java.util.Set;
  * obtained from the input file.
  * 
  * Because the AST was constructed in one pass, backward references are not yet
- * solved. This visitor resolves them (along with the backward references). 
- * @author Matúš Sulír
+ * solved. This visitor resolves them (along with the backward references).
  */
 public class ResolveNamesVisitor extends Visitor {
     

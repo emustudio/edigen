@@ -19,7 +19,6 @@ package net.emustudio.edigen.ui;
 
 /**
  * An exception thrown when the command line arguments are invalid.
- * @author Matúš Sulír
  */
 public class CommandLineException extends Exception {
 

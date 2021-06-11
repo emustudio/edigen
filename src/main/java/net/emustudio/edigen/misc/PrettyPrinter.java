@@ -55,7 +55,6 @@ import java.io.Writer;
  * }
  * </pre>
  *
- * @author Matúš Sulír
  */
 public class PrettyPrinter {
 

@@ -22,7 +22,6 @@ import net.emustudio.edigen.nodes.TreeNode;
 /**
  * This class represents an error found during semantic analysis, for example
  * a duplicate rule name.
- * @author Matúš Sulír
  */
 public class SemanticException extends Exception {
 

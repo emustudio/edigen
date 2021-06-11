@@ -25,7 +25,6 @@ import static org.junit.Assert.*;
 
 /**
  * Test of the BitSequence class.
- * @author Matúš Sulír
  */
 public class BitSequenceTest {
 
@@ -37,8 +36,8 @@ public class BitSequenceTest {
         String binaryString = "01100";
         boolean[] expected = {false, true, true, false, false};
         boolean[] result = BitSequence.fromBinary(binaryString).toBooleanArray();
-        
-        assertTrue(Arrays.equals(expected, result));
+
+        assertArrayEquals(expected, result);
     }
 
     /**

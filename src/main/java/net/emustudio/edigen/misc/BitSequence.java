@@ -28,7 +28,6 @@ import java.util.regex.Pattern;
  * it can end with zeroes and the length is preserved. The sequence length can
  * be modified after creation. In addition, several conversion methods are
  * provided.
- * @author Matúš Sulír
  */
 public class BitSequence {
     

@@ -24,7 +24,6 @@ import java.io.*;
 
 /**
  * An output code generator.
- * @author Matúš Sulír
  */
 public abstract class Generator {
     

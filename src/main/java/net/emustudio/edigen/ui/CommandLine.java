@@ -23,7 +23,6 @@ import java.util.*;
 
 /**
  * The command line argument parser.
- * @author Matúš Sulír
  */
 public class CommandLine {
 

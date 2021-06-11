@@ -35,7 +35,6 @@ import java.util.Set;
  * Each rule (which has at least one returning variant) and string-returning
  * variant is given a unique integral constant which can be later used in a
  * disassembler and emulator.
- * @author Matúš Sulír
  */
 public class GenerateFieldsVisitor extends Visitor {
 
