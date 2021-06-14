@@ -40,8 +40,6 @@ src_reg, dst_reg =
     "X": 00 |
     "Y": 01;
 
-immediate = imm: imm(10);
-
 %%
 
 # disassembler
