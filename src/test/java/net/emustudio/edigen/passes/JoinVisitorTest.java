@@ -1,17 +1,130 @@
 package net.emustudio.edigen.passes;
 
+import net.emustudio.edigen.SemanticException;
+import net.emustudio.edigen.misc.BitSequence;
+import net.emustudio.edigen.nodes.*;
+import org.junit.Before;
+import org.junit.Test;
+
+import java.util.concurrent.atomic.AtomicReference;
+
+import static org.junit.Assert.assertEquals;
+
 public class JoinVisitorTest {
+    private Decoder decoder;
+    private Variant variant;
 
-    // subrule without length does not generate mask/pattern
+    @Before
+    public void setUp() {
+        decoder = new Decoder();
+        Rule rule = new Rule("rule");
+        decoder.addChild(rule);
+        variant = new Variant();
+        rule.addChild(variant);
+    }
 
-    // subrule without pre-pattern generates false mask & false pattern of the subrule length
+    @Test
+    public void testSubruleWithoutLengthDoesNotGenerateMaskAndPattern() throws SemanticException {
+        // It is not necessary to match no-length subrule since it can exist only at the end of the variant.
+        // Decoder will continue matching the subrule later.
 
-    // subrule with pre-pattern generates true mask of the pre-pattern & pre-pattern bits; the rest of the length - false mask&pattern
+        // rule = "something": nolength;
+        // nolength = arg: arg(20);
 
-    // constant (pattern) generates true mask & constant bits
+        variant.setReturnString("something");
+        Subrule nolength = new Subrule("nolength", null, null);
+        variant.addChild(nolength);
 
-    // if pre-pattern of subrule is longer than length - throw exception
+        Rule nolengthDefinition = new Rule("nolength");
+        Variant nolengthVariant = new Variant();
+        nolengthVariant.setReturnSubrule(new Subrule("arg"));
+        nolengthVariant.addChild(new Subrule("arg", 20, null));
+        nolengthDefinition.addChild(nolengthVariant);
+
+        decoder.addChild(nolengthDefinition);
+
+        decoder.accept(new ResolveNamesVisitor());
+        decoder.accept(new JoinVisitor());
+
+        assertEquals(0, findMask(variant).getBits().getLength());
+        assertEquals(0, findPattern(variant).getBits().getLength());
+    }
+
+    @Test
+    public void testSubruleWithoutPrePatternGeneratesFalseMaskAndPattern() throws SemanticException {
+        // rule = "something": subrule(8);
+
+        variant.setReturnString("something");
+        Subrule subrule = new Subrule("subrule", 8, null);
+        variant.addChild(subrule);
+
+        decoder.accept(new ResolveNamesVisitor());
+        decoder.accept(new JoinVisitor());
+
+        assertEquals("00000000", findMask(variant).getBits().toString());
+        assertEquals("00000000", findPattern(variant).getBits().toString());
+    }
+
+    @Test
+    public void testSubruleWithPrePatternGeneratesTrueMaskAndPrePatternBits() throws SemanticException {
+        // rule = "something": subrule[1101](8);
+
+        variant.setReturnString("something");
+        Subrule subrule = new Subrule("subrule", 8, new Pattern(BitSequence.fromBinary("1101")));
+        variant.addChild(subrule);
+
+        decoder.accept(new ResolveNamesVisitor());
+        decoder.accept(new JoinVisitor());
+
+        assertEquals("11110000", findMask(variant).getBits().toString());
+        assertEquals("11010000", findPattern(variant).getBits().toString());
+    }
+
+    @Test
+    public void testConstantGeneratesTrueMaskAndConstantBits() throws SemanticException {
+        // rule = "something": 0xAA55;
+
+        variant.setReturnString("something");
+        variant.addChild(new Pattern(BitSequence.fromHexadecimal("AA55")));
+
+        decoder.accept(new ResolveNamesVisitor());
+        decoder.accept(new JoinVisitor());
+
+        assertEquals("1111111111111111", findMask(variant).getBits().toString());
+        assertEquals("1010101001010101", findPattern(variant).getBits().toString());
+    }
+
+    @Test(expected = SemanticException.class)
+    public void testPrePatternOfSubruleCannotBeLongerThanSubruleLength() throws SemanticException {
+        // rule = "something": subrule[1101](2);
+
+        variant.setReturnString("something");
+        Subrule subrule = new Subrule("subrule", 2, new Pattern(BitSequence.fromBinary("1101")));
+        variant.addChild(subrule);
+
+        decoder.accept(new ResolveNamesVisitor());
+        decoder.accept(new JoinVisitor());
+    }
 
 
 
+    private Mask findMask(TreeNode tree) {
+        AtomicReference<Mask> mask = new AtomicReference<>();
+        tree.getChildren().forEach(node -> {
+            if (node instanceof Mask) {
+                mask.set((Mask)node);
+            }
+        });
+        return mask.get();
+    }
+
+    private Pattern findPattern(TreeNode tree) {
+        AtomicReference<Pattern> pattern = new AtomicReference<>();
+        tree.getChildren().forEach(node -> {
+            if (node instanceof Pattern) {
+                pattern.set((Pattern)node);
+            }
+        });
+        return pattern.get();
+    }
 }

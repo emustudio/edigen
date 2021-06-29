@@ -47,6 +47,8 @@ public class ResolveNamesVisitorTest {
 
     @Test
     public void testVariantHasAssociatedSubrule() throws SemanticException {
+        // rule = subrule: subrule(1);
+
         variant.setReturnSubrule(new Subrule("subrule"));
         Subrule subrule = new Subrule("subrule", 1, null);
         variant.addChild(subrule);
@@ -57,6 +59,7 @@ public class ResolveNamesVisitorTest {
 
     @Test(expected = SemanticException.class)
     public void testVariantReturnsNonexistentSubrule() throws SemanticException {
+        // rule = subrule: ;
         variant.setReturnSubrule(new Subrule("subrule"));
 
         decoder.accept(new ResolveNamesVisitor());
@@ -64,6 +67,8 @@ public class ResolveNamesVisitorTest {
 
     @Test
     public void testSubruleHasAssociatedRule() throws SemanticException {
+        // rule = rule2 ;
+        // rule2 = ;
         Subrule subrule = new Subrule("rule2");
         variant.addChild(subrule);
         Rule rule2 = new Rule("rule2");
@@ -75,6 +80,7 @@ public class ResolveNamesVisitorTest {
 
     @Test(expected = SemanticException.class)
     public void testSubruleRefersToNonexistentRule() throws SemanticException {
+        // rule = nonexistent ;
         variant.addChild(new Subrule("nonexistent"));
 
         decoder.accept(new ResolveNamesVisitor());
@@ -82,6 +88,7 @@ public class ResolveNamesVisitorTest {
 
     @Test
     public void testSubruleRefersToNonexistentRuleWithLength() throws SemanticException {
+        // rule = nonexistent(10);
         Subrule subrule = new Subrule("nonexistent", 10, null);
         variant.addChild(subrule);
 
@@ -91,6 +98,7 @@ public class ResolveNamesVisitorTest {
 
     @Test
     public void testValueHasAssociatedRule() throws SemanticException {
+        // "" = rule ;
         Value value = new Value("rule");
         format.addChild(value);
 
@@ -100,6 +108,7 @@ public class ResolveNamesVisitorTest {
 
     @Test(expected = SemanticException.class)
     public void testValueRefersToNonexistentRule() throws SemanticException {
+        // "" = nonexistant ;
         format.addChild(new Value("nonexistent"));
 
         new Specification(decoder, disassembler).accept(new ResolveNamesVisitor());
@@ -107,20 +116,23 @@ public class ResolveNamesVisitorTest {
 
     @Test(expected = SemanticException.class)
     public void testDuplicateRule() throws SemanticException {
+        // name = ;
+        // name = ;
         decoder.addChildren(new Rule("name"), new Rule("name"));
-
         decoder.accept(new ResolveNamesVisitor());
     }
 
     @Test(expected = SemanticException.class)
-    public void testDuplicateRuleField() throws SemanticException {
+    public void testDuplicateRuleCaseSensitive() throws SemanticException {
+        // name = ;
+        // NAME = ;
         decoder.addChildren(new Rule("name"), new Rule("NAME"));
-
         decoder.accept(new ResolveNamesVisitor());
     }
 
     @Test(expected = SemanticException.class)
     public void testDuplicateSubrule() throws SemanticException {
+        // rule = subrule: subrule(1) subrule(2);
         variant.setReturnSubrule(new Subrule("subrule"));
         Subrule subrule1 = new Subrule("subrule", 1, null);
         Subrule subrule2 = new Subrule("subrule", 2, null);
