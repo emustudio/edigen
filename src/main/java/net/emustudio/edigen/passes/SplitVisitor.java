@@ -41,7 +41,7 @@ public class SplitVisitor extends Visitor {
     private BitSequence patternBits;
     
     /**
-     * Splits the mask and pattern and adds the splitted pieces to the variant.
+     * Splits the mask and pattern and adds the split pieces to the variant.
      * 
      * <p>The nodes are placed "vertically" - each pattern is a child of the
      * corresponding mask and each mask is a child of the previous pattern
