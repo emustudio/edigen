@@ -26,6 +26,7 @@ public class SemanticCheckVisitorTest {
 
     @Test(expected = SemanticException.class)
     public void testNotEndingSubruleMustHaveLengthSpecified() throws SemanticException {
+        // rule = subrule1 subrule2 ;
         variant.addChild(new Subrule("subrule1"));
         variant.addChild(new Subrule("subrule2"));
         decoder.accept(new SemanticCheckVisitor());
@@ -33,12 +34,14 @@ public class SemanticCheckVisitorTest {
 
     @Test
     public void testEndingSubruleDoesntNeedToHaveLengthSpecified() throws SemanticException {
+        // rule = subrule1 ;
         variant.addChild(new Subrule("subrule1"));
         decoder.accept(new SemanticCheckVisitor());
     }
 
     @Test(expected = SemanticException.class)
     public void testNonReturningValueUsedInDisassemblerThrows() throws SemanticException {
+        // "" = rule
         Value value = new Value("rule");
         format.addChild(value);
         Specification specification = new Specification(decoder, disassembler);
@@ -48,6 +51,9 @@ public class SemanticCheckVisitorTest {
 
     @Test
     public void testReturningValueCanBeUsedInDisassembler() throws SemanticException {
+        // rule = "at least something": ;
+        // %%
+        // "" = rule
         Value value = new Value("rule");
         format.addChild(value);
         variant.setReturnString("at least something");
@@ -58,6 +64,10 @@ public class SemanticCheckVisitorTest {
 
     @Test(expected = SemanticException.class)
     public void testTwoValuesUsedInFormatCannotBeTheSame() throws SemanticException {
+        // rule = "at least something": ;
+        // %%
+        // "" = rule
+        // "" = rule
         Value value = new Value("rule");
         format.addChild(value);
 
