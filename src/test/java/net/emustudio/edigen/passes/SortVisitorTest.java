@@ -11,6 +11,30 @@ import static org.junit.Assert.assertArrayEquals;
 
 public class SortVisitorTest {
 
+    // Expected tree at input:
+    //  Rule
+    //    Variant
+    //      Subrules...
+    //      Mask (length=3)
+    //      Pattern
+    //    Variant
+    //      ...
+    //      Mask (length=4)
+    //      Pattern
+
+    // Expected tree at output:
+    //  Rule
+    //    Variant
+    //      ...
+    //      Mask (length=4)
+    //      Pattern
+    //    Variant
+    //      Subruless...
+    //      Mask (length=3)
+    //      Pattern
+    //
+    // (variants are sorted by mask length from longest to shortest)s
+
     @Test
     public void testMasksAreSortedFromLongestToShortest() throws SemanticException {
         // stable sort

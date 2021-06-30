@@ -45,7 +45,7 @@ public class MoveVariantsVisitor extends Visitor {
     }
 
     /**
-     * Saves the current variant and dettaches the variant from the rule if at
+     * Saves the current variant and detaches the variant from the rule if at
      * least one variant's child is a mask.
      * @param variant the variant node
      * @throws SemanticException never
