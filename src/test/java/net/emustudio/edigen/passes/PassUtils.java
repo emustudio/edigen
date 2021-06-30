@@ -7,6 +7,7 @@ import net.emustudio.edigen.nodes.TreeNode;
 import net.emustudio.edigen.nodes.Variant;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -67,5 +68,29 @@ public class PassUtils {
         Pattern pattern = new Pattern(BitSequence.fromBinary(patternBits));
         variant.addChild(pattern);
         return variant;
+    }
+
+
+    public static Mask mask(String bits) {
+        return new Mask(BitSequence.fromBinary(bits));
+    }
+
+    public static Pattern pattern(String bits) {
+        return new Pattern(BitSequence.fromBinary(bits));
+    }
+
+    public static TreeNode chain(TreeNode... nodes) {
+        TreeNode first = null;
+        TreeNode parent = null;
+        for (TreeNode node : nodes) {
+            if (parent == null) {
+                parent = node;
+                first = node;
+            } else {
+                parent.addChild(node);
+                parent = node;
+            }
+        }
+        return first;
     }
 }

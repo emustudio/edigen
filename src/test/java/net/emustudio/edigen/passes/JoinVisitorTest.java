@@ -11,6 +11,23 @@ import static net.emustudio.edigen.passes.PassUtils.findPattern;
 import static org.junit.Assert.assertEquals;
 
 public class JoinVisitorTest {
+
+    // Expectation of a tree at input:
+    //  Rule
+    //    Variant
+    //      Subrule
+    //      Subrule
+    //      Constant
+    //      ...
+
+    // Expectation of the tree at output:
+    //  Rule
+    //    Variant
+    //      Subrule
+    //      Subrule
+    //      Mask
+    //      Pattern
+
     private Decoder decoder;
     private Variant variant;
 
