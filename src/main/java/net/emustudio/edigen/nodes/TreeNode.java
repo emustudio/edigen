@@ -21,10 +21,7 @@ import net.emustudio.edigen.SemanticException;
 import net.emustudio.edigen.Visitor;
 
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.*;
 
 /**
  * A node of an abstract syntax tree (AST).

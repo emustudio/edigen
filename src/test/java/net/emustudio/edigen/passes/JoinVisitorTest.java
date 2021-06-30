@@ -6,8 +6,8 @@ import net.emustudio.edigen.nodes.*;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.concurrent.atomic.AtomicReference;
-
+import static net.emustudio.edigen.passes.PassUtils.findMask;
+import static net.emustudio.edigen.passes.PassUtils.findPattern;
 import static org.junit.Assert.assertEquals;
 
 public class JoinVisitorTest {
@@ -104,27 +104,5 @@ public class JoinVisitorTest {
 
         decoder.accept(new ResolveNamesVisitor());
         decoder.accept(new JoinVisitor());
-    }
-
-
-
-    private Mask findMask(TreeNode tree) {
-        AtomicReference<Mask> mask = new AtomicReference<>();
-        tree.getChildren().forEach(node -> {
-            if (node instanceof Mask) {
-                mask.set((Mask)node);
-            }
-        });
-        return mask.get();
-    }
-
-    private Pattern findPattern(TreeNode tree) {
-        AtomicReference<Pattern> pattern = new AtomicReference<>();
-        tree.getChildren().forEach(node -> {
-            if (node instanceof Pattern) {
-                pattern.set((Pattern)node);
-            }
-        });
-        return pattern.get();
     }
 }
