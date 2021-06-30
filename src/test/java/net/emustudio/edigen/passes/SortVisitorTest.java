@@ -1,13 +1,11 @@
 package net.emustudio.edigen.passes;
 
 import net.emustudio.edigen.SemanticException;
-import net.emustudio.edigen.misc.BitSequence;
 import net.emustudio.edigen.nodes.Decoder;
-import net.emustudio.edigen.nodes.Mask;
 import net.emustudio.edigen.nodes.Rule;
-import net.emustudio.edigen.nodes.Variant;
 import org.junit.Test;
 
+import static net.emustudio.edigen.passes.PassUtils.createVariantWithMask;
 import static net.emustudio.edigen.passes.PassUtils.findMaskStrings;
 import static org.junit.Assert.assertArrayEquals;
 
@@ -41,13 +39,5 @@ public class SortVisitorTest {
         Decoder decoder = new Decoder();
         decoder.addChild(rule);
         decoder.accept(new SortVisitor());
-    }
-
-
-    private Variant createVariantWithMask(String bits) {
-        Variant variant = new Variant();
-        Mask mask = new Mask(BitSequence.fromBinary(bits));
-        variant.addChild(mask);
-        return variant;
     }
 }

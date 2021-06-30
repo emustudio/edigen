@@ -6,8 +6,6 @@ import net.emustudio.edigen.nodes.*;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.concurrent.atomic.AtomicReference;
-
 import static net.emustudio.edigen.passes.PassUtils.findMask;
 import static net.emustudio.edigen.passes.PassUtils.findPattern;
 import static org.junit.Assert.assertEquals;

@@ -35,7 +35,7 @@ import net.emustudio.edigen.nodes.Variant;
  */
 public class SplitVisitor extends Visitor {
 
-    private static final int BITS_PER_PIECE = 32;
+    public static final int BITS_PER_PIECE = 32;
     
     private BitSequence maskBits;
     private BitSequence patternBits;
