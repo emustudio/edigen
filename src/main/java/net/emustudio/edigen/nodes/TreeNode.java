@@ -34,7 +34,7 @@ import java.util.*;
 public abstract class TreeNode {
     
     private TreeNode parent;
-    private final Set<TreeNode> children = new LinkedHashSet<>();
+    private final List<TreeNode> children = new LinkedList<>();
     private Integer line;
     
     /**
@@ -84,20 +84,24 @@ public abstract class TreeNode {
     /**
      * Adds a child to this node, placing it on the end.
      * @param child the child node
+     * @return this
      */
-    public void addChild(TreeNode child) {
+    public TreeNode addChild(TreeNode child) {
         child.parent = this;
         children.add(child);
+        return this;
     }
 
     /**
      * Adds multiple children to this node, placing them on the end.
      * @param children the child nodes
+     * @return this
      */
-    public void addChildren(TreeNode... children) {
+    public TreeNode addChildren(TreeNode... children) {
         for (TreeNode child : children) {
             addChild(child);
         }
+        return this;
     }
 
     /**

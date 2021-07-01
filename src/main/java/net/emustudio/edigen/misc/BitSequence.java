@@ -79,7 +79,7 @@ public class BitSequence {
      * @throws NumberFormatException if the input contains invalid characters
      */
     public static BitSequence fromBinary(String binaryString) {
-        if (!BIN_NUMBER.matcher(binaryString).matches())
+        if (!binaryString.isEmpty() && !BIN_NUMBER.matcher(binaryString).matches())
             throw new NumberFormatException("Invalid binary number.");
         
         int length = binaryString.length();

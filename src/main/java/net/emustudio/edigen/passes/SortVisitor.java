@@ -33,12 +33,37 @@ import java.util.List;
  *
  * This ensures that the generated decoder will not read bytes beyond
  * the current instruction.
+ *
+ * Expected tree at input:
+ * <code>
+ *   Rule
+ *     Variant
+ *       ...
+ *       Mask (length=3)
+ *       Pattern
+ *     Variant
+ *       ...
+ *       Mask (length=4)
+ *       Pattern
+ * </code>
+ *
+ * Expected tree at output:
+ * <code>
+ *   Rule
+ *     Variant
+ *       ...
+ *       Mask (length=4)
+ *       Pattern
+ *     Variant
+ *       ...
+ *       Mask (length=3)
+ *       Pattern
+ * </code>
  */
 public class SortVisitor extends Visitor {
 
-    private List<Mask> masks = new ArrayList<>();
-    private Comparator<Mask> byLength = (Mask mask1, Mask mask2) ->
-            ((Integer) mask1.getBits().getLength()).compareTo(mask2.getBits().getLength());
+    private final List<Mask> masks = new ArrayList<>();
+    private final Comparator<Mask> byLength = Comparator.comparingInt((Mask mask) -> mask.getBits().getLength());
 
     /**
      * Collects the variants, sorts them by mask length and re-attaches them

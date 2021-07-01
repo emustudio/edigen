@@ -1,43 +1,19 @@
 package net.emustudio.edigen.passes;
 
 import net.emustudio.edigen.SemanticException;
-import net.emustudio.edigen.misc.BitSequence;
-import net.emustudio.edigen.nodes.*;
+import net.emustudio.edigen.nodes.Decoder;
+import net.emustudio.edigen.nodes.Rule;
 import org.junit.Before;
 import org.junit.Test;
 
-import static net.emustudio.edigen.passes.PassUtils.findMask;
-import static net.emustudio.edigen.passes.PassUtils.findPattern;
-import static org.junit.Assert.assertEquals;
+import static net.emustudio.edigen.passes.PassUtils.*;
 
 public class JoinVisitorTest {
-
-    // Expectation of a tree at input:
-    //  Rule
-    //    Variant
-    //      Subrule
-    //      Subrule
-    //      Constant
-    //      ...
-
-    // Expectation of the tree at output:
-    //  Rule
-    //    Variant
-    //      Subrule
-    //      Subrule
-    //      Mask
-    //      Pattern
-
     private Decoder decoder;
-    private Variant variant;
 
     @Before
     public void setUp() {
         decoder = new Decoder();
-        Rule rule = new Rule("rule");
-        decoder.addChild(rule);
-        variant = new Variant();
-        rule.addChild(variant);
     }
 
     @Test
@@ -48,77 +24,131 @@ public class JoinVisitorTest {
         // rule = "something": nolength;
         // nolength = arg: arg(20);
 
-        variant.setReturnString("something");
-        Subrule nolength = new Subrule("nolength", null, null);
-        variant.addChild(nolength);
+        Rule r1 = nest(
+                mkRule("something"),
+                mkVariant("something"),
+                mkSubrule("nolength")
+        );
 
-        Rule nolengthDefinition = new Rule("nolength");
-        Variant nolengthVariant = new Variant();
-        nolengthVariant.setReturnSubrule(new Subrule("arg"));
-        nolengthVariant.addChild(new Subrule("arg", 20, null));
-        nolengthDefinition.addChild(nolengthVariant);
+        Rule r2 = nest(
+                mkRule("nolength"),
+                mkVariant(mkSubrule("arg")),
+                mkSubrule("arg", 20, null)
+        );
 
-        decoder.addChild(nolengthDefinition);
-
+        decoder.addChildren(r1, r2);
         decoder.accept(new ResolveNamesVisitor());
         decoder.accept(new JoinVisitor());
 
-        assertEquals(0, findMask(variant).getBits().getLength());
-        assertEquals(0, findPattern(variant).getBits().getLength());
+        assertTreesAreEqual(r1, nest(
+                mkRule("something"),
+                mkVariant("something").addChildren(
+                        mkSubrule("nolength", null, null, 0, r2),
+                        mkMask(""), // no mask
+                        mkPattern("") // no pattern
+                )
+        ));
     }
 
     @Test
     public void testSubruleWithoutPrePatternGeneratesFalseMaskAndPattern() throws SemanticException {
         // rule = "something": subrule(8);
+        Rule r = nest(
+                mkRule("something"),
+                mkVariant("something"),
+                mkSubrule("subrule", 8, null)
+        );
 
-        variant.setReturnString("something");
-        Subrule subrule = new Subrule("subrule", 8, null);
-        variant.addChild(subrule);
-
+        decoder.addChild(r);
         decoder.accept(new ResolveNamesVisitor());
         decoder.accept(new JoinVisitor());
 
-        assertEquals("00000000", findMask(variant).getBits().toString());
-        assertEquals("00000000", findPattern(variant).getBits().toString());
+        Rule subrule = mkRule("subrule");
+        nest(
+                subrule,
+                mkVariant(mkSubrule("subrule", 8, null, 0, subrule)).addChildren(
+                        mkSubrule("subrule", 8, null, 0, subrule),
+                        mkMask("00000000"),
+                        mkPattern("00000000")
+                )
+        );
+        assertTreesAreEqual(r, nest(
+                mkRule("something"),
+                mkVariant("something").addChildren(
+                        mkSubrule("subrule", 8, null, 0, subrule),
+                        mkMask("00000000"),
+                        mkPattern("00000000")
+                ))
+        );
     }
 
     @Test
     public void testSubruleWithPrePatternGeneratesTrueMaskAndPrePatternBits() throws SemanticException {
         // rule = "something": subrule[1101](8);
 
-        variant.setReturnString("something");
-        Subrule subrule = new Subrule("subrule", 8, new Pattern(BitSequence.fromBinary("1101")));
-        variant.addChild(subrule);
+        Rule r = nest(
+                mkRule("something"),
+                mkVariant("something"),
+                mkSubrule("subrule", 8, mkPattern("1101"))
+        );
 
+        decoder.addChild(r);
         decoder.accept(new ResolveNamesVisitor());
         decoder.accept(new JoinVisitor());
 
-        assertEquals("11110000", findMask(variant).getBits().toString());
-        assertEquals("11010000", findPattern(variant).getBits().toString());
+        Rule subrule = mkRule("subrule");
+        nest(
+                subrule,
+                mkVariant(mkSubrule("subrule", 8, mkPattern("1101"), 0, subrule)).addChildren(
+                        mkSubrule("subrule", 8, mkPattern("1101"), 0, subrule),
+                        mkMask("11110000"),
+                        mkPattern("11010000")
+                )
+        );
+        assertTreesAreEqual(r, nest(
+                mkRule("something"),
+                mkVariant("something").addChildren(
+                        mkSubrule("subrule", 8, mkPattern("1101"), 0, subrule),
+                        mkMask("11110000"),
+                        mkPattern("11010000")
+                ))
+        );
     }
 
     @Test
     public void testConstantGeneratesTrueMaskAndConstantBits() throws SemanticException {
         // rule = "something": 0xAA55;
 
-        variant.setReturnString("something");
-        variant.addChild(new Pattern(BitSequence.fromHexadecimal("AA55")));
+        Rule r = nest(
+                mkRule("something"),
+                mkVariant("something"),
+                mkPattern("1010101001010101")
+        );
 
+        decoder.addChild(r);
         decoder.accept(new ResolveNamesVisitor());
         decoder.accept(new JoinVisitor());
 
-        assertEquals("1111111111111111", findMask(variant).getBits().toString());
-        assertEquals("1010101001010101", findPattern(variant).getBits().toString());
+        assertTreesAreEqual(r, nest(
+                mkRule("something"),
+                mkVariant("something").addChildren(
+                        mkMask("1111111111111111"),
+                        mkPattern("1010101001010101")
+                )
+        ));
     }
 
     @Test(expected = SemanticException.class)
     public void testPrePatternOfSubruleCannotBeLongerThanSubruleLength() throws SemanticException {
         // rule = "something": subrule[1101](2);
 
-        variant.setReturnString("something");
-        Subrule subrule = new Subrule("subrule", 2, new Pattern(BitSequence.fromBinary("1101")));
-        variant.addChild(subrule);
+        Rule r = nest(
+                mkRule("something"),
+                mkVariant("something"),
+                mkSubrule("subrule", 2, mkPattern("1101"))
+        );
 
+        decoder.addChild(r);
         decoder.accept(new ResolveNamesVisitor());
         decoder.accept(new JoinVisitor());
     }
