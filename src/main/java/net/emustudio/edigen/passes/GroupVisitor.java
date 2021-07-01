@@ -33,6 +33,27 @@ import java.util.Map;
  * node.
  * 
  * All children of the original nodes will be attached to the grouped node.
+ *
+ * Expectation of a tree at input, e.g:
+ * <code>
+ *   Rule
+ *     Mask (111)
+ *       Pattern (110)
+ *         Variant
+ *     Mask (111)
+ *       Pattern (111)
+ *         Variant
+ * </code>
+ *
+ * Expectation of the tree at output:
+ * <code>
+ *   Rule
+ *     Mask (111)
+ *       Pattern (110)
+ *         Variant
+ *       Pattern (111)
+ *         Variant
+ * </code>
  */
 public class GroupVisitor extends Visitor {
     
@@ -91,7 +112,7 @@ public class GroupVisitor extends Visitor {
             savedBits = null;
             savingBits = true;
             child.accept(this);
-            
+
             // add the node to the corresponding group
             if (savedBits != null) {
                 TreeNode uniqueChild = uniqueChildren.get(savedBits);
@@ -104,7 +125,7 @@ public class GroupVisitor extends Visitor {
                 }
             }
         }
-        
+
         // traverse
         savingBits = false;
         node.acceptChildren(this);

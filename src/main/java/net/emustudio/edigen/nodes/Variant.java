@@ -158,11 +158,4 @@ public class Variant extends TreeNode {
         return Objects.equals(returnSubrule, variant.returnSubrule);
     }
 
-    @Override
-    public int hashCode() {
-        int result = returnType != null ? returnType.hashCode() : 0;
-        result = 31 * result + (returnString != null ? returnString.hashCode() : 0);
-        result = 31 * result + (returnSubrule != null ? returnSubrule.hashCode() : 0);
-        return result;
-    }
 }

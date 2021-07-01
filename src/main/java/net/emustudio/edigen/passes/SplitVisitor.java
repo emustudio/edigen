@@ -32,6 +32,25 @@ import net.emustudio.edigen.nodes.Variant;
  * This is necessary to support instructions with variable length, especially
  * instructions with length larger than <code>int</code> or <code>long</code>
  * size.
+ *
+ * Expectation of a tree at input, e.g.:
+ * <code>
+ *   Rule
+ *     Variant
+ *     Mask (length > BITS_PER_PIECE)
+ *     Pattern (length > BITS_PER_PIECE)
+ * </code>
+ *
+ * Expectation of the tree at output:
+ * <code>
+ *   Rule
+ *     Variant
+ *       Mask (length = BITS_PER_PIECE)
+ *         Pattern (length = BITS_PER_PIECE)
+ *           ...
+ *             Mask (length <= BITS_PER_PIECE)
+ *               Pattern (length <= BITS_PER_PIECE)
+ * </code>
  */
 public class SplitVisitor extends Visitor {
 

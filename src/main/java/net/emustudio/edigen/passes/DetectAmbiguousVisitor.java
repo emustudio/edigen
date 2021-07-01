@@ -63,7 +63,7 @@ public class DetectAmbiguousVisitor extends Visitor {
 
     private static final String MESSAGE = "Ambiguity detected in rule \"%s\"";
     private Rule currentRule;
-    private final List<Mask> masks = new ArrayList<Mask>();
+    private final List<Mask> masks = new ArrayList<>();
 
     /**
      * Detects possible ambiguity under the rule node and traverses the
@@ -174,8 +174,7 @@ public class DetectAmbiguousVisitor extends Visitor {
      */
     private void detectVariant(Pattern pattern) throws SemanticException {
         if (pattern.childCount() > 1) {
-            throw new SemanticException(String.format(MESSAGE, currentRule.getLabel())
-                    + ": " + pattern.toString(), currentRule);
+            throw new SemanticException(String.format(MESSAGE, currentRule.getLabel()) + ": " + pattern, currentRule);
         }
     }
 }

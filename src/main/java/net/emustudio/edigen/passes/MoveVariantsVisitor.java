@@ -29,21 +29,21 @@ import net.emustudio.edigen.nodes.*;
  *   Rule
  *     Variant
  *       Mask
- *       Pattern
- *       ...
- *       Mask
- *       Pattern
+ *         Pattern
+ *           ...
+ *             Mask
+ *               Pattern
  * </code>
  *
  * Expectation of the tree at output:
  * <code>
  *   Rule
  *     Mask
- *     Pattern
- *     ...
- *     Mask
- *     Pattern
- *     Variant
+ *       Pattern
+ *         ...
+ *           Mask
+ *             Pattern
+ *               Variant
  * </code>
  */
 public class MoveVariantsVisitor extends Visitor {

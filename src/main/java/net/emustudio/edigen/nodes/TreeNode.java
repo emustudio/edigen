@@ -34,9 +34,13 @@ import java.util.*;
 public abstract class TreeNode {
     
     private TreeNode parent;
-    private final List<TreeNode> children = new LinkedList<>();
+    // NOTE: Since almost all TreeNodes implement equals(), calling e.g. children.remove(this) can fail. Therefore we
+    //       need a key which does not override equals() - so the comparison is the same as using `==`
+    private final Map<String, TreeNode> children = new LinkedHashMap<>();
     private Integer line;
-    
+
+    private final String ID = UUID.randomUUID().toString();
+
     /**
      * Returns the parent of this node.
      * 
@@ -54,7 +58,7 @@ public abstract class TreeNode {
      * @return the child node
      */
     public TreeNode getChild(int index) {
-        Iterator<TreeNode> iterator = children.iterator();
+        Iterator<TreeNode> iterator = children.values().iterator();
         
         for (int i = 0; i < index; i++)
             iterator.next();
@@ -70,7 +74,7 @@ public abstract class TreeNode {
      * @return the iterable collection of all children
      */
     public Iterable<TreeNode> getChildren() {
-        return new ArrayList<>(children);
+        return new ArrayList<>(children.values());
     }
     
     /**
@@ -88,7 +92,7 @@ public abstract class TreeNode {
      */
     public TreeNode addChild(TreeNode child) {
         child.parent = this;
-        children.add(child);
+        children.put(child.ID, child);
         return this;
     }
 
@@ -111,7 +115,7 @@ public abstract class TreeNode {
      * node and the parent one is removed bilaterally.
      */
     public void remove() {
-        parent.children.remove(this);
+        parent.children.remove(ID);
         this.parent = null;
     }
     
@@ -179,5 +183,10 @@ public abstract class TreeNode {
         
         for (TreeNode child : getChildren())
             child.print(outStream, indent + 1);
+    }
+
+    @Override
+    public int hashCode() {
+        return ID.hashCode();
     }
 }
