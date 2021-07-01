@@ -20,6 +20,7 @@ package net.emustudio.edigen.nodes;
 import net.emustudio.edigen.SemanticException;
 import net.emustudio.edigen.Visitor;
 
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 /**
@@ -143,4 +144,18 @@ public class Variant extends TreeNode {
         
         return NON_WORD.matcher(string).replaceAll("_");
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Variant variant = (Variant) o;
+
+        if (returnType != variant.returnType) return false;
+        if (!Objects.equals(returnString, variant.returnString))
+            return false;
+        return Objects.equals(returnSubrule, variant.returnSubrule);
+    }
+
 }

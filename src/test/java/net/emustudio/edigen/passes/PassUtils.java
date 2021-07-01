@@ -1,17 +1,11 @@
 package net.emustudio.edigen.passes;
 
 import net.emustudio.edigen.misc.BitSequence;
-import net.emustudio.edigen.nodes.Mask;
-import net.emustudio.edigen.nodes.Pattern;
-import net.emustudio.edigen.nodes.TreeNode;
-import net.emustudio.edigen.nodes.Variant;
+import net.emustudio.edigen.nodes.*;
 
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
+
+import static org.junit.Assert.assertEquals;
 
 public class PassUtils {
 
@@ -21,76 +15,81 @@ public class PassUtils {
         return String.valueOf(data);
     }
 
-    public static List<String> findMaskStrings(TreeNode tree) {
-        return findMasks(tree).stream().map(n -> n.getBits().toString()).collect(Collectors.toList());
+    public static Rule mkRule(String name) {
+        return new Rule(name);
     }
 
-    public static List<Mask> findMasks(TreeNode tree) {
-        List<Mask> masks = new LinkedList<>();
-        if (tree instanceof Mask) {
-            masks.add((Mask)tree);
-        }
-        tree.getChildren().forEach(node -> {
-            if (node instanceof Mask) {
-                masks.add(((Mask)node));
-            } else {
-                node.getChildren().forEach(n -> masks.addAll(findMasks(n)));
-            }
-        });
-        return masks;
+    public static Variant mkVariant() {
+        return new Variant();
     }
 
-    public static Mask findMask(TreeNode tree) {
-        return findMasks(tree).get(0);
+    public static Variant mkVariant(String returnString) {
+        Variant v = new Variant();
+        v.setReturnString(returnString);
+        return v;
     }
 
-    public static Pattern findPattern(TreeNode tree) {
-        AtomicReference<Pattern> pattern = new AtomicReference<>();
-        tree.getChildren().forEach(node -> {
-            if (node instanceof Pattern) {
-                pattern.set((Pattern)node);
-            }
-        });
-        return pattern.get();
+    public static Variant mkVariant(Subrule returnSubrule) {
+        Variant v = new Variant();
+        v.setReturnSubrule(returnSubrule);
+        return v;
     }
 
-    public static Variant createVariantWithMask(String bits) {
-        Variant variant = new Variant();
-        Mask mask = new Mask(BitSequence.fromBinary(bits));
-        variant.addChild(mask);
-        return variant;
+    public static Subrule mkSubrule(String name) {
+        return new Subrule(name);
     }
 
-    public static Variant createVariantWithMaskAndPattern(String maskBits, String patternBits) {
-        Variant variant = new Variant();
-        Mask mask = new Mask(BitSequence.fromBinary(maskBits));
-        variant.addChild(mask);
-        Pattern pattern = new Pattern(BitSequence.fromBinary(patternBits));
-        variant.addChild(pattern);
-        return variant;
+    public static Subrule mkSubrule(String name, Integer length, Pattern prePattern) {
+        return new Subrule(name, length, prePattern);
     }
 
+    public static Subrule mkSubrule(String name, Integer length, Pattern prePattern, int start, Rule rule) {
+        Subrule s = new Subrule(name, length, prePattern);
+        s.setStart(start);
+        s.setRule(rule);
+        return s;
+    }
 
-    public static Mask mask(String bits) {
+    public static Mask mkMask(String bits) {
         return new Mask(BitSequence.fromBinary(bits));
     }
 
-    public static Pattern pattern(String bits) {
+    public static Mask mkMask(String bits, int start) {
+        Mask mask = new Mask(BitSequence.fromBinary(bits));
+        mask.setStart(start);
+        return mask;
+    }
+
+    public static Pattern mkPattern(String bits) {
         return new Pattern(BitSequence.fromBinary(bits));
     }
 
-    public static TreeNode chain(TreeNode... nodes) {
-        TreeNode first = null;
-        TreeNode parent = null;
+    public static <T extends TreeNode> T nest(T fst, TreeNode... nodes) {
+        TreeNode parent = fst;
         for (TreeNode node : nodes) {
-            if (parent == null) {
-                parent = node;
-                first = node;
-            } else {
-                parent.addChild(node);
-                parent = node;
-            }
+            parent.addChild(node);
+            parent = node;
         }
-        return first;
+        return fst;
+    }
+
+    public static void assertTreesAreIsomorphic(TreeNode fst, TreeNode snd) {
+        assertEquals(fst.childCount(), snd.childCount());
+        for (int i = 0; i < fst.childCount(); i++) {
+            TreeNode fstChild = fst.getChild(i);
+            TreeNode sndChild = snd.getChild(i);
+            assertEquals(fstChild.getClass(), sndChild.getClass());
+            assertTreesAreIsomorphic(fstChild, sndChild);
+        }
+    }
+
+    public static void assertTreesAreEqual(TreeNode fst, TreeNode snd) {
+        assertEquals(fst.childCount(), snd.childCount());
+        for (int i = 0; i < fst.childCount(); i++) {
+            TreeNode fstChild = fst.getChild(i);
+            TreeNode sndChild = snd.getChild(i);
+            assertEquals(fstChild, sndChild);
+            assertTreesAreEqual(fstChild, sndChild);
+        }
     }
 }

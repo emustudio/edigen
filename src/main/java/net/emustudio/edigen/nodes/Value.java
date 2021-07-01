@@ -20,9 +20,7 @@ package net.emustudio.edigen.nodes;
 import net.emustudio.edigen.SemanticException;
 import net.emustudio.edigen.Visitor;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * The disassembler value node - bound to an instruction decoder rule name.
@@ -106,5 +104,17 @@ public class Value extends TreeNode {
     @Override
     public String toString() {
         return "Value: " + name;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Value value = (Value) o;
+
+        if (!Objects.equals(name, value.name)) return false;
+        if (!Objects.equals(rule, value.rule)) return false;
+        return Objects.equals(strategies, value.strategies);
     }
 }

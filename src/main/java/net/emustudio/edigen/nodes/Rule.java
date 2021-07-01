@@ -20,17 +20,14 @@ package net.emustudio.edigen.nodes;
 import net.emustudio.edigen.SemanticException;
 import net.emustudio.edigen.Visitor;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 /**
  * Instruction decoder rule node.
  */
 public class Rule extends TreeNode {
     
-    private List<String> names = new ArrayList<>();
+    private final List<String> names;
     
     /**
      * Constructs a rule with one or more names.
@@ -89,7 +86,7 @@ public class Rule extends TreeNode {
      * @return the label
      */
     public String getLabel() {
-        Iterator nameIterator = names.iterator();
+        Iterator<String> nameIterator = names.iterator();
         StringBuilder result = new StringBuilder();
         
         while (nameIterator.hasNext()) {
@@ -119,5 +116,20 @@ public class Rule extends TreeNode {
     @Override
     public String toString() {
         return "Rule: " + getLabel();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Rule rule = (Rule) o;
+
+        return Objects.equals(names, rule.names);
+    }
+
+    @Override
+    public int hashCode() {
+        return names != null ? names.hashCode() : 0;
     }
 }

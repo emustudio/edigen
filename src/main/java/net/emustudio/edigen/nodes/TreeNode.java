@@ -34,9 +34,13 @@ import java.util.*;
 public abstract class TreeNode {
     
     private TreeNode parent;
-    private final Set<TreeNode> children = new LinkedHashSet<>();
+    // NOTE: Since almost all TreeNodes implement equals(), calling e.g. children.remove(this) can fail. Therefore we
+    //       need a key which does not override equals() - so the comparison is the same as using `==`
+    private final Map<String, TreeNode> children = new LinkedHashMap<>();
     private Integer line;
-    
+
+    private final String ID = UUID.randomUUID().toString();
+
     /**
      * Returns the parent of this node.
      * 
@@ -54,7 +58,7 @@ public abstract class TreeNode {
      * @return the child node
      */
     public TreeNode getChild(int index) {
-        Iterator<TreeNode> iterator = children.iterator();
+        Iterator<TreeNode> iterator = children.values().iterator();
         
         for (int i = 0; i < index; i++)
             iterator.next();
@@ -70,7 +74,7 @@ public abstract class TreeNode {
      * @return the iterable collection of all children
      */
     public Iterable<TreeNode> getChildren() {
-        return new ArrayList<>(children);
+        return new ArrayList<>(children.values());
     }
     
     /**
@@ -84,20 +88,24 @@ public abstract class TreeNode {
     /**
      * Adds a child to this node, placing it on the end.
      * @param child the child node
+     * @return this
      */
-    public void addChild(TreeNode child) {
+    public TreeNode addChild(TreeNode child) {
         child.parent = this;
-        children.add(child);
+        children.put(child.ID, child);
+        return this;
     }
 
     /**
      * Adds multiple children to this node, placing them on the end.
      * @param children the child nodes
+     * @return this
      */
-    public void addChildren(TreeNode... children) {
+    public TreeNode addChildren(TreeNode... children) {
         for (TreeNode child : children) {
             addChild(child);
         }
+        return this;
     }
 
     /**
@@ -107,7 +115,7 @@ public abstract class TreeNode {
      * node and the parent one is removed bilaterally.
      */
     public void remove() {
-        parent.children.remove(this);
+        parent.children.remove(ID);
         this.parent = null;
     }
     
@@ -175,5 +183,10 @@ public abstract class TreeNode {
         
         for (TreeNode child : getChildren())
             child.print(outStream, indent + 1);
+    }
+
+    @Override
+    public int hashCode() {
+        return ID.hashCode();
     }
 }

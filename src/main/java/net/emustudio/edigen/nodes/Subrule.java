@@ -20,6 +20,8 @@ package net.emustudio.edigen.nodes;
 import net.emustudio.edigen.SemanticException;
 import net.emustudio.edigen.Visitor;
 
+import java.util.Objects;
+
 /**
  * A subrule is a rule name contained in a variant.
  */
@@ -163,7 +165,37 @@ public class Subrule extends TreeNode {
         
         if (length != null)
             result.append(", length: ").append(length);
+
+        if (prePattern != null)
+            result.append(", prePattern: ").append(prePattern.getBits());
+
+        if (rule != null)
+            result.append(", rule: ").append(rule.getLabel());
         
         return result.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Subrule subrule = (Subrule) o;
+
+        if (!Objects.equals(name, subrule.name)) return false;
+        if (!Objects.equals(start, subrule.start)) return false;
+        if (!Objects.equals(length, subrule.length)) return false;
+        if (!Objects.equals(prePattern, subrule.prePattern)) return false;
+        return Objects.equals(rule, subrule.rule);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = name != null ? name.hashCode() : 0;
+        result = 31 * result + (start != null ? start.hashCode() : 0);
+        result = 31 * result + (length != null ? length.hashCode() : 0);
+        result = 31 * result + (prePattern != null ? prePattern.hashCode() : 0);
+        result = 31 * result + (rule != null ? rule.hashCode() : 0);
+        return result;
     }
 }
