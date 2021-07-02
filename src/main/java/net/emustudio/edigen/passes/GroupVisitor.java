@@ -35,7 +35,7 @@ import java.util.Map;
  * All children of the original nodes will be attached to the grouped node.
  *
  * Expectation of a tree at input, e.g:
- * <code>
+ * <pre>
  *   Rule
  *     Mask (111)
  *       Pattern (110)
@@ -43,17 +43,17 @@ import java.util.Map;
  *     Mask (111)
  *       Pattern (111)
  *         Variant
- * </code>
+ * </pre>
  *
  * Expectation of the tree at output:
- * <code>
+ * <pre>
  *   Rule
  *     Mask (111)
  *       Pattern (110)
  *         Variant
  *       Pattern (111)
  *         Variant
- * </code>
+ * </pre>
  */
 public class GroupVisitor extends Visitor {
     

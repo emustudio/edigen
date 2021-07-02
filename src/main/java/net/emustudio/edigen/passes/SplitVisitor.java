@@ -34,15 +34,15 @@ import net.emustudio.edigen.nodes.Variant;
  * size.
  *
  * Expectation of a tree at input, e.g.:
- * <code>
+ * <pre>
  *   Rule
  *     Variant
  *     Mask (length > BITS_PER_PIECE)
  *     Pattern (length > BITS_PER_PIECE)
- * </code>
+ * </pre>
  *
  * Expectation of the tree at output:
- * <code>
+ * <pre>
  *   Rule
  *     Variant
  *       Mask (length = BITS_PER_PIECE)
@@ -50,7 +50,7 @@ import net.emustudio.edigen.nodes.Variant;
  *           ...
  *             Mask (length <= BITS_PER_PIECE)
  *               Pattern (length <= BITS_PER_PIECE)
- * </code>
+ * </pre>
  */
 public class SplitVisitor extends Visitor {
 

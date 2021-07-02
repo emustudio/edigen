@@ -35,7 +35,7 @@ import java.util.List;
  * the current instruction.
  *
  * Expected tree at input:
- * <code>
+ * <pre>
  *   Rule
  *     Variant
  *       ...
@@ -45,10 +45,10 @@ import java.util.List;
  *       ...
  *       Mask (length=4)
  *       Pattern
- * </code>
+ * </pre>
  *
  * Expected tree at output:
- * <code>
+ * <pre>
  *   Rule
  *     Variant
  *       ...
@@ -58,7 +58,7 @@ import java.util.List;
  *       ...
  *       Mask (length=3)
  *       Pattern
- * </code>
+ * </pre>
  */
 public class SortVisitor extends Visitor {
 
