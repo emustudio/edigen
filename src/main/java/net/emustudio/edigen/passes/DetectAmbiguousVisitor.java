@@ -29,34 +29,50 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * <p>
  * A visitor which checks for ambiguous variants.
- * <p>
- * There are two types of ambiguity.
- * <p>
- * Path ambiguity means that for some rule, given a unit of input (usually a
- * byte), the decoder is not able to decide which one (and only one) execution
- * path to choose without reading more units or walking up the switch-case tree
- * later and choosing an another path (or none at all). Ambiguity is dangerous
- * because it can cause unintended behavior not discovered until the generated
- * decoder is run.
- * <p>
- * Two variants of one rule R have an ambiguous path if and only if there
- * exists a node N of type Rule (equivalent to R) or Pattern (an indirect child
- * of R) such that:
- * <ul>
- *  <li>There exist two Mask nodes M1, M2, both direct children of N, such that:
- *  <ul>
- *   <li>There exist two Pattern nodes P1, P2, where P1 is a direct child of M1
- *       and P2 is a direct child of M2, such that: M1 &amp; M2 &amp; P1 = M1 &amp; M2 &amp; P2.
- *   </li>
- *  </ul>
- *  </li>
- * </ul>
- * <p>
- * Variant ambiguity means that one pattern has more than one child variant.
- * <p>
  * This visitor is not a transformation; the tree is left unmodified. It
  * must be applied after the grouping transformation.
+ * </p>
+ *
+ * <p>
+ * Ambiguity is dangerous, because it can cause unintended behavior not discovered until the generated decoder is run.
+ * There are two types of ambiguity: path ambiguity and variant ambiguity.
+ * </p>
+ *
+ * <h3>Path ambiguity</h3>
+ * <p>
+ * Path ambiguity means that for some rule and input, decoder is not able to decide which execution path to choose
+ * without reading more input, even if the deep contains solution. The reason is that Decoder is simple state machine
+ * which decides only based on the current state and input. It means that the current implementation of decoder doesn't
+ * support look-aheads.
+ * </p>
+ * <p>
+ * Effect of path ambiguity is that only the first found path would be executed by decoder, and all other ambiguous paths
+ * would be ignored forever. Therefore this smells of unintended behavior.
+ * </p>
+ * <p>
+ * Let N be a rule node or a Pattern node which is an indirect child of the rule. Then, two variants of the rule have
+ * ambiguous path if:
+ * <ul>
+ *     <li>N has two direct children: masks M1 and M2</li>
+ *     <li>M1 has direct child pattern P1</li>
+ *     <li>M2 has direct child pattern P2</li>
+ *     <li><code>M1 & M2 & P1 = M1 & M2 & P2</code></li>
+ * </ul>
+ * </p>
+ *
+ * Example of path ambiguity:
+ * <pre>
+ *     Rule
+ *       Mask (111)
+ *         Pattern (101)
+ *       Mask (101)
+ *         Pattern (101)
+ * </pre>
+ *
+ * <h3>Variant ambiguity</h3>
+ * Variant ambiguity means that one pattern has more than one child variant.
  *
  */
 public class DetectAmbiguousVisitor extends Visitor {
@@ -76,7 +92,7 @@ public class DetectAmbiguousVisitor extends Visitor {
     public void visit(Rule rule) throws SemanticException {
         currentRule = rule;
         detectPath(rule);
-        traverseSubtrees(rule);
+        traverseChildrenSubtrees(rule); // direct children are masks
     }
 
     /**
@@ -100,7 +116,7 @@ public class DetectAmbiguousVisitor extends Visitor {
     public void visit(Pattern pattern) throws SemanticException {
         detectVariant(pattern);
         detectPath(pattern);
-        traverseSubtrees(pattern);
+        traverseChildrenSubtrees(pattern); // direct children are masks
     }
 
     /**
@@ -158,7 +174,7 @@ public class DetectAmbiguousVisitor extends Visitor {
      * @param node the parent node
      * @throws SemanticException when an ambiguity is detected
      */
-    private void traverseSubtrees(TreeNode node) throws SemanticException {
+    private void traverseChildrenSubtrees(TreeNode node) throws SemanticException {
         for (TreeNode child : node.getChildren()) {
             for (TreeNode subchild : child.getChildren()) {
                 subchild.accept(this);

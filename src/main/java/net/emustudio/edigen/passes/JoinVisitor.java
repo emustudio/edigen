@@ -31,24 +31,24 @@ import net.emustudio.edigen.nodes.Variant;
  * In addition, it sets starting offsets for subrules.
  *
  * Expectation of a tree at input:
- * <code>
+ * <pre>
  *   Rule
  *     Variant
  *       Subrule
  *       Subrule
  *       Constant
  *       ...
- * </code>
+ * </pre>
  *
  * Expectation of the tree at output:
- * <code>
+ * <pre>
  *   Rule
  *     Variant
  *       Subrule
  *       Subrule
  *       Mask
  *       Pattern
- * </code>
+ * </pre>
  */
 public class JoinVisitor extends Visitor {
 

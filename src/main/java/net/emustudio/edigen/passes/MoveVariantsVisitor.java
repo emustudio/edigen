@@ -25,7 +25,7 @@ import net.emustudio.edigen.nodes.*;
  * A visitor which moves the variant nodes to the bottom of the tree.
  *
  * Expectation of a tree at input, e.g.:
- * <code>
+ * <pre>
  *   Rule
  *     Variant
  *       Mask
@@ -33,10 +33,10 @@ import net.emustudio.edigen.nodes.*;
  *           ...
  *             Mask
  *               Pattern
- * </code>
+ * </pre>
  *
  * Expectation of the tree at output:
- * <code>
+ * <pre>
  *   Rule
  *     Mask
  *       Pattern
@@ -44,7 +44,7 @@ import net.emustudio.edigen.nodes.*;
  *           Mask
  *             Pattern
  *               Variant
- * </code>
+ * </pre>
  */
 public class MoveVariantsVisitor extends Visitor {
 
