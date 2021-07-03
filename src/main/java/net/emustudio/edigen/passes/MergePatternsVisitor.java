@@ -26,7 +26,7 @@ import net.emustudio.edigen.nodes.Subrule;
 import net.emustudio.edigen.nodes.Variant;
 
 /**
- * A visitor which joins multiple patterns of a variant into one mask + pattern.
+ * A visitor which merges multiple patterns of a variant into one mask + pattern.
  * <p>
  * In addition, it sets starting offsets for subrules.
  *
@@ -50,7 +50,7 @@ import net.emustudio.edigen.nodes.Variant;
  *       Pattern
  * </pre>
  */
-public class JoinVisitor extends Visitor {
+public class MergePatternsVisitor extends Visitor {
 
     private BitSequence maskBits;
     private BitSequence patternBits;

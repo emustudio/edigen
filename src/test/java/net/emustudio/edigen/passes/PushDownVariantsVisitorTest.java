@@ -8,7 +8,7 @@ import org.junit.Test;
 
 import static net.emustudio.edigen.passes.PassUtils.*;
 
-public class MoveVariantsVisitorTest {
+public class PushDownVariantsVisitorTest {
     private Decoder decoder;
 
     @Before
@@ -32,7 +32,7 @@ public class MoveVariantsVisitorTest {
         );
 
         decoder.addChild(rule);
-        decoder.accept(new MoveVariantsVisitor());
+        decoder.accept(new PushDownVariantsVisitor());
 
         assertTreesAreIsomorphic(rule, nest(
                 mkRule("rule").addChild(nest(
@@ -55,7 +55,7 @@ public class MoveVariantsVisitorTest {
                 mkVariant()
         );
         decoder.addChild(rule);
-        decoder.accept(new MoveVariantsVisitor());
+        decoder.accept(new PushDownVariantsVisitor());
 
         assertTreesAreIsomorphic(rule, nest(
                 mkRule("rule"),

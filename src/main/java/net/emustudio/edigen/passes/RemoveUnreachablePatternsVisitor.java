@@ -24,14 +24,15 @@ import net.emustudio.edigen.nodes.TreeNode;
 
 /**
  * A visitor which removes patterns which are children of zero-only masks.
- * 
+ * <p>
  * This represents the fact that masks containing only zeroes do not require
  * comparing with the pattern because the result is always true.
  */
-public class RemovePatternsVisitor extends Visitor {
+public class RemoveUnreachablePatternsVisitor extends Visitor {
 
     /**
      * Removes the child pattern if the mask contains only zeroes.
+     *
      * @param mask the mask node
      * @throws SemanticException never
      */
@@ -40,12 +41,12 @@ public class RemovePatternsVisitor extends Visitor {
         if (mask.getBits().containsOnly(false)) {
             TreeNode pattern = mask.getChild(0);
             TreeNode childMask = pattern.getChild(0);
-            
+
             pattern.remove();
             mask.addChild(childMask);
         }
-        
+
         mask.acceptChildren(this);
     }
-    
+
 }

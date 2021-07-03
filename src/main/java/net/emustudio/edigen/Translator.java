@@ -97,14 +97,14 @@ public class Translator {
         Visitor[] transforms = {
             new ResolveNamesVisitor(),
             new SemanticCheckVisitor(),
-            new JoinVisitor(),
+            new MergePatternsVisitor(),
             new SortVisitor(),
             new SplitVisitor(),
-            new MoveVariantsVisitor(),
+            new PushDownVariantsVisitor(),
             new GroupVisitor(),
             new DetectAmbiguousVisitor(),
-            new MoveMasksVisitor(),
-            new RemovePatternsVisitor()
+            new NarrowMasksVisitor(),
+            new RemoveUnreachablePatternsVisitor()
         };
 
         if (settings.containsKey(DEBUG))

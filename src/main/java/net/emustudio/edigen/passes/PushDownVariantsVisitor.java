@@ -22,7 +22,7 @@ import net.emustudio.edigen.Visitor;
 import net.emustudio.edigen.nodes.*;
 
 /**
- * A visitor which moves the variant nodes to the bottom of the tree.
+ * A visitor which pushes the variant nodes down to the bottom of the tree.
  *
  * Expectation of a tree at input, e.g.:
  * <pre>
@@ -46,7 +46,7 @@ import net.emustudio.edigen.nodes.*;
  *               Variant
  * </pre>
  */
-public class MoveVariantsVisitor extends Visitor {
+public class PushDownVariantsVisitor extends Visitor {
 
     private Variant currentVariant;
     private Mask topMask;

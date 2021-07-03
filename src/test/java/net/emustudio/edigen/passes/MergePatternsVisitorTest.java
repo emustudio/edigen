@@ -8,7 +8,7 @@ import org.junit.Test;
 
 import static net.emustudio.edigen.passes.PassUtils.*;
 
-public class JoinVisitorTest {
+public class MergePatternsVisitorTest {
     private Decoder decoder;
 
     @Before
@@ -38,7 +38,7 @@ public class JoinVisitorTest {
 
         decoder.addChildren(r1, r2);
         decoder.accept(new ResolveNamesVisitor());
-        decoder.accept(new JoinVisitor());
+        decoder.accept(new MergePatternsVisitor());
 
         assertTreesAreEqual(r1, nest(
                 mkRule("something"),
@@ -61,7 +61,7 @@ public class JoinVisitorTest {
 
         decoder.addChild(r);
         decoder.accept(new ResolveNamesVisitor());
-        decoder.accept(new JoinVisitor());
+        decoder.accept(new MergePatternsVisitor());
 
         Rule subrule = mkRule("subrule");
         nest(
@@ -94,7 +94,7 @@ public class JoinVisitorTest {
 
         decoder.addChild(r);
         decoder.accept(new ResolveNamesVisitor());
-        decoder.accept(new JoinVisitor());
+        decoder.accept(new MergePatternsVisitor());
 
         Rule subrule = mkRule("subrule");
         nest(
@@ -127,7 +127,7 @@ public class JoinVisitorTest {
 
         decoder.addChild(r);
         decoder.accept(new ResolveNamesVisitor());
-        decoder.accept(new JoinVisitor());
+        decoder.accept(new MergePatternsVisitor());
 
         assertTreesAreEqual(r, nest(
                 mkRule("something"),
@@ -150,6 +150,6 @@ public class JoinVisitorTest {
 
         decoder.addChild(r);
         decoder.accept(new ResolveNamesVisitor());
-        decoder.accept(new JoinVisitor());
+        decoder.accept(new MergePatternsVisitor());
     }
 }

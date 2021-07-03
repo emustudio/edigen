@@ -33,7 +33,7 @@ import net.emustudio.edigen.nodes.TreeNode;
  * This is necessary to represent the fact that if no pattern matches an input,
  * the next mask (an its associated patterns) is tried.
  */
-public class MoveMasksVisitor extends Visitor {
+public class NarrowMasksVisitor extends Visitor {
 
     /**
      * Moves all child masks of the rule node except the first one.
@@ -42,7 +42,7 @@ public class MoveMasksVisitor extends Visitor {
      */
     @Override
     public void visit(Rule rule) throws SemanticException {
-        moveMasks(rule);
+        narrowMasks(rule);
     }
     
     /**
@@ -52,7 +52,7 @@ public class MoveMasksVisitor extends Visitor {
      */
     @Override
     public void visit(Pattern pattern) throws SemanticException {
-        moveMasks(pattern);
+        narrowMasks(pattern);
     }
     
     /**
@@ -66,7 +66,7 @@ public class MoveMasksVisitor extends Visitor {
      * @param node the node object
      * @throws SemanticException never
      */
-    private void moveMasks(TreeNode node) throws SemanticException {
+    private void narrowMasks(TreeNode node) throws SemanticException {
         TreeNode firstMask = null;
         Pattern defaultPattern = new Pattern(new BitSequence());
         

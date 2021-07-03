@@ -26,8 +26,8 @@ import java.util.*;
  */
 public class CommandLine {
 
-    private final List<Argument> mandatory = new ArrayList<Argument>();
-    private final Map<String, Argument> optional = new LinkedHashMap<String, Argument>();
+    private final List<Argument> mandatory = new ArrayList<>();
+    private final Map<String, Argument> optional = new LinkedHashMap<>();
     private Map<Setting, String> configuration;
     
     /**
@@ -53,7 +53,7 @@ public class CommandLine {
      * @throws CommandLineException when the arguments are invalid
      */
     public Map<Setting, String> parse(String[] arguments) throws CommandLineException {
-        configuration = new EnumMap<Setting, String>(Setting.class);
+        configuration = new EnumMap<>(Setting.class);
         Iterator<Argument> expectedMandatory = mandatory.iterator();
         Iterator<String> allArguments = Arrays.asList(arguments).iterator();
         
