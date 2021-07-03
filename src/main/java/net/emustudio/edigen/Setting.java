@@ -18,8 +18,7 @@
 package net.emustudio.edigen;
 
 /**
- * An enumeration of possible program configuration settings, usually read from
- * the command line.
+ * An enumeration of possible program configuration settings, usually read from the command line.
  */
 public enum Setting {
     /**
@@ -35,7 +34,7 @@ public enum Setting {
      */
     DISASSEMBLER_NAME,
     /**
-     * An output directory of the generated disassemler file.
+     * An output directory of the generated disassembler file.
      */
     DISASSEMBLER_DIRECTORY,
     /**
@@ -43,13 +42,11 @@ public enum Setting {
      */
     DISASSEMBLER_PACKAGE,
     /**
-     * The external disassembler template to use (instead of the internal,
-     * default template).
+     * The external disassembler template to use (instead of the internal, default template).
      */
     DISASSEMBLER_TEMPLATE,
     /**
-     * If set, the program will run in the debug mode (printing the tree after
-     * each transformation).
+     * If set, the program will run in the debug mode (printing the tree after each transformation).
      */
     DEBUG,
     /**
@@ -61,8 +58,11 @@ public enum Setting {
      */
     DECODER_PACKAGE,
     /**
-     * The external decoder template to use (instead of the internal,
-     * default template).
+     * The external decoder template to use (instead of the internal, default template).
      */
-    DECODER_TEMPLATE
+    DECODER_TEMPLATE,
+    /**
+     * Ignore unused rules. If enabled, detection of unused rules will be turned off.
+     */
+    IGNORE_UNUSED_RULES
 }
