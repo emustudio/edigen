@@ -29,4 +29,25 @@ public class DetectUnusedRulesVisitorTest {
         decoder.accept(new ResolveNamesVisitor());
         decoder.accept(new DetectUnusedRulesVisitor());
     }
+
+    @Test
+    public void testRuleUsedLaterIsNotDetectedAsUnused() throws SemanticException {
+        Decoder decoder = (Decoder) new Decoder().addChildren(
+                nest(
+                        mkRule("rule"),
+                        mkVariant("x"),
+                        mkSubrule("used")
+                ), nest(
+                        mkRule("used"),
+                        mkVariant("y"),
+                        mkSubrule("used2", 7, null)
+                ), nest(
+                        mkRule("used2"),
+                        mkVariant("haha"),
+                        mkSubrule("unused", 5, null)
+                )
+        );
+        decoder.accept(new ResolveNamesVisitor());
+        decoder.accept(new DetectUnusedRulesVisitor());
+    }
 }

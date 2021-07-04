@@ -32,15 +32,26 @@ public class DetectUnusedRulesVisitor extends Visitor {
             knownRules.addAll(rule.getNames());
             rule.acceptChildren(this);
         }
-        for (String name: rule.getNames()) {
-            if (!knownRules.contains(name)) {
-                throw new SemanticException(String.format(MESSAGE, rule.getLabel()), rule);
-            }
+        if (isUnknown(rule)) {
+            throw new SemanticException(String.format(MESSAGE, rule.getLabel()), rule);
         }
     }
 
     @Override
     public void visit(Subrule subrule) throws SemanticException {
-        knownRules.addAll(subrule.getRule().getNames());
+        Rule rule = subrule.getRule();
+        if (isUnknown(rule)) {
+            knownRules.addAll(rule.getNames());
+            rule.acceptChildren(this);
+        }
+    }
+
+    private boolean isUnknown(Rule rule) {
+        for (String name : rule.getNames()) {
+            if (knownRules.contains(name)) {
+                return false;
+            }
+        }
+        return true;
     }
 }
