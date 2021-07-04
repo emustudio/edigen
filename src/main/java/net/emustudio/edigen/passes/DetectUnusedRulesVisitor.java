@@ -20,7 +20,7 @@ public class DetectUnusedRulesVisitor extends Visitor {
 
     /**
      * In case the root rule traverses it and saves references to other rules.
-     * Otherwise detects possible unused rule by checking it's name(s) in the saved references.
+     * Otherwise detects possible unused rule by checking its name(s) in the saved references.
      *
      * @param rule the rule node
      * @throws SemanticException when unused rule is detected
