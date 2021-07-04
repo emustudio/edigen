@@ -19,7 +19,7 @@ public class DetectUnusedRulesVisitor extends Visitor {
     private final Set<String> knownRules = new HashSet<>();
 
     /**
-     * In case the root rule traverses it and saves references to other rules.
+     * In case of the root rule traverses it and saves references to other rules.
      * Otherwise detects possible unused rule by checking its name(s) in the saved references.
      *
      * @param rule the rule node
