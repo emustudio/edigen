@@ -111,8 +111,7 @@ public class ResolveNamesVisitor extends Visitor {
      */
     @Override
     public void visit(Subrule subrule) throws SemanticException {
-        if (searchedSubrule != null && subrule.getLength() != null
-                && subrule.getName().equals(searchedSubrule)) {
+        if (subrule.getLength() != null && subrule.getName().equals(searchedSubrule)) {
             if (foundSubrule == null)
                 foundSubrule = subrule;
             else
