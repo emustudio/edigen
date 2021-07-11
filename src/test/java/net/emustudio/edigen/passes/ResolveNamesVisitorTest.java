@@ -22,8 +22,7 @@ import net.emustudio.edigen.nodes.*;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 public class ResolveNamesVisitorTest {
     private Decoder decoder;
@@ -94,6 +93,13 @@ public class ResolveNamesVisitorTest {
 
         decoder.accept(new ResolveNamesVisitor());
         assertNotNull(subrule.getRule());
+
+        // inferred variant should return inferred subrule
+        Variant inferredVariant = (Variant) subrule.getRule().getChild(0);
+        assertEquals(inferredVariant.getChild(0), inferredVariant.getReturnSubrule());
+
+        // inferred subrule should not have set a rule
+        assertNull(inferredVariant.getReturnSubrule().getRule());
     }
 
     @Test

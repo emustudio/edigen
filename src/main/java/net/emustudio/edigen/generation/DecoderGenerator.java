@@ -51,10 +51,13 @@ public class DecoderGenerator extends Generator {
     @Override
     protected void fillTemplate(Template template) throws SemanticException {
         super.fillTemplate(template);
-        
+
         template.setVariable("decoder_package", getPackageName());
         template.setVariable("decoder_class", getClassName());
-        template.setVariable("root_rule", decoder.getRootRule().getMethodName());
+
+        Writer rootRuleCalls = new StringWriter();
+        decoder.accept(new GenerateRootRuleCallsVisitor(rootRuleCalls, 2));
+        template.setVariable("root_rule_calls", rootRuleCalls.toString());
 
         Writer fields = new StringWriter();
         decoder.accept(new GenerateFieldsVisitor(fields));

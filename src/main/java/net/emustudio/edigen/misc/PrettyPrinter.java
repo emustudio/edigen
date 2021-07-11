@@ -59,6 +59,7 @@ import java.io.Writer;
 public class PrettyPrinter {
 
     private final PrintWriter output;
+    private int baseIndent;
     private int indentCount = 0;
     private static final String indentString = "    ";
 
@@ -69,6 +70,17 @@ public class PrettyPrinter {
      */
     public PrettyPrinter(Writer output) {
         this.output = new PrintWriter(output, true);
+    }
+
+    /**
+     * Constructs the pretty printer.
+     *
+     * @param output the output to write the source code to
+     * @param baseIndent base (starting) indent
+     */
+    public PrettyPrinter(Writer output, int baseIndent) {
+        this.output = new PrintWriter(output, true);
+        this.baseIndent = baseIndent;
     }
 
     /**
@@ -107,7 +119,7 @@ public class PrettyPrinter {
      * Writes the curently set indentation to the stream.
      */
     private void printIndentation() {
-        for (int i = 0; i < indentCount; i++)
+        for (int i = 0; i < indentCount + baseIndent; i++)
             output.print(indentString);
     }
 }

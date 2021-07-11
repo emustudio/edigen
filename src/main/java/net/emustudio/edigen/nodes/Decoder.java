@@ -20,19 +20,50 @@ package net.emustudio.edigen.nodes;
 import net.emustudio.edigen.SemanticException;
 import net.emustudio.edigen.Visitor;
 
+import java.util.*;
+
 /**
  * The root node of the instruction decoder subtree.
  */
 public class Decoder extends TreeNode {
+    private final Set<String> rootRuleNames;
 
     /**
-     * Returns the starting rule.
-     * 
-     * This is the first rule in the input file.
-     * @return the root rule object
+     * Creates new decoder.
+     *
+     * @param rootRuleNames explicitly define root rules of the decoder.
      */
-    public Rule getRootRule() {
-        return (Rule) getChild(0);
+    public Decoder(Set<String> rootRuleNames) {
+        this.rootRuleNames = Objects.requireNonNull(rootRuleNames);
+    }
+
+    /**
+     * Creates new decoder.
+     *
+     * @param rootRuleNames explicitly define root rules of the decoder.
+     */
+    public Decoder(String... rootRuleNames) {
+        this.rootRuleNames = new LinkedHashSet<>(Arrays.asList(rootRuleNames));
+    }
+
+    /**
+     * Creates new decoder.
+     * Root rule will be the first child
+     */
+    public Decoder() {
+        rootRuleNames = Collections.emptySet();
+    }
+
+    /**
+     * Returns the starting rules names.
+     * 
+     * @return the root rules names
+     */
+    public Set<String> getRootRuleNames() {
+        if (rootRuleNames.isEmpty()) {
+            return Collections.singleton(((Rule)getChild(0)).getNames().get(0));
+        }
+        return rootRuleNames;
     }
     
     /**
