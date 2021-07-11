@@ -32,9 +32,14 @@ Edigen files have `.eds` extension. This is an example of an input file:
 
 ```
 # decoder
+root: instruction, data;
+
 instruction =
     "add": 0xE dst_reg(2) src_reg(2) |
     "sub": 0xF dst_reg(2) immediate(10);
+
+data =
+    data: data(32);
 
 src_reg, dst_reg =
     "X": 00 |
@@ -45,6 +50,7 @@ src_reg, dst_reg =
 # disassembler
 "%s %s, %s" = instruction dst_reg src_reg;
 "%s %s, %d" = instruction dst_reg immediate;
+"%0x"       = data;
 ```
 
 The file is divided into two parts: decoder and disassembler, separated by `%%`. The character `#` denotes one-line comments.
@@ -62,33 +68,53 @@ Rule               instruction =
     Subrule              dst_reg(2)
     Subrule              immediate(10) ;
 
-Rule                src_reg, dst_reg =
+Rule               data =
+  Variant              data:
+    Subrule              data(32) ;
+
+Rule               src_reg, dst_reg =
   Variant              "X":
     Constant             00 |
   Variant              "Y":
     Constant             01 ;
 ```
 
-Decoder part consists of a set of **rules**. Decoding always starts with the first rule (in this case, `instruction`). Rule definition ends with a semi-colon `;`.
+Decoder part consists of a set of **rules**. It starts with declaration of root rules, which are tried to be matched
+in defined order. In our case, the first rule will be `instruction` and if that is not matched, the other rule `data`
+will be tried.
 
-A **rule** is composed of one or more **variants**, split with pipe `|`. A variant can optionally start with a name - in quotes, followed by a colon `;`. The variant name can be referenced in disassembler part by rule name. Optionally, the variant can return a binary value taken from a subrule - again by referencing its name without quotes, followed by a colon `;`. What follow after colon is a mixture of **constants** or **subrules**.
+After root-rules declaration, rule definitions follow. Rule definition ends with a semi-colon `;`.
 
-A **constant** can be hexadecimal (e.g., `0xF`) or binary (`01`). Constants are used to perform unambiguous match of exactly one variant for each rule.
+A **rule** is composed of one or more **variants**, split with pipe `|`. A variant can optionally start with a name -
+in quotes, followed by a colon `;`. The variant name can be referenced in disassembler part by rule name. Optionally,
+the variant can return a binary value taken from a *subrule* - again by referencing its name without quotes, followed
+by a colon `;`. What follow after colon is a mixture of **constants** or **subrules**.
 
-A **subrule** is a reference to another rule (which might or might not be explicitly defined). Subrule starts with a name (without quotes), followed by optional pre-pattern enclosed in square brackets, and optionally length in bits - e.g., `dst_reg[1](2)`. This means that `dst_reg` will match two bits only if the two-bit sequence starts with binary 1.
+A **constant** can be hexadecimal (e.g., `0xF`) or binary (`01`). Constants are used to perform unambiguous match of
+exactly one variant for each rule.
+
+A **subrule** is a reference to another rule (which might or might not be explicitly defined). Subrule starts with
+a name (without quotes), followed by optional pre-pattern enclosed in square brackets, and optionally length in bits -
+e.g., `dst_reg[1](2)`. This means that `dst_reg` will match two bits only if the two-bit sequence starts with binary 1.
 
 The result of decoding is an associative array in the form `{rule: value, ...}`.
 
-For example, let us decode the instruction "1111 0100 0000 0011", The second variant of the rule `instruction` is matched, since `0xF` is 1111. So far, the result is {instruction: "sub"}. The following bits (01) are passed to the rule `dst_reg`, where the second variant matches, so the result is updated: `{instruction: "sub", dst_reg: "Y"}`.
+For example, let us decode the instruction `1111 0100 0000 0011`, The second variant of the rule `instruction` is
+matched, since `0xF` is `1111`. So far, the result is `{instruction: "sub"}`. The following bits (`01`) are passed to
+the rule `dst_reg`, where the second variant matches, so the result is updated: `{instruction: "sub", dst_reg: "Y"}`.
 
 Finally, the bits `00 0000 0011` are passed to the rule `immediate`, which just returns the passed binary value. 
 The final result is `{instruction: "sub", dst_reg: "Y", immediate: 3}`.
 
 ### Disassembler
 
-Disassembler part matches a set of rules (on the right side of `=`) to a formatting string (on the left side). The first set of rules which is a subset of the result rule-set is selected. The corresponding formatting string is used, substituting the formats with concrete values.
+Disassembler part matches a set of rules (on the right side of `=`) to a formatting string (on the left side). The first
+set of rules which is a subset of the result rule-set is selected. The corresponding formatting string is used,
+substituting the formats with concrete values.
 
-In our example, the first rule-set cannot be used, since our result does not contain `src_reg`. However, our result contains all rules specified in the second rule-set (`instruction dst_reg immediate`), so the disassembled instruction is "sub Y, 3".
+In our example, the first rule-set cannot be used, since our result does not contain `src_reg`. However, our result
+contains all rules specified in the second rule-set (`instruction dst_reg immediate`), so the disassembled instruction
+is `"sub Y, 3"`.
 
 By default, these format specifiers are available:
  * `%c` - one character, in the platform's default charset
@@ -99,14 +125,17 @@ By default, these format specifiers are available:
  * `%X` - arbitrarily long unsigned integer, hexadecimal, uppercase
  * `%%` - a percent sign
  
- The rule-set on the right side of `=` can take decoding strategy as a parameter in brackets `()`. The following decoding strategies are available:
+The rule-set on the right side of `=` can take decoding strategy as a parameter in brackets `()`. The following decoding
+strategies are available:
  
  * `bit_reverse` - reverses the bits
  * `big_endian` - decodes the bits as they are stored in big-endian format
  * `little_endian` - decodes the bits as they are stored in little-endian format
  * `absolute` - decodes the bits as stored in 2's complement if they are negative; the negative sign is then thrown away
- * `shift_left` - shifts the number to the left by 1 bit. Does it in "big endian" way. Meaning bytes `[0] = 1, [1] = 2` will result in `[0] = 2, [1] = 4`
- * `shift_right` - shifts the number to the right by 1 bit. Dies it in "big endian" way. Meaning bytes `[0] = 1, [1] = 2` will result in `[0] = 0, [1] = 0x81`   
+ * `shift_left` - shifts the number to the left by 1 bit. Does it in "big endian" way. Meaning bytes `[0] = 1, [1] = 2`
+   will result in `[0] = 2, [1] = 4`
+ * `shift_right` - shifts the number to the right by 1 bit. Dies it in "big endian" way. Meaning bytes `[0] = 1, [1] = 2`
+   will result in `[0] = 0, [1] = 0x81`   
  
 The strategies can be combined. Multiple strategies will be applied in the left-to-right order.
 For example (grammar of [SSEM](http://curation.cs.manchester.ac.uk/computer50/www.computer50.org/mark1/prog98/ssemref.html) machine):
