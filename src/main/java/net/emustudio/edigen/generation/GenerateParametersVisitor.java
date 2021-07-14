@@ -27,7 +27,6 @@ import net.emustudio.edigen.nodes.Value;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.Iterator;
-import java.util.List;
 import java.util.stream.Collectors;
 
 /**
