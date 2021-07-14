@@ -22,6 +22,8 @@ import net.emustudio.edigen.nodes.*;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.List;
+
 import static org.junit.Assert.*;
 
 public class ResolveNamesVisitorTest {
@@ -144,6 +146,14 @@ public class ResolveNamesVisitorTest {
         Subrule subrule2 = new Subrule("subrule", 2, null);
         variant.addChildren(subrule1, subrule2);
 
+        decoder.accept(new ResolveNamesVisitor());
+    }
+
+    @Test(expected = SemanticException.class)
+    public void testDuplicateRuleAlternativeName() throws SemanticException {
+        // instruction, src = ;
+        // data, src = ;
+        decoder.addChildren(new Rule(List.of("instruction", "src")), new Rule(List.of("data", "src")));
         decoder.accept(new ResolveNamesVisitor());
     }
 }
