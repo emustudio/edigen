@@ -33,6 +33,10 @@ public class GenerateMethodsVisitor extends Visitor {
     private final PrettyPrinter printer;
     private Rule currentRule;
     private boolean isDefaultCase = false;
+
+    private boolean unitWasRead;
+    private int unitLastStart;
+    private int unitLastLength;
     
     /**
      * Constructs the visitor.
@@ -51,6 +55,7 @@ public class GenerateMethodsVisitor extends Visitor {
     public void visit(Rule rule) throws SemanticException {
         currentRule = rule;
         isDefaultCase = false;
+        unitWasRead = false;
         
         String secondParameter = rule.hasOnlyOneName() ? "" : ", int rule";
         
@@ -69,10 +74,15 @@ public class GenerateMethodsVisitor extends Visitor {
     @Override
     public void visit(Mask mask) throws SemanticException {
         boolean isZero = mask.getBits().containsOnly(false);
+        int maskStart = mask.getStart();
+        int maskLength = mask.getBits().getLength();
+        boolean alreadyRead = unitWasRead && unitLastStart == maskStart && unitLastLength == maskLength;
         
-        if (!isDefaultCase) {
-            put("unit = read(start + " + mask.getStart()
-                    + ", " + mask.getBits().getLength() + ");", true);
+        if (!isDefaultCase && !isZero && !alreadyRead) {
+            put("unit = read(start + " + maskStart + ", " + maskLength + ");", true);
+            unitWasRead = true;
+            unitLastStart = maskStart;
+            unitLastLength = maskLength;
         }
         
         isDefaultCase = false;
@@ -98,14 +108,17 @@ public class GenerateMethodsVisitor extends Visitor {
      */
     @Override
     public void visit(Pattern pattern) throws SemanticException {
-        if (pattern.getBits().getLength() != 0)
+        boolean thisIsDefaultCase = pattern.getBits().getLength() == 0;
+        if (!thisIsDefaultCase)
             put("case 0x" + pattern.getBits().toHexadecimal() + ":");
         else
             put("default:");
         
         pattern.acceptChildren(this);
-        put("break;");
-        isDefaultCase = (pattern.getBits().getLength() == 0);
+        if (!thisIsDefaultCase)
+            put("break;");
+
+        isDefaultCase = thisIsDefaultCase;
     }
 
     /**
