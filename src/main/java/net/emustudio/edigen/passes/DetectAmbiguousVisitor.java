@@ -58,9 +58,8 @@ import java.util.List;
  *     <li>N has two direct children: masks M1 and M2</li>
  *     <li>M1 has direct child pattern P1</li>
  *     <li>M2 has direct child pattern P2</li>
- *     <li><code>M1 & M2 & P1 = M1 & M2 & P2</code></li>
+ *     <li><code>M1 &amp; M2 &amp; P1 = M1 &amp; M2 &amp; P2</code></li>
  * </ul>
- * </p>
  *
  * Example of path ambiguity:
  * <pre>

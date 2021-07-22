@@ -153,12 +153,13 @@ public class ResolveNamesVisitor extends Visitor {
         }
     }
 
-    private Rule inferImplicitRule(Subrule subrule) {
-        Rule constructed = new Rule(subrule.getName());
+    private Rule inferImplicitRule(Subrule originalSubrule) {
+        Rule rule = new Rule(originalSubrule.getName());
         Variant variant = new Variant();
+        Subrule subrule = new Subrule("arg", originalSubrule.getLength(), originalSubrule.getPrePattern());
         variant.addChild(subrule);
         variant.setReturnSubrule(subrule);
-        constructed.addChild(variant);
-        return constructed;
+        rule.addChild(variant);
+        return rule;
     }
 }

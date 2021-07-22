@@ -79,7 +79,14 @@ public class GenerateMethodsVisitor extends Visitor {
         boolean alreadyRead = unitWasRead && unitLastStart == maskStart && unitLastLength == maskLength;
         
         if (!isDefaultCase && !isZero && !alreadyRead) {
-            put("unit = read(start + " + maskStart + ", " + maskLength + ");", true);
+            if (maskLength > 32) {
+                throw new SemanticException("Mask length can only be 32 bites (4 bytes)!", mask);
+            }
+            if (maskStart == 0) {
+                put("unit = readBits(start, " + maskLength + ");", true);
+            } else {
+                put("unit = readBits(start + " + maskStart + ", " + maskLength + ");", true);
+            }
             unitWasRead = true;
             unitLastStart = maskStart;
             unitLastLength = maskLength;
@@ -136,16 +143,23 @@ public class GenerateMethodsVisitor extends Visitor {
                 field = currentRule.getFieldName(currentRule.getNames().get(0));
 
             if (variant.getReturnString() != null) {
-                value = '"' + variant.getReturnString() + "\", "
-                        + variant.getFieldName();
+                value = '"' + variant.getReturnString() + "\", " + variant.getFieldName();
+                put(String.format("instruction.add(%s, %s);", field, value));
             } else {
                 int start = variant.getReturnSubrule().getStart();
                 int length = variant.getReturnSubrule().getLength();
-                
-                value = String.format("readBytes(start + %d, %d)", start, length);
+                if (length > 32) {
+                    throw new SemanticException("Subrule " + variant.getReturnSubrule().getName() +
+                            " length can only be 32 bits (4 bytes)!", variant);
+                }
+
+                if (start == 0) {
+                    value = String.format("readBits(start, %d)", length);
+                } else {
+                    value = String.format("readBits(start + %d, %d)", start, length);
+                }
+                put(String.format("instruction.add(%s, %s, %d);", field, value, length));
             }
-            
-            put(String.format("instruction.add(%s, %s);", field, value));
         }
         
         variant.acceptChildren(this);
@@ -165,9 +179,14 @@ public class GenerateMethodsVisitor extends Visitor {
         
         if (!subrule.getRule().hasOnlyOneName())
             fieldToWrite = ", " + subrule.getFieldName();
-        
-        put(subrule.getRule().getMethodName() + "(start + " + subrule.getStart()
-                + fieldToWrite + ");");
+
+        String methodName = subrule.getRule().getMethodName();
+        int start = subrule.getStart();
+        if (start == 0) {
+            put(methodName + "(start" + fieldToWrite + ");");
+        } else {
+            put(methodName + "(start + " + subrule.getStart() + fieldToWrite + ");");
+        }
     }
     
     /**

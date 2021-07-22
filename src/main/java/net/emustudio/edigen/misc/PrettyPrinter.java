@@ -88,6 +88,15 @@ public class PrettyPrinter {
     }
 
     /**
+     * Writes text to the output stream as-is.
+     *
+     * @param text text to write
+     */
+    public void write(String text) {
+        output.print(text);
+    }
+
+    /**
      * Makes the indentation of the next written line bigger.
      */
     private void indent() {

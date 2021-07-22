@@ -63,6 +63,10 @@ public class DecoderGenerator extends Generator {
         Writer methods = new StringWriter();
         decoder.accept(new GenerateMethodsVisitor(methods));
         template.setVariable("decoder_methods", methods.toString());
+
+        Writer maxInstructionBytes = new StringWriter();
+        decoder.accept(new GenerateMaxInstructionBytes(maxInstructionBytes));
+        template.setVariable("max_instruction_bytes", maxInstructionBytes.toString());
     }
     
 }

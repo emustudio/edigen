@@ -27,10 +27,10 @@ import java.util.Objects;
  */
 public class Subrule extends TreeNode {
     
-    private String name;
+    private final String name;
     private Integer start;
-    private Integer length;
-    private Pattern prePattern;
+    private final Integer length;
+    private final Pattern prePattern;
     private Rule rule;
     
     /**

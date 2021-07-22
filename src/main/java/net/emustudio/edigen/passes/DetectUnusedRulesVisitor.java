@@ -40,7 +40,7 @@ public class DetectUnusedRulesVisitor extends Visitor {
     @Override
     public void visit(Subrule subrule) throws SemanticException {
         Rule rule = subrule.getRule();
-        if (isUnknown(rule)) {
+        if (rule != null && isUnknown(rule)) {
             knownRules.addAll(rule.getNames());
             rule.acceptChildren(this);
         }

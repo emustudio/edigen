@@ -5,6 +5,7 @@ import net.emustudio.emulib.plugins.cpu.DecodedInstruction;
 import net.emustudio.emulib.plugins.cpu.Decoder;
 import net.emustudio.emulib.plugins.cpu.InvalidInstructionException;
 import net.emustudio.emulib.plugins.memory.MemoryContext;
+import net.emustudio.emulib.runtime.helpers.NumberUtils;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -13,11 +14,12 @@ import java.util.Objects;
  * The instruction decoder.
  */
 public class %decoder_class% implements Decoder {
-    private final byte[] instructionBytes = new byte[1024];
-    private final MemoryContext<?> memory;
-    private int memoryPosition;
+    private static final int MAX_INSTRUCTION_BYTES = %max_instruction_bytes%;
+
+    private byte[] instructionBytes;
+    private final MemoryContext<? extends Number> memory;
+
     private int unit;
-    private int bytesRead;
     private DecodedInstruction instruction;
     
     %decoder_fields%
@@ -26,7 +28,7 @@ public class %decoder_class% implements Decoder {
      * The constructor.
      * @param memory the memory context which will be used to read instructions
      */
-    public %decoder_class%(MemoryContext<?> memory) {
+    public %decoder_class%(MemoryContext<? extends Number> memory) {
         this.memory = Objects.requireNonNull(memory);
     }
     
@@ -38,62 +40,32 @@ public class %decoder_class% implements Decoder {
      */
     @Override
     public DecodedInstruction decode(int memoryPosition) throws InvalidInstructionException {
-        this.memoryPosition = memoryPosition;
-        bytesRead = 0;
+        this.instructionBytes = NumberUtils.numbersToNativeBytes(memory.read(memoryPosition, MAX_INSTRUCTION_BYTES));
 
         instruction = new DecodedInstruction();
         %root_rule%(0);
-        instruction.setImage(Arrays.copyOfRange(instructionBytes, 0, bytesRead));
+        instruction.setImage(Arrays.copyOfRange(instructionBytes, 0, this.instructionBytes.length));
         return instruction;
     }
 
     /**
-     * Reads an arbitrary number of bits of the current instruction into a byte array.
+     * Reads an arbitrary number of bits of the current instruction.
+     * Bits are read in little endian
+     *
      * @param start the number of bits from the start of the current instruction
      * @param length the number of bits to read
      * @return the bytes read
      */
-    private byte[] readBytes(int start, int length) {
+    private int readBits(int start, int length) {
         int startByte = start / 8;
         int endByte = (start + length - 1) / 8;
-        int clear = start % 8;
+
+        int value = NumberUtils.readInt(
+            instructionBytes, startByte, endByte - startByte + 1, NumberUtils.Strategy.LITTLE_ENDIAN
+        );
+        int clearLSB = (0xFF >> (start % 8));
         int shift = (8 - ((start + length) % 8)) % 8;
-
-        while (bytesRead <= endByte) {
-            instructionBytes[bytesRead++] = ((Number) memory.read(memoryPosition++)).byteValue();
-        }
-
-        byte[] result = Arrays.copyOfRange(instructionBytes, startByte, endByte + 1);
-        result[0] &= 0xFF >> clear;
-
-        // right shift all bits
-        for (int i = result.length - 1; i >= 0; i--) {
-            result[i] = (byte) ((result[i] & 0xFF) >>> shift);
-            if (i > 0)
-                result[i] |= (result[i - 1] & (0xFF >>> (8 - shift))) << (8 - shift);
-        }
-
-        // if the leftmost byte is now unused
-        if (result.length > 8 * length)
-            result = Arrays.copyOfRange(result, 1, result.length);
-
-        return result;
-    }
-
-    /**
-     * Reads at most one unit (int) of the current instruction.
-     * @param start the number of bits from the start of the current instruction
-     * @param length the number of bits to read
-     * @return the bits read
-     */
-    private int read(int start, int length) {
-        int number = 0;
-        byte[] bytes = readBytes(start, length);
-
-        for (int i = 0; i < bytes.length; i++)
-            number |= (bytes[i] & 0xFF) << (8 * (bytes.length - i - 1));
-
-        return number;
+        return (value & clearLSB) >> shift;
     }
     
     %decoder_methods%
