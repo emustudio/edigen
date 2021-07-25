@@ -101,7 +101,7 @@ public class Translator {
 
         Visitor[] transforms = {
                 new ResolveNamesVisitor(),
-                new DetectNonExistingRootRulesVisitor(),
+                new DetectRootRulesVisitor(),
                 new DeduplicateRootRulesVisitor(),
                 detectUnusedRulesVisitor,
                 new SemanticCheckVisitor(),

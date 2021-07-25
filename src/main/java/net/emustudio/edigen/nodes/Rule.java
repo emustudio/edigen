@@ -28,6 +28,7 @@ import java.util.*;
 public class Rule extends TreeNode {
     
     private final List<String> names;
+    private boolean isRoot;
     
     /**
      * Constructs a rule with one or more names.
@@ -97,6 +98,22 @@ public class Rule extends TreeNode {
         }
         
         return result.toString();
+    }
+
+    /**
+     * Determines if it is a root rule
+     * @return true if it is a root rule, false otherwise
+     */
+    public boolean isRoot() {
+        return isRoot;
+    }
+
+    /**
+     * Sets if this rule is a root rule.
+     * @param isRoot true if it is a root rule, false otherwise
+     */
+    public void setRoot(boolean isRoot) {
+        this.isRoot = isRoot;
     }
     
     /**

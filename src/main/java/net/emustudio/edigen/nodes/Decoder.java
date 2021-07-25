@@ -27,6 +27,7 @@ import java.util.*;
  */
 public class Decoder extends TreeNode {
     private final Set<String> rootRuleNames;
+    private final Set<Rule> rootRules = new LinkedHashSet<>();
 
     /**
      * Creates new decoder.
@@ -74,6 +75,26 @@ public class Decoder extends TreeNode {
     public void setRootRuleNames(Set<String> rootRuleNames) {
         this.rootRuleNames.clear();
         this.rootRuleNames.addAll(rootRuleNames);
+    }
+
+    public Set<Rule> getRootRules() {
+        return rootRules;
+    }
+
+    /**
+     * Get first root rule.
+     * @return first root rule
+     */
+    public Rule getRootRule() {
+        return rootRules.iterator().next();
+    }
+
+    public void setRootRules(Set<Rule> rootRules) {
+        if (rootRuleNames.size() != rootRules.size()) {
+            throw new IllegalArgumentException("Root rule sizes do not match");
+        }
+        this.rootRules.clear();
+        this.rootRules.addAll(rootRules);
     }
     
     /**

@@ -54,10 +54,7 @@ public class DecoderGenerator extends Generator {
 
         template.setVariable("decoder_package", getPackageName());
         template.setVariable("decoder_class", getClassName());
-
-        Writer rootRuleCalls = new StringWriter();
-        decoder.accept(new GenerateRootRuleCallsVisitor(rootRuleCalls, 2));
-        template.setVariable("root_rule_calls", rootRuleCalls.toString());
+        template.setVariable("root_rule", decoder.getRootRule().getMethodName());
 
         Writer fields = new StringWriter();
         decoder.accept(new GenerateFieldsVisitor(fields));
