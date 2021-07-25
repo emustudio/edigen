@@ -5,9 +5,8 @@ import net.emustudio.emulib.plugins.cpu.*;
 import net.emustudio.emulib.plugins.memory.MemoryContext;
 import net.emustudio.emulib.runtime.helpers.Bits;
 import net.emustudio.emulib.runtime.helpers.NumberUtils;
+import net.emustudio.emulib.runtime.interaction.Formatter;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.*;
 import java.util.function.UnaryOperator;
 
@@ -76,6 +75,7 @@ public class %disasm_class% implements Disassembler {
     private static final Map<Set<Integer>, MnemonicFormat> formatMap;
     private final MemoryContext<? extends Number> memory;
     private final Decoder decoder;
+    private final Formatter formatter = Formatter.DEFAULT;
 
     static {
         String[] formats = {
@@ -189,47 +189,11 @@ public class %disasm_class% implements Disassembler {
                 );
             }
 
-            String replaced = format(mnemonic.charAt(position + 1), value);
+            String replaced = formatter.format(mnemonic.charAt(position + 1), value);
             mnemonic.replace(position, position + 2, replaced);
             position += replaced.length();
         }
         
         return mnemonic.toString();
-    }
-    
-    /**
-     * Transforms the bytes into a meaningful string using the formatting
-     * character.
-     * @param format the formatting character ('s' for a string, etc.)
-     * @param value the array of bytes
-     * @return the resulting string
-     */
-    private String format(char format, Bits value) {
-        switch (format) {
-            case 'c':
-                String string = new String(value.toBytes());
-                return (string.length() != 0) ? string.substring(0, 1) : "?";
-            case 'd':
-                return Integer.toString(value.bits);
-            case 'f':
-                switch (value.length) {
-                    case 32:
-                        return Float.toString(ByteBuffer.wrap(value.toBytes()).order(ByteOrder.LITTLE_ENDIAN).getFloat());
-                    case 64:
-                        return Double.toString(ByteBuffer.wrap(value.toBytes()).order(ByteOrder.LITTLE_ENDIAN).getDouble());
-                    default:
-                        return "NaN";
-                }
-            case 's':
-                return new String(value.toBytes());
-            case 'x':
-                return Integer.toHexString(value.bits);
-            case 'X':
-                return Integer.toHexString(value.bits).toUpperCase();
-            case '%':
-                return "%";
-            default:
-                return Character.toString(format);
-        }
     }
 }

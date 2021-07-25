@@ -10,6 +10,9 @@ import net.emustudio.emulib.runtime.helpers.NumberUtils;
 import java.util.Arrays;
 import java.util.Objects;
 
+import static net.emustudio.emulib.runtime.helpers.NumberUtils.*;
+
+
 /**
  * The instruction decoder.
  */
@@ -40,7 +43,7 @@ public class %decoder_class% implements Decoder {
      */
     @Override
     public DecodedInstruction decode(int memoryPosition) throws InvalidInstructionException {
-        this.instructionBytes = NumberUtils.numbersToNativeBytes(memory.read(memoryPosition, MAX_INSTRUCTION_BYTES));
+        this.instructionBytes = numbersToNativeBytes(memory.read(memoryPosition, MAX_INSTRUCTION_BYTES));
 
         instruction = new DecodedInstruction();
         %root_rule%(0);
@@ -57,15 +60,7 @@ public class %decoder_class% implements Decoder {
      * @return the bytes read
      */
     private int readBits(int start, int length) {
-        int startByte = start / 8;
-        int endByte = (start + length - 1) / 8;
-
-        int value = NumberUtils.readInt(
-            instructionBytes, startByte, endByte - startByte + 1, NumberUtils.Strategy.LITTLE_ENDIAN
-        );
-        int clearLSB = (0xFF >> (start % 8));
-        int shift = (8 - ((start + length) % 8)) % 8;
-        return (value & clearLSB) >> shift;
+        return NumberUtils.readBits(instructionBytes, start, length, Strategy.LITTLE_ENDIAN);
     }
     
     %decoder_methods%
