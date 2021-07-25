@@ -72,8 +72,8 @@ public class Decoder extends TreeNode {
     }
 
     /**
-     * Get first root rule.
-     * @return first root rule
+     * This is the first rule in the input file.
+     * @return the root rule object
      */
     public Rule getRootRule() {
         return rootRules.iterator().next();
