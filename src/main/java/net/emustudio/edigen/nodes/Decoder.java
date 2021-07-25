@@ -67,16 +67,6 @@ public class Decoder extends TreeNode {
         return rootRuleNames;
     }
 
-    /**
-     * Set starting rule names.
-     *
-     * @param rootRuleNames rule names
-     */
-    public void setRootRuleNames(Set<String> rootRuleNames) {
-        this.rootRuleNames.clear();
-        this.rootRuleNames.addAll(rootRuleNames);
-    }
-
     public Set<Rule> getRootRules() {
         return rootRules;
     }
