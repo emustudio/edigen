@@ -35,7 +35,7 @@ public class DetectRootRulesVisitor extends Visitor {
     public void visit(Rule rule) throws SemanticException {
         for (String name: rule.getNames()) {
             if (rootRuleNames.remove(name)) {
-                rule.setRoot(true);
+                rule.setRoot(true, name);
                 rootRulesByName.put(name, rule);
             }
         }
