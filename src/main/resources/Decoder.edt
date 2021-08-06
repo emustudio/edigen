@@ -42,7 +42,7 @@ public class %decoder_class% implements Decoder {
         bytesRead = 0;
 
         instruction = new DecodedInstruction();
-        %root_rule%(0);
+        %root_rule%;
         instruction.setImage(Arrays.copyOfRange(instructionBytes, 0, bytesRead));
         return instruction;
     }

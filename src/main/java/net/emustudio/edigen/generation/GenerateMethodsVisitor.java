@@ -111,7 +111,7 @@ public class GenerateMethodsVisitor extends Visitor {
                 if (ruleToTry.hasOnlyOneName()) {
                     put(ruleToTry.getMethodName() + "(0);");
                 } else {
-                    put(ruleToTry.getMethodName() + "(0, " + ruleToTry.getMethodName() + ");");
+                    put(ruleToTry.getMethodName() + "(0, " + ruleToTry.getFieldName() + ");");
                 }
             } else {
                 put("throw new InvalidInstructionException();");

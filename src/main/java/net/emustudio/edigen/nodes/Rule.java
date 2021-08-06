@@ -82,6 +82,14 @@ public class Rule extends TreeNode {
     }
 
     /**
+     * Returns a field name of this rule (key). If the rule has more names, return the key of the first name.
+     * @return the name of a constant for the given key
+     */
+    public String getFieldName() {
+        return getFieldName(getMethodName());
+    }
+
+    /**
      * Returns a human-readable label of this rule - a name or a list of names
      * separated by commas.
      * @return the label
