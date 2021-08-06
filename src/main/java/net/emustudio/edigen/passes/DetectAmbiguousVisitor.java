@@ -40,7 +40,7 @@ import java.util.List;
  * There are two types of ambiguity: path ambiguity and variant ambiguity.
  * </p>
  *
- * <h3>Path ambiguity</h3>
+ * <strong>Path ambiguity</strong>
  * <p>
  * Path ambiguity means that for some rule and input, decoder is not able to decide which execution path to choose
  * without reading more input, even if the deep contains solution. The reason is that Decoder is simple state machine
@@ -70,7 +70,7 @@ import java.util.List;
  *         Pattern (101)
  * </pre>
  *
- * <h3>Variant ambiguity</h3>
+ * <strong>Variant ambiguity</strong>
  * Variant ambiguity means that one pattern has more than one child variant.
  *
  */

@@ -43,7 +43,7 @@ public class DetectAmbiguousVisitorTest {
                 ),
                 mkMask("101").addChild(
                         mkPattern("101").addChild(
-                                mkVariant("101")
+                                mkVariant("y")
                         )
                 )
         );

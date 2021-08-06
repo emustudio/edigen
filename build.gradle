@@ -1,0 +1,97 @@
+plugins {
+    id 'java'
+    id 'maven-publish'
+    id 'signing'
+    id 'com.intershop.gradle.javacc' version '4.0.1'
+}
+
+group = 'net.emustudio'
+version = '1.4-SNAPSHOT'
+description = 'Emulator Disassembler Generator'
+
+dependencies {
+    testImplementation 'junit:junit:4.13.1'
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
+javacc {
+    configs {
+        template {
+            inputFile = file('src/main/javacc/Grammar.jj')
+            packageName = 'net.emustudio.edigen.parser'
+        }
+    }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = 'edigen'
+            from components.java
+            pom {
+                name = 'edigen'
+                description = 'Emulator Disassembler Generator'
+                url = 'https://github.com/emustudio/edigen'
+                licenses {
+                    license {
+                        name = 'GNU General Public License, Version 2.0'
+                        url = 'https://www.gnu.org/licenses/gpl-2.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'sulir'
+                        name = 'Matúš Sulír'
+                        url = 'https://github.com/sulir/'
+                    }
+                    developer {
+                        id = 'vbmacher'
+                        name = 'Peter Jakubčo'
+                        url = 'https://github.com/vbmacher'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:git://github.com/emustudio/edigen.git'
+                    developerConnection = 'scm:git:ssh://github.com:emustudio/edigen.git'
+                    url = 'https://github.com/emustudio/edigen'
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            url "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+            credentials {
+                username findProperty("SONATYPE_USERNAME") ?: System.getenv("SONATYPE_USERNAME")
+                password findProperty("SONATYPE_PASSWORD") ?: System.getenv("SONATYPE_PASSWORD")
+            }
+        }
+    }
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+signing {
+    def signingKey = findProperty("GPG_KEY") ?: System.getenv("GPG_KEY")
+    def signingPassword = findProperty("GPG_PASSWORD") ?: System.getenv("GPG_PASSWORD")
+    useInMemoryPgpKeys(signingKey, signingPassword)
+    sign publishing.publications.mavenJava
+}
+
+javadoc {
+    exclude 'net/emustudio/edigen/parser/**'
+    if (JavaVersion.current().isJava9Compatible()) {
+        options.addBooleanOption('html5', true)
+    }
+}
