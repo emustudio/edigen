@@ -26,7 +26,7 @@ import java.util.*;
  * The root node of the instruction decoder subtree.
  */
 public class Decoder extends TreeNode {
-    private final Set<String> declaredRootRuleNames;
+    private final Set<String> declaredRootRuleNames = new LinkedHashSet<>();
     private final Set<Rule> rootRules = new LinkedHashSet<>();
 
     /**
@@ -35,7 +35,7 @@ public class Decoder extends TreeNode {
      * @param declaredRootRuleNames explicitly define root rules of the decoder.
      */
     public Decoder(Set<String> declaredRootRuleNames) {
-        this.declaredRootRuleNames = Objects.requireNonNull(declaredRootRuleNames);
+        this.declaredRootRuleNames.addAll(Objects.requireNonNull(declaredRootRuleNames));
     }
 
     /**
@@ -44,7 +44,7 @@ public class Decoder extends TreeNode {
      * @param declaredRootRuleNames explicitly define root rules of the decoder.
      */
     public Decoder(String... declaredRootRuleNames) {
-        this.declaredRootRuleNames = new LinkedHashSet<>(Arrays.asList(declaredRootRuleNames));
+        this.declaredRootRuleNames.addAll(Arrays.asList(declaredRootRuleNames));
     }
 
     /**
@@ -52,7 +52,6 @@ public class Decoder extends TreeNode {
      * Root rule will be the first child
      */
     public Decoder() {
-        declaredRootRuleNames = Collections.emptySet();
     }
 
     /**
@@ -64,7 +63,7 @@ public class Decoder extends TreeNode {
         if (declaredRootRuleNames.isEmpty()) {
             return Collections.singleton(((Rule)getChild(0)).getNames().get(0));
         }
-        return declaredRootRuleNames;
+        return Collections.unmodifiableSet(declaredRootRuleNames);
     }
 
     /**
@@ -73,7 +72,7 @@ public class Decoder extends TreeNode {
      * @return root rules
      */
     public Set<Rule> getRootRules() {
-        return rootRules;
+        return Collections.unmodifiableSet(rootRules);
     }
 
     /**
@@ -92,6 +91,15 @@ public class Decoder extends TreeNode {
     public void setRootRules(Set<Rule> rootRules) {
         if (declaredRootRuleNames.size() != rootRules.size()) {
             throw new IllegalArgumentException("Root rule sizes do not match");
+        }
+
+        Iterator<Rule> ruleIterator = rootRules.iterator();
+        for (String name : declaredRootRuleNames) {
+            Rule rule = ruleIterator.next();
+            if (!rule.getNames().contains(name)) {
+                throw new IllegalArgumentException("Declared root rule name '" + name +
+                        "' does not match with provided root rule");
+            }
         }
         this.rootRules.clear();
         this.rootRules.addAll(rootRules);
