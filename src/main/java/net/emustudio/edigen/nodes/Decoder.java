@@ -26,25 +26,25 @@ import java.util.*;
  * The root node of the instruction decoder subtree.
  */
 public class Decoder extends TreeNode {
-    private final Set<String> rootRuleNames;
+    private final Set<String> declaredRootRuleNames;
     private final Set<Rule> rootRules = new LinkedHashSet<>();
 
     /**
      * Creates new decoder.
      *
-     * @param rootRuleNames explicitly define root rules of the decoder.
+     * @param declaredRootRuleNames explicitly define root rules of the decoder.
      */
-    public Decoder(Set<String> rootRuleNames) {
-        this.rootRuleNames = Objects.requireNonNull(rootRuleNames);
+    public Decoder(Set<String> declaredRootRuleNames) {
+        this.declaredRootRuleNames = Objects.requireNonNull(declaredRootRuleNames);
     }
 
     /**
      * Creates new decoder.
      *
-     * @param rootRuleNames explicitly define root rules of the decoder.
+     * @param declaredRootRuleNames explicitly define root rules of the decoder.
      */
-    public Decoder(String... rootRuleNames) {
-        this.rootRuleNames = new LinkedHashSet<>(Arrays.asList(rootRuleNames));
+    public Decoder(String... declaredRootRuleNames) {
+        this.declaredRootRuleNames = new LinkedHashSet<>(Arrays.asList(declaredRootRuleNames));
     }
 
     /**
@@ -52,7 +52,7 @@ public class Decoder extends TreeNode {
      * Root rule will be the first child
      */
     public Decoder() {
-        rootRuleNames = Collections.emptySet();
+        declaredRootRuleNames = Collections.emptySet();
     }
 
     /**
@@ -61,27 +61,36 @@ public class Decoder extends TreeNode {
      * @return the root rules names
      */
     public Set<String> getRootRuleNames() {
-        if (rootRuleNames.isEmpty()) {
+        if (declaredRootRuleNames.isEmpty()) {
             return Collections.singleton(((Rule)getChild(0)).getNames().get(0));
         }
-        return rootRuleNames;
+        return declaredRootRuleNames;
     }
 
+    /**
+     * Returns all starting rule variants.
+     * Note root rules must be explicitly set; having only declared root rule names is not enough.
+     * @return root rules
+     */
     public Set<Rule> getRootRules() {
         return rootRules;
     }
 
     /**
-     * Returns the starting rule.
-     * This is the first rule in the input file.
-     * @return the root rule object
+     * Returns the first starting rule.
+     * @return the first root rule object
      */
     public Rule getRootRule() {
         return rootRules.iterator().next();
     }
 
+    /**
+     * Set starting rules.
+     * Size of declared root rules and root rules objects must be the same.
+     * @param rootRules root rule objects
+     */
     public void setRootRules(Set<Rule> rootRules) {
-        if (rootRuleNames.size() != rootRules.size()) {
+        if (declaredRootRuleNames.size() != rootRules.size()) {
             throw new IllegalArgumentException("Root rule sizes do not match");
         }
         this.rootRules.clear();
