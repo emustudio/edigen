@@ -41,4 +41,17 @@ public class DetectRootRulesVisitorTest {
         assertTrue(b.isRoot());
         assertFalse(c.isRoot());
     }
+
+    @Test(expected = SemanticException.class)
+    public void testMultipleDeclarationsOfRootRuleIsProhibited() throws SemanticException {
+        Set<String> rootRuleNames = new HashSet<>();
+        rootRuleNames.add("a");
+        rootRuleNames.add("b");
+
+        Rule a = mkRule("a", "b");
+        Decoder decoder = new Decoder(rootRuleNames);
+        decoder.addChild(a);
+
+        decoder.accept(new DetectRootRulesVisitor());
+    }
 }
