@@ -83,9 +83,10 @@ tasks.withType(JavaCompile) {
 }
 
 signing {
+    def signingKeyId = findProperty("GPG_KEY_ID") ?: System.getenv("GPG_KEY_ID")
     def signingKey = findProperty("GPG_KEY") ?: System.getenv("GPG_KEY")
     def signingPassword = findProperty("GPG_PASSWORD") ?: System.getenv("GPG_PASSWORD")
-    useInMemoryPgpKeys(signingKey, signingPassword)
+    useInMemoryPgpKeys(signingKeyId, signingKey, signingPassword)
     sign publishing.publications.mavenJava
 }
 

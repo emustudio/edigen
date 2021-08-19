@@ -2,6 +2,7 @@ package net.emustudio.edigen.passes;
 
 import net.emustudio.edigen.SemanticException;
 import net.emustudio.edigen.Visitor;
+import net.emustudio.edigen.nodes.Decoder;
 import net.emustudio.edigen.nodes.Rule;
 import net.emustudio.edigen.nodes.Subrule;
 
@@ -17,6 +18,12 @@ public class DetectUnusedRulesVisitor extends Visitor {
     private static final String MESSAGE = "Unused rule detected: \"%s\"";
     private boolean rootRuleVisited;
     private final Set<String> knownRules = new HashSet<>();
+
+    @Override
+    public void visit(Decoder decoder) throws SemanticException {
+        knownRules.addAll(decoder.getRootRuleNames());
+        decoder.acceptChildren(this);
+    }
 
     /**
      * In case of the root rule traverses it and saves references to other rules.
@@ -40,7 +47,7 @@ public class DetectUnusedRulesVisitor extends Visitor {
     @Override
     public void visit(Subrule subrule) throws SemanticException {
         Rule rule = subrule.getRule();
-        if (isUnknown(rule)) {
+        if (rule != null && isUnknown(rule)) {
             knownRules.addAll(rule.getNames());
             rule.acceptChildren(this);
         }

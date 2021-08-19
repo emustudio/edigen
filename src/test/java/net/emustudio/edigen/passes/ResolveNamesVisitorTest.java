@@ -22,8 +22,9 @@ import net.emustudio.edigen.nodes.*;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import java.util.List;
+
+import static org.junit.Assert.*;
 
 public class ResolveNamesVisitorTest {
     private Decoder decoder;
@@ -94,6 +95,13 @@ public class ResolveNamesVisitorTest {
 
         decoder.accept(new ResolveNamesVisitor());
         assertNotNull(subrule.getRule());
+
+        // inferred variant should return inferred subrule
+        Variant inferredVariant = (Variant) subrule.getRule().getChild(0);
+        assertEquals(inferredVariant.getChild(0), inferredVariant.getReturnSubrule());
+
+        // inferred subrule should not have set a rule
+        assertNull(inferredVariant.getReturnSubrule().getRule());
     }
 
     @Test
@@ -138,6 +146,14 @@ public class ResolveNamesVisitorTest {
         Subrule subrule2 = new Subrule("subrule", 2, null);
         variant.addChildren(subrule1, subrule2);
 
+        decoder.accept(new ResolveNamesVisitor());
+    }
+
+    @Test(expected = SemanticException.class)
+    public void testDuplicateRuleAlternativeName() throws SemanticException {
+        // instruction, src = ;
+        // data, src = ;
+        decoder.addChildren(new Rule(List.of("instruction", "src")), new Rule(List.of("data", "src")));
         decoder.accept(new ResolveNamesVisitor());
     }
 }

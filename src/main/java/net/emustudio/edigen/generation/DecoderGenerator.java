@@ -20,6 +20,7 @@ package net.emustudio.edigen.generation;
 import net.emustudio.edigen.SemanticException;
 import net.emustudio.edigen.misc.Template;
 import net.emustudio.edigen.nodes.Decoder;
+import net.emustudio.edigen.nodes.Rule;
 
 import java.io.StringWriter;
 import java.io.Writer;
@@ -51,10 +52,16 @@ public class DecoderGenerator extends Generator {
     @Override
     protected void fillTemplate(Template template) throws SemanticException {
         super.fillTemplate(template);
-        
+
         template.setVariable("decoder_package", getPackageName());
         template.setVariable("decoder_class", getClassName());
-        template.setVariable("root_rule", decoder.getRootRule().getMethodName());
+
+        Rule rootRule = decoder.getRootRule();
+        if (rootRule.hasOnlyOneName()) {
+            template.setVariable("root_rule", rootRule.getMethodName() + "(0)");
+        } else {
+            template.setVariable("root_rule", rootRule.getMethodName() + "(0, " + rootRule.getFieldName() + ")");
+        }
 
         Writer fields = new StringWriter();
         decoder.accept(new GenerateFieldsVisitor(fields));

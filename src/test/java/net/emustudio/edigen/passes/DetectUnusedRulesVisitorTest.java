@@ -50,4 +50,26 @@ public class DetectUnusedRulesVisitorTest {
         decoder.accept(new ResolveNamesVisitor());
         decoder.accept(new DetectUnusedRulesVisitor());
     }
+
+    @Test
+    public void testRootRulesAreNotTreatedAsUnused() throws SemanticException {
+        Decoder decoder = (Decoder) new Decoder("rule", "unused").addChildren(
+                nest(
+                        mkRule("rule"),
+                        mkVariant("x"),
+                        mkSubrule("used")
+                ), nest(
+                        mkRule("used"),
+                        mkVariant("y"),
+                        mkSubrule("used", 7, null)
+                ), nest(
+                        mkRule("unused"),
+                        mkVariant("haha"),
+                        mkSubrule("unused", 5, null)
+                )
+        );
+
+        decoder.accept(new ResolveNamesVisitor());
+        decoder.accept(new DetectUnusedRulesVisitor());
+    }
 }

@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2011, 2012 Matúš Sulír
+ * Copyright (C) 2011-2021 Matúš Sulír
+ * Copyright (C) 2011-2021 Peter Jakubčo
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -25,8 +26,7 @@ package net.emustudio.edigen.parser;
 
 import net.emustudio.edigen.misc.BitSequence;
 import net.emustudio.edigen.nodes.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class Parser {
     public Specification parse() throws ParseException {
@@ -65,6 +65,7 @@ TOKEN :
   | <L_PAREN: "(">
   | <R_PAREN: ")">
   | <PART_SEPARATOR: "%%">
+  | <ROOT: "root">
 }
 
 // Identifiers and literals
@@ -101,14 +102,36 @@ Decoder Decoder():
 {
     Decoder decoder;
     Rule rule;
+    Set<String> rootRules;
 }
 {
-    { decoder = new Decoder(); }
+    rootRules = RootRules()
+    { decoder = new Decoder(rootRules); }
     (
         rule = Rule()
         { decoder.addChild(rule); }
     )+
     { return decoder; }
+}
+
+Set<String> RootRules():
+{
+    Token name;
+    Set<String> names = new LinkedHashSet<String>();
+}
+{
+    <ROOT>
+    name = <ID>
+    { names.add(name.image); }
+    (
+        <COMMA>
+        name = <ID>
+        { names.add(name.image); }
+    )*
+    <SEMICOLON>
+    {
+        return names;
+    }
 }
 
 Rule Rule():
@@ -173,7 +196,6 @@ List<Variant> VariantSet():
 Variant Variant():
 {
     Variant variant = new Variant();
-    String value;
 }
 {
     ( LOOKAHEAD(2) Return(variant)
