@@ -19,6 +19,10 @@ public class PassUtils {
         return new Rule(name);
     }
 
+    public static Rule mkRule(String... names) {
+        return new Rule(Arrays.asList(names));
+    }
+
     public static Variant mkVariant() {
         return new Variant();
     }

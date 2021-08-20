@@ -46,7 +46,7 @@ public class %decoder_class% implements Decoder {
         this.instructionBytes = numbersToNativeBytes(memory.read(memoryPosition, MAX_INSTRUCTION_BYTES));
 
         instruction = new DecodedInstruction();
-        %root_rule%(0);
+        %root_rule%;
         instruction.setImage(Arrays.copyOfRange(instructionBytes, 0, this.instructionBytes.length));
         return instruction;
     }

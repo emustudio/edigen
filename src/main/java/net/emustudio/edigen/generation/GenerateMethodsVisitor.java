@@ -23,6 +23,7 @@ import net.emustudio.edigen.misc.PrettyPrinter;
 import net.emustudio.edigen.nodes.*;
 
 import java.io.Writer;
+import java.util.*;
 
 /**
  * A visitor which generates Java source code of the instruction decoder methods
@@ -31,13 +32,15 @@ import java.io.Writer;
 public class GenerateMethodsVisitor extends Visitor {
 
     private final PrettyPrinter printer;
+    private final Queue<Rule> rootRulesLeft = new LinkedList<>();
+    private Rule ruleToTry;
     private Rule currentRule;
     private boolean isDefaultCase = false;
 
     private boolean unitWasRead;
     private int unitLastStart;
     private int unitLastLength;
-    
+
     /**
      * Constructs the visitor.
      * @param output the output stream to write the code to
@@ -45,7 +48,21 @@ public class GenerateMethodsVisitor extends Visitor {
     public GenerateMethodsVisitor(Writer output) {
         this.printer = new PrettyPrinter(output);
     }
-    
+
+    /**
+     * Finds out which root rules are available.
+     *
+     * @param decoder decoder node
+     * @throws SemanticException never
+     */
+    @Override
+    public void visit(Decoder decoder) throws SemanticException {
+        List<Rule> rootRulesToTry = new ArrayList<>(decoder.getRootRules());
+        rootRulesToTry.remove(0);
+        rootRulesLeft.addAll(rootRulesToTry);
+        decoder.acceptChildren(this);
+    }
+
     /**
      * Writes the method definition.
      * @param rule the rule node
@@ -56,7 +73,13 @@ public class GenerateMethodsVisitor extends Visitor {
         currentRule = rule;
         isDefaultCase = false;
         unitWasRead = false;
-        
+
+        if (rule.isRoot() && !rootRulesLeft.isEmpty()) {
+            ruleToTry = rootRulesLeft.poll();
+        } else {
+            ruleToTry = null;
+        }
+
         String secondParameter = rule.hasOnlyOneName() ? "" : ", int rule";
         
         put("private void " + currentRule.getMethodName() + "(int start"
@@ -77,7 +100,7 @@ public class GenerateMethodsVisitor extends Visitor {
         int maskStart = mask.getStart();
         int maskLength = mask.getBits().getLength();
         boolean alreadyRead = unitWasRead && unitLastStart == maskStart && unitLastLength == maskLength;
-        
+
         if (!isDefaultCase && !isZero && !alreadyRead) {
             if (maskLength > 32) {
                 throw new SemanticException("Mask length can only be 32 bites (4 bytes)!", mask);
@@ -101,7 +124,15 @@ public class GenerateMethodsVisitor extends Visitor {
         
         if (!isZero && !isDefaultCase) {
             put("default:");
-            put("throw new InvalidInstructionException();");
+            if (ruleToTry != null) {
+                if (ruleToTry.hasOnlyOneName()) {
+                    put(ruleToTry.getMethodName() + "(0);");
+                } else {
+                    put(ruleToTry.getMethodName() + "(0, " + ruleToTry.getFieldName() + ");");
+                }
+            } else {
+                put("throw new InvalidInstructionException();");
+            }
         }
         
         if (!isZero)

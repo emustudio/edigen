@@ -28,7 +28,9 @@ import java.util.*;
 public class Rule extends TreeNode {
     
     private final List<String> names;
-    
+    private boolean isRoot;
+    private String rootRuleName;
+
     /**
      * Constructs a rule with one or more names.
      * @param names the list of all names of this rule
@@ -81,6 +83,14 @@ public class Rule extends TreeNode {
     }
 
     /**
+     * Returns a field name of this rule (key). If the rule has more names, return the key of the root rule name.
+     * @return the name of a constant for the given key
+     */
+    public String getFieldName() {
+        return getFieldName(getRootRuleName());
+    }
+
+    /**
      * Returns a human-readable label of this rule - a name or a list of names
      * separated by commas.
      * @return the label
@@ -97,6 +107,35 @@ public class Rule extends TreeNode {
         }
         
         return result.toString();
+    }
+
+    /**
+     * Determines if it is a root rule
+     * @return true if it is a root rule, false otherwise
+     */
+    public boolean isRoot() {
+        return isRoot;
+    }
+
+    /**
+     * Get root rule name (if this rule is root).
+     * @return root rule name if this rule is root; null otherwise
+     */
+    public String getRootRuleName() {
+        return rootRuleName;
+    }
+
+    /**
+     * Sets if this rule is a root rule.
+     * @param isRoot true if it is a root rule, false otherwise
+     * @param rootRuleName root rule name used in root rules declaration
+     */
+    public void setRoot(boolean isRoot, String rootRuleName) {
+        if (!names.contains(rootRuleName)) {
+            throw new IllegalArgumentException("Root rule name must be one of rule names!");
+        }
+        this.isRoot = isRoot;
+        this.rootRuleName = rootRuleName;
     }
     
     /**
