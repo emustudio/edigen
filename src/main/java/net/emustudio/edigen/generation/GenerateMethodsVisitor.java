@@ -107,7 +107,7 @@ public class GenerateMethodsVisitor extends Visitor {
         if (!isDefaultCase && !isZero && !alreadyRead) {
             if (maskLength > UNIT_SIZE_BITS) {
                 throw new SemanticException(
-                        String.format("Mask length can only be %d bites (%d bytes)!", UNIT_SIZE_BITS, UNIT_SIZE_BYTES),
+                        String.format("Mask length %d is over maximum %d bits", maskLength, UNIT_SIZE_BITS),
                         mask
                 );
             }
@@ -188,8 +188,8 @@ public class GenerateMethodsVisitor extends Visitor {
                 if (length > UNIT_SIZE_BITS) {
                     throw new SemanticException(
                             String.format(
-                                    "Sub-rule %s length %d is over %d bits (%d bytes)",
-                                    variant.getReturnSubrule().getName(), length, UNIT_SIZE_BITS, UNIT_SIZE_BYTES),
+                                    "Sub-rule %s length %d is over maximum %d bits",
+                                    variant.getReturnSubrule().getName(), length, UNIT_SIZE_BITS),
                             variant
                     );
                 }
