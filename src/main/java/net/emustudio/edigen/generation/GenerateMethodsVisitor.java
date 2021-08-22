@@ -26,7 +26,6 @@ import java.io.Writer;
 import java.util.*;
 
 import static net.emustudio.edigen.nodes.Decoder.UNIT_SIZE_BITS;
-import static net.emustudio.edigen.nodes.Decoder.UNIT_SIZE_BYTES;
 
 /**
  * A visitor which generates Java source code of the instruction decoder methods
