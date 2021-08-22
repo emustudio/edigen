@@ -30,7 +30,7 @@ public class GenerateMaxInstructionBytes extends Visitor  {
     }
 
     /**
-     * Detects max bits size of a mask and it's children
+     * Detects max bits size of a mask and its children
      * @param mask the mask node
      * @throws SemanticException never
      */
