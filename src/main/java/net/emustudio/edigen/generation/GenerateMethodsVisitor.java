@@ -25,6 +25,9 @@ import net.emustudio.edigen.nodes.*;
 import java.io.Writer;
 import java.util.*;
 
+import static net.emustudio.edigen.nodes.Decoder.UNIT_SIZE_BITS;
+import static net.emustudio.edigen.nodes.Decoder.UNIT_SIZE_BYTES;
+
 /**
  * A visitor which generates Java source code of the instruction decoder methods
  * for all rules.
@@ -102,13 +105,16 @@ public class GenerateMethodsVisitor extends Visitor {
         boolean alreadyRead = unitWasRead && unitLastStart == maskStart && unitLastLength == maskLength;
 
         if (!isDefaultCase && !isZero && !alreadyRead) {
-            if (maskLength > 32) {
-                throw new SemanticException("Mask length can only be 32 bites (4 bytes)!", mask);
+            if (maskLength > UNIT_SIZE_BITS) {
+                throw new SemanticException(
+                        String.format("Mask length can only be %d bites (%d bytes)!", UNIT_SIZE_BITS, UNIT_SIZE_BYTES),
+                        mask
+                );
             }
             if (maskStart == 0) {
-                put("unit = readBits(start, " + maskLength + ");", true);
+                put(String.format("unit = readBits(start, %d);", maskLength), true);
             } else {
-                put("unit = readBits(start + " + maskStart + ", " + maskLength + ");", true);
+                put(String.format("unit = readBits(start + %d, %d);", maskStart, maskLength), true);
             }
             unitWasRead = true;
             unitLastStart = maskStart;
@@ -179,9 +185,13 @@ public class GenerateMethodsVisitor extends Visitor {
             } else {
                 int start = variant.getReturnSubrule().getStart();
                 int length = variant.getReturnSubrule().getLength();
-                if (length > 32) {
-                    throw new SemanticException("Subrule " + variant.getReturnSubrule().getName() +
-                            " length can only be 32 bits (4 bytes)!", variant);
+                if (length > UNIT_SIZE_BITS) {
+                    throw new SemanticException(
+                            String.format(
+                                    "Sub-rule %s length %d is over %d bits (%d bytes)",
+                                    variant.getReturnSubrule().getName(), length, UNIT_SIZE_BITS, UNIT_SIZE_BYTES),
+                            variant
+                    );
                 }
 
                 if (start == 0) {

@@ -26,6 +26,15 @@ import java.util.*;
  * The root node of the instruction decoder subtree.
  */
 public class Decoder extends TreeNode {
+    /**
+     * Size (in bits) of one unit which decoder can read at once
+     */
+    public static final int UNIT_SIZE_BITS = 32;
+    /**
+     * Size (in bytes) of one unit which decoder can read at once
+     */
+    public static final int UNIT_SIZE_BYTES = UNIT_SIZE_BITS / 8;
+
     private final Set<String> declaredRootRuleNames = new LinkedHashSet<>();
     private final Set<Rule> rootRules = new LinkedHashSet<>();
 
