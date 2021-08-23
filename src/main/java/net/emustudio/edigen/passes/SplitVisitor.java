@@ -25,9 +25,11 @@ import net.emustudio.edigen.nodes.Pattern;
 import net.emustudio.edigen.nodes.TreeNode;
 import net.emustudio.edigen.nodes.Variant;
 
+import static net.emustudio.edigen.nodes.Decoder.UNIT_SIZE_BITS;
+
 /**
  * A visitor which splits the patterns and mask into smaller pieces of the same
- * length.
+ * length (max length is equal to decoder unit size).
  * 
  * This is necessary to support instructions with variable length, especially
  * instructions with length larger than <code>int</code> or <code>long</code>
@@ -37,25 +39,23 @@ import net.emustudio.edigen.nodes.Variant;
  * <pre>
  *   Rule
  *     Variant
- *     Mask (length &gt; BITS_PER_PIECE)
- *     Pattern (length &gt; BITS_PER_PIECE)
+ *     Mask (length &gt; UNIT_SIZE_BITS)
+ *     Pattern (length &gt; UNIT_SIZE_BITS)
  * </pre>
  *
  * Expectation of the tree at output:
  * <pre>
  *   Rule
  *     Variant
- *       Mask (length = BITS_PER_PIECE)
- *         Pattern (length = BITS_PER_PIECE)
+ *       Mask (length = UNIT_SIZE_BITS)
+ *         Pattern (length = UNIT_SIZE_BITS)
  *           ...
- *             Mask (length &lt;= BITS_PER_PIECE)
- *               Pattern (length &lt;= BITS_PER_PIECE)
+ *             Mask (length &lt;= UNIT_SIZE_BITS)
+ *               Pattern (length &lt;= UNIT_SIZE_BITS)
  * </pre>
  */
 public class SplitVisitor extends Visitor {
 
-    public static final int BITS_PER_PIECE = 32;
-    
     private BitSequence maskBits;
     private BitSequence patternBits;
     
@@ -74,14 +74,14 @@ public class SplitVisitor extends Visitor {
     public void visit(Variant variant) throws SemanticException {
         variant.acceptChildren(this);
         
-        BitSequence[] masks = maskBits.split(BITS_PER_PIECE);
-        BitSequence[] patterns = patternBits.split(BITS_PER_PIECE);
+        BitSequence[] masks = maskBits.split(UNIT_SIZE_BITS);
+        BitSequence[] patterns = patternBits.split(UNIT_SIZE_BITS);
         
         TreeNode parent = variant;
         
         for (int i = 0; i < masks.length; i++) {
             Mask mask = new Mask(masks[i]);
-            mask.setStart(i * BITS_PER_PIECE);
+            mask.setStart(i * UNIT_SIZE_BITS);
             
             Pattern pattern = new Pattern(patterns[i]);
             

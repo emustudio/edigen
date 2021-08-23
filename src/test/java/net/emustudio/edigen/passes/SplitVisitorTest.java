@@ -6,8 +6,8 @@ import net.emustudio.edigen.nodes.Rule;
 import org.junit.Before;
 import org.junit.Test;
 
+import static net.emustudio.edigen.nodes.Decoder.UNIT_SIZE_BITS;
 import static net.emustudio.edigen.passes.PassUtils.*;
-import static net.emustudio.edigen.passes.SplitVisitor.BITS_PER_PIECE;
 
 public class SplitVisitorTest {
     private Decoder decoder;
@@ -19,8 +19,8 @@ public class SplitVisitorTest {
 
     @Test
     public void testVerticalSplit() throws SemanticException {
-        String maskPatternString = mkString(BITS_PER_PIECE * 3, '0');
-        String expectedMaskPatternString = mkString(BITS_PER_PIECE, '0');
+        String maskPatternString = mkString(UNIT_SIZE_BITS * 3, '0');
+        String expectedMaskPatternString = mkString(UNIT_SIZE_BITS, '0');
 
         Rule rule = nest(
                 mkRule("rule"),
@@ -38,16 +38,16 @@ public class SplitVisitorTest {
                 mkVariant(),
                 mkMask(expectedMaskPatternString, 0),
                 mkPattern(expectedMaskPatternString),
-                mkMask(expectedMaskPatternString, BITS_PER_PIECE),
+                mkMask(expectedMaskPatternString, UNIT_SIZE_BITS),
                 mkPattern(expectedMaskPatternString),
-                mkMask(expectedMaskPatternString, 2 * BITS_PER_PIECE),
+                mkMask(expectedMaskPatternString, 2 * UNIT_SIZE_BITS),
                 mkPattern(expectedMaskPatternString)
         ));
     }
 
     @Test
     public void testMaskShorterThanBitsPerPieceIsNotSplit() throws SemanticException {
-        String maskPatternString = mkString(BITS_PER_PIECE, '0');
+        String maskPatternString = mkString(UNIT_SIZE_BITS, '0');
 
         Rule rule = nest(
                 mkRule("rule"),
@@ -69,7 +69,7 @@ public class SplitVisitorTest {
 
     @Test
     public void testMaskIsSplitProperly() throws SemanticException {
-        String maskPatternString = mkString(BITS_PER_PIECE + 1, '0');
+        String maskPatternString = mkString(UNIT_SIZE_BITS + 1, '0');
 
         Rule rule = nest(
                 mkRule("rule"),
@@ -82,13 +82,13 @@ public class SplitVisitorTest {
         decoder.addChild(rule);
         decoder.accept(new SplitVisitor());
 
-        String bitsPerPieceMaskPatternString = mkString(BITS_PER_PIECE, '0');
+        String bitsPerPieceMaskPatternString = mkString(UNIT_SIZE_BITS, '0');
         assertTreesAreEqual(rule, nest(
                 mkRule("rule"),
                 mkVariant(),
                 mkMask(bitsPerPieceMaskPatternString, 0),
                 mkPattern(bitsPerPieceMaskPatternString),
-                mkMask("0", BITS_PER_PIECE),
+                mkMask("0", UNIT_SIZE_BITS),
                 mkPattern("0")
         ));
     }

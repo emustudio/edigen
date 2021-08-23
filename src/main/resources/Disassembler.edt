@@ -3,10 +3,10 @@ package %disasm_package%;
 
 import net.emustudio.emulib.plugins.cpu.*;
 import net.emustudio.emulib.plugins.memory.MemoryContext;
-import net.emustudio.emulib.runtime.helpers.RadixUtils;
+import net.emustudio.emulib.runtime.helpers.Bits;
+import net.emustudio.emulib.runtime.helpers.NumberUtils;
+import net.emustudio.emulib.runtime.interaction.Formatter;
 
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.function.UnaryOperator;
 
@@ -37,15 +37,15 @@ public class %disasm_class% implements Disassembler {
     */
     private static class Parameter {
         private final int ruleCode;
-        private final List<UnaryOperator<byte[]>> strategies;
+        private final List<UnaryOperator<Bits>> strategies;
 
-        public Parameter(int ruleCode, List<UnaryOperator<byte[]>> strategies) {
+        public Parameter(int ruleCode, List<UnaryOperator<Bits>> strategies) {
             this.ruleCode = ruleCode;
             this.strategies = strategies;
         }
 
         public int getRuleCode() { return ruleCode; }
-        public List<UnaryOperator<byte[]>> getStrategies() { return strategies; }
+        public List<UnaryOperator<Bits>> getStrategies() { return strategies; }
     }
 
     /**
@@ -55,29 +55,27 @@ public class %disasm_class% implements Disassembler {
     * the big-endian order since they will be used in Java methods accepting big endian.
     */
     private static class Strategy {
-        public static byte[] little_endian(byte[] value) {
-            return DecodingStrategy.reverseBytes(value);
+        public static Bits reverse_bytes(Bits bits) {
+            return bits.reverseBytes();
         }
-        public static byte[] big_endian(byte[] value) {
-            return value;
+        public static Bits bit_reverse(Bits bits) {
+            return bits.reverseBits();
         }
-        public static byte[] bit_reverse(byte[] value) {
-            return DecodingStrategy.reverseBits(value);
+        public static Bits absolute(Bits bits) {
+            return bits.absolute();
         }
-        public static byte[] absolute(byte[] value) {
-            return DecodingStrategy.absolute(value);
+        public static Bits shift_left(Bits bits) {
+            return bits.shiftLeft();
         }
-        public static byte[] shift_left(byte[] value) {
-            return DecodingStrategy.shiftLeft(value);
-        }
-        public static byte[] shift_right(byte[] value) {
-            return DecodingStrategy.shiftRight(value);
+        public static Bits shift_right(Bits bits) {
+            return bits.shiftRight();
         }
     }
 
     private static final Map<Set<Integer>, MnemonicFormat> formatMap;
-    private final MemoryContext memory;
+    private final MemoryContext<? extends Number> memory;
     private final Decoder decoder;
+    private final Formatter formatter = Formatter.DEFAULT;
 
     static {
         String[] formats = {
@@ -91,7 +89,7 @@ public class %disasm_class% implements Disassembler {
         formatMap = new HashMap<>();
         
         for (int i = 0; i < formats.length; i++) {
-            Set<Integer> ruleCodes = new HashSet<Integer>();
+            Set<Integer> ruleCodes = new HashSet<>();
 
             for (Parameter parameter : parameters[i]) {
                 ruleCodes.add(parameter.getRuleCode());
@@ -106,7 +104,7 @@ public class %disasm_class% implements Disassembler {
      * @param memory the memory context which will be used to read instructions
      * @param decoder the decoder to use to decode instructions
      */
-    public %disasm_class%(MemoryContext memory, Decoder decoder) {
+    public %disasm_class%(MemoryContext<? extends Number> memory, Decoder decoder) {
         this.decoder = Objects.requireNonNull(decoder);
         this.memory = Objects.requireNonNull(memory);
     }
@@ -126,7 +124,7 @@ public class %disasm_class% implements Disassembler {
             MnemonicFormat format = formatMap.get(instruction.getKeys());
 
             if (format == null) {
-                mnemonic = "undisassemblable";
+                mnemonic = "N/A";
             } else {
                 mnemonic = createMnemonic(instruction, format);
             }
@@ -140,7 +138,7 @@ public class %disasm_class% implements Disassembler {
             code = codeBuilder.toString();
         } catch (InvalidInstructionException ex) {
             mnemonic = "unknown";
-            code = String.format("%02X", memory.read(memoryPosition));
+            code = String.format("%02X", memory.read(memoryPosition).byteValue());
         }
         
         return new DisassembledInstruction(memoryPosition, mnemonic, code);
@@ -177,56 +175,25 @@ public class %disasm_class% implements Disassembler {
                 break;
             }
             
-            byte[] value = instruction.getBits(parameter.getRuleCode());
+            Bits value = instruction.getBits(parameter.getRuleCode());
             if (value != null) {
-                for (UnaryOperator<byte[]> strategy : parameter.getStrategies()) {
+                for (UnaryOperator<Bits> strategy : parameter.getStrategies()) {
                     value = strategy.apply(value);
                 }
             } else {
-                value = instruction.getString(parameter.getRuleCode()).getBytes();
+                value = new Bits(
+                    NumberUtils.readInt(
+                        instruction.getString(parameter.getRuleCode()).getBytes(), NumberUtils.Strategy.LITTLE_ENDIAN
+                    ),
+                    instruction.getLength() * 8
+                );
             }
 
-            String replaced = format(mnemonic.charAt(position + 1), value);
+            String replaced = formatter.format(mnemonic.charAt(position + 1), value);
             mnemonic.replace(position, position + 2, replaced);
             position += replaced.length();
         }
         
         return mnemonic.toString();
-    }
-    
-    /**
-     * Transforms the bytes into a meaningful string using the formatting
-     * character.
-     * @param format the formatting character ('s' for a string, etc.)
-     * @param value the array of bytes
-     * @return the resulting string
-     */
-    private String format(char format, byte[] value) {
-        switch (format) {
-            case 'c':
-                String string = new String(value);
-                return (string.length() != 0) ? string.substring(0, 1) : "?";
-            case 'd':
-                return new BigInteger(value).toString();
-            case 'f':
-                switch (value.length) {
-                    case 4:
-                        return Float.toString(ByteBuffer.wrap(value).getFloat());
-                    case 8:
-                        return Double.toString(ByteBuffer.wrap(value).getDouble());
-                    default:
-                        return "NaN";
-                }
-            case 's':
-                return new String(value);
-            case 'x':
-                return RadixUtils.convertToRadix(value, 16, false).toLowerCase();
-            case 'X':
-                return RadixUtils.convertToRadix(value, 16, false);
-            case '%':
-                return "%";
-            default:
-                return Character.toString(format);
-        }
     }
 }

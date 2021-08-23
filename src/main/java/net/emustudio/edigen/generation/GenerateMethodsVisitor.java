@@ -25,6 +25,8 @@ import net.emustudio.edigen.nodes.*;
 import java.io.Writer;
 import java.util.*;
 
+import static net.emustudio.edigen.nodes.Decoder.UNIT_SIZE_BITS;
+
 /**
  * A visitor which generates Java source code of the instruction decoder methods
  * for all rules.
@@ -36,6 +38,10 @@ public class GenerateMethodsVisitor extends Visitor {
     private Rule ruleToTry;
     private Rule currentRule;
     private boolean isDefaultCase = false;
+
+    private boolean unitWasRead;
+    private int unitLastStart;
+    private int unitLastLength;
 
     /**
      * Constructs the visitor.
@@ -68,6 +74,7 @@ public class GenerateMethodsVisitor extends Visitor {
     public void visit(Rule rule) throws SemanticException {
         currentRule = rule;
         isDefaultCase = false;
+        unitWasRead = false;
 
         if (rule.isRoot() && !rootRulesLeft.isEmpty()) {
             ruleToTry = rootRulesLeft.poll();
@@ -92,10 +99,25 @@ public class GenerateMethodsVisitor extends Visitor {
     @Override
     public void visit(Mask mask) throws SemanticException {
         boolean isZero = mask.getBits().containsOnly(false);
-        
-        if (!isDefaultCase) {
-            put("unit = read(start + " + mask.getStart()
-                    + ", " + mask.getBits().getLength() + ");", true);
+        int maskStart = mask.getStart();
+        int maskLength = mask.getBits().getLength();
+        boolean alreadyRead = unitWasRead && unitLastStart == maskStart && unitLastLength == maskLength;
+
+        if (!isDefaultCase && !isZero && !alreadyRead) {
+            if (maskLength > UNIT_SIZE_BITS) {
+                throw new SemanticException(
+                        String.format("Mask length %d is over maximum %d bits", maskLength, UNIT_SIZE_BITS),
+                        mask
+                );
+            }
+            if (maskStart == 0) {
+                put(String.format("unit = readBits(start, %d);", maskLength), true);
+            } else {
+                put(String.format("unit = readBits(start + %d, %d);", maskStart, maskLength), true);
+            }
+            unitWasRead = true;
+            unitLastStart = maskStart;
+            unitLastLength = maskLength;
         }
         
         isDefaultCase = false;
@@ -129,14 +151,17 @@ public class GenerateMethodsVisitor extends Visitor {
      */
     @Override
     public void visit(Pattern pattern) throws SemanticException {
-        if (pattern.getBits().getLength() != 0)
+        boolean thisIsDefaultCase = pattern.getBits().getLength() == 0;
+        if (!thisIsDefaultCase)
             put("case 0x" + pattern.getBits().toHexadecimal() + ":");
         else
             put("default:");
         
         pattern.acceptChildren(this);
-        put("break;");
-        isDefaultCase = (pattern.getBits().getLength() == 0);
+        if (!thisIsDefaultCase)
+            put("break;");
+
+        isDefaultCase = thisIsDefaultCase;
     }
 
     /**
@@ -154,16 +179,27 @@ public class GenerateMethodsVisitor extends Visitor {
                 field = currentRule.getFieldName(currentRule.getNames().get(0));
 
             if (variant.getReturnString() != null) {
-                value = '"' + variant.getReturnString() + "\", "
-                        + variant.getFieldName();
+                value = '"' + variant.getReturnString() + "\", " + variant.getFieldName();
+                put(String.format("instruction.add(%s, %s);", field, value));
             } else {
                 int start = variant.getReturnSubrule().getStart();
                 int length = variant.getReturnSubrule().getLength();
-                
-                value = String.format("readBytes(start + %d, %d)", start, length);
+                if (length > UNIT_SIZE_BITS) {
+                    throw new SemanticException(
+                            String.format(
+                                    "Sub-rule %s length %d is over maximum %d bits",
+                                    variant.getReturnSubrule().getName(), length, UNIT_SIZE_BITS),
+                            variant
+                    );
+                }
+
+                if (start == 0) {
+                    value = String.format("readBits(start, %d)", length);
+                } else {
+                    value = String.format("readBits(start + %d, %d)", start, length);
+                }
+                put(String.format("instruction.add(%s, %s, %d);", field, value, length));
             }
-            
-            put(String.format("instruction.add(%s, %s);", field, value));
         }
         
         variant.acceptChildren(this);
@@ -183,9 +219,14 @@ public class GenerateMethodsVisitor extends Visitor {
         
         if (!subrule.getRule().hasOnlyOneName())
             fieldToWrite = ", " + subrule.getFieldName();
-        
-        put(subrule.getRule().getMethodName() + "(start + " + subrule.getStart()
-                + fieldToWrite + ");");
+
+        String methodName = subrule.getRule().getMethodName();
+        int start = subrule.getStart();
+        if (start == 0) {
+            put(methodName + "(start" + fieldToWrite + ");");
+        } else {
+            put(methodName + "(start + " + subrule.getStart() + fieldToWrite + ");");
+        }
     }
     
     /**

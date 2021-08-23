@@ -29,7 +29,7 @@ public class Value extends TreeNode {
     
     private final String name;
     private Rule rule;
-    private List<String> strategies = Collections.singletonList("little_endian");
+    private List<String> strategies = Collections.emptyList();
 
     /**
      * Constructs the value.

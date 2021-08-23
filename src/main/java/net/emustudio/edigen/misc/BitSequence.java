@@ -36,7 +36,7 @@ public class BitSequence {
     private static final Pattern HEX_NUMBER = Pattern.compile("[0-9a-fA-F]+");
     
     private int length;
-    private BitSet bitSet;
+    private final BitSet bitSet;
     
     /**
      * Constructs a bit sequence with zero length.
