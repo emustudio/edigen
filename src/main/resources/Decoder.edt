@@ -60,7 +60,7 @@ public class %decoder_class% implements Decoder {
      * @return the bytes read
      */
     private int readBits(int start, int length) {
-        return NumberUtils.readBits(instructionBytes, start, length, Strategy.LITTLE_ENDIAN);
+        return NumberUtils.readBits(instructionBytes, start, length, Strategy.BIG_ENDIAN);
     }
     
     %decoder_methods%

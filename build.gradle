@@ -6,8 +6,9 @@ plugins {
 }
 
 group = 'net.emustudio'
-version = '1.4-SNAPSHOT'
 description = 'Emulator Disassembler Generator'
+version = '1.4-SNAPSHOT'
+ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
 
 dependencies {
     testImplementation 'junit:junit:4.13.2'
@@ -83,10 +84,13 @@ tasks.withType(JavaCompile) {
 }
 
 signing {
-    def signingKeyId = findProperty("GPG_KEY_ID") ?: System.getenv("GPG_KEY_ID")
+    required {
+        isReleaseVersion
+    }
+
     def signingKey = findProperty("GPG_KEY") ?: System.getenv("GPG_KEY")
     def signingPassword = findProperty("GPG_PASSWORD") ?: System.getenv("GPG_PASSWORD")
-    useInMemoryPgpKeys(signingKeyId, signingKey, signingPassword)
+    useInMemoryPgpKeys(signingKey, signingPassword)
     sign publishing.publications.mavenJava
 }
 

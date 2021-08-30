@@ -135,7 +135,7 @@ public class %disasm_class% implements Disassembler {
                 codeBuilder.append(String.format("%02X ", number));
             }
             
-            code = codeBuilder.toString();
+            code = codeBuilder.toString().trim();
         } catch (InvalidInstructionException ex) {
             mnemonic = "unknown";
             code = String.format("%02X", memory.read(memoryPosition).byteValue());
@@ -183,7 +183,7 @@ public class %disasm_class% implements Disassembler {
             } else {
                 value = new Bits(
                     NumberUtils.readInt(
-                        instruction.getString(parameter.getRuleCode()).getBytes(), NumberUtils.Strategy.LITTLE_ENDIAN
+                        instruction.getString(parameter.getRuleCode()).getBytes(), NumberUtils.Strategy.BIG_ENDIAN
                     ),
                     instruction.getLength() * 8
                 );
