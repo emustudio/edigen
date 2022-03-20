@@ -23,6 +23,7 @@ public class %decoder_class% implements Decoder {
     private final MemoryContext<? extends Number> memory;
 
     private int unit;
+    private int bitsRead;
     private DecodedInstruction instruction;
     
     %decoder_fields%
@@ -46,8 +47,11 @@ public class %decoder_class% implements Decoder {
         this.instructionBytes = numbersToNativeBytes(memory.read(memoryPosition, MAX_INSTRUCTION_BYTES));
 
         instruction = new DecodedInstruction();
+
+        bitsRead = 0;
         %root_rule%;
-        instruction.setImage(Arrays.copyOfRange(instructionBytes, 0, this.instructionBytes.length));
+
+        instruction.setImage(Arrays.copyOfRange(instructionBytes, 0, (int)Math.max(1, Math.ceil(bitsRead / 8.0))));
         return instruction;
     }
 
@@ -60,6 +64,9 @@ public class %decoder_class% implements Decoder {
      * @return the bytes read
      */
     private int readBits(int start, int length) {
+        if (bitsRead < start + length) {
+            bitsRead = start + length;
+        }
         return NumberUtils.readBits(instructionBytes, start, length, Strategy.BIG_ENDIAN);
     }
     

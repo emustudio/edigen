@@ -76,6 +76,7 @@ public class %disasm_class% implements Disassembler {
     private final MemoryContext<? extends Number> memory;
     private final Decoder decoder;
     private final Formatter formatter = Formatter.DEFAULT;
+    private boolean allowRuleFormatting = true;
 
     static {
         String[] formats = {
@@ -143,6 +144,30 @@ public class %disasm_class% implements Disassembler {
         
         return new DisassembledInstruction(memoryPosition, mnemonic, code);
     }
+
+    /**
+     * Allows/disallows formatting of rules.
+     *
+     * If allowed (true by default), formatting symbols (like "%x", etc.) in particular rules will be
+     * interpreted, otherwise they won't.
+     *
+     * @param allowRuleFormatting true if rule formatting should be allowed (default), false otherwise.
+     */
+    public void setAllowRuleFormatting(boolean allowRuleFormatting) {
+        this.allowRuleFormatting = allowRuleFormatting;
+    }
+
+    /**
+     * Return true, if rule formatting is allowed.
+     *
+     * If allowed (true by default), formatting symbols (like "%x", etc.) in particular rules will be
+     * interpreted, otherwise they won't.
+     *
+     * @return true if rule-formatting is allowed, false otherwise
+     */
+    public boolean isAllowRuleFormatting() {
+        return allowRuleFormatting;
+    }
     
     /**
      * Returns an address of the instruction located right after the current
@@ -170,26 +195,26 @@ public class %disasm_class% implements Disassembler {
         int position = 0;
         
         for (Parameter parameter : format.getParameters()) {
-            position = mnemonic.indexOf("%", position);
+            if (allowRuleFormatting) {
+                position = mnemonic.indexOf("%");
+            } else {
+                position = mnemonic.indexOf("%", position);
+            }
             if (position == -1 || position == mnemonic.length()) {
                 break;
             }
             
+            String replaced;
             Bits value = instruction.getBits(parameter.getRuleCode());
             if (value != null) {
                 for (UnaryOperator<Bits> strategy : parameter.getStrategies()) {
                     value = strategy.apply(value);
                 }
+                replaced = formatter.format(mnemonic.charAt(position + 1), value);
             } else {
-                value = new Bits(
-                    NumberUtils.readInt(
-                        instruction.getString(parameter.getRuleCode()).getBytes(), NumberUtils.Strategy.BIG_ENDIAN
-                    ),
-                    instruction.getLength() * 8
-                );
+                replaced = instruction.getString(parameter.getRuleCode());
             }
 
-            String replaced = formatter.format(mnemonic.charAt(position + 1), value);
             mnemonic.replace(position, position + 2, replaced);
             position += replaced.length();
         }
