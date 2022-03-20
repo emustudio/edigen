@@ -76,7 +76,6 @@ public class %disasm_class% implements Disassembler {
     private final MemoryContext<? extends Number> memory;
     private final Decoder decoder;
     private final Formatter formatter = Formatter.DEFAULT;
-    private boolean allowRuleFormatting = true;
 
     static {
         String[] formats = {
