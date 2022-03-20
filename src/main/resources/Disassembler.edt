@@ -146,30 +146,6 @@ public class %disasm_class% implements Disassembler {
     }
 
     /**
-     * Allows/disallows formatting of rules.
-     *
-     * If allowed (true by default), formatting symbols (like "%x", etc.) in particular rules will be
-     * interpreted, otherwise they won't.
-     *
-     * @param allowRuleFormatting true if rule formatting should be allowed (default), false otherwise.
-     */
-    public void setAllowRuleFormatting(boolean allowRuleFormatting) {
-        this.allowRuleFormatting = allowRuleFormatting;
-    }
-
-    /**
-     * Return true, if rule formatting is allowed.
-     *
-     * If allowed (true by default), formatting symbols (like "%x", etc.) in particular rules will be
-     * interpreted, otherwise they won't.
-     *
-     * @return true if rule-formatting is allowed, false otherwise
-     */
-    public boolean isAllowRuleFormatting() {
-        return allowRuleFormatting;
-    }
-    
-    /**
      * Returns an address of the instruction located right after the current
      * instruction.
      * @param memoryPosition the starting address of the current instruction
@@ -195,11 +171,7 @@ public class %disasm_class% implements Disassembler {
         int position = 0;
         
         for (Parameter parameter : format.getParameters()) {
-            if (allowRuleFormatting) {
-                position = mnemonic.indexOf("%");
-            } else {
-                position = mnemonic.indexOf("%", position);
-            }
+            position = mnemonic.indexOf("%");
             if (position == -1 || position == mnemonic.length()) {
                 break;
             }

@@ -155,3 +155,65 @@ instruction = "JMP": line(5)     ignore8(8) 000 ignore16(16) |
 "%s %X" = instruction line(shift_left, shift_left, shift_left, bit_reverse, absolute) ignore8 ignore16;
 "%s" = instruction ignore8 ignore16;
 ```
+
+### Formatting in rule names
+ 
+This feature allows to specify formatting in rule names. This feature is enabled only in case a default disassembler
+template is used. An example follows (partial Z80 CPU decoder):
+
+```
+root instruction;
+
+# http://www.z80.info/decoding.htm
+instruction =
+  "nop":         00 000 000                       |  # x=0, y=0, z=0
+  "ex af, af'":  00 001 000                       |  # x=0, y=1, z=0
+  "djnz %X":     00 010 000 imm8                  |  # x=0, y=2, z=0
+  "jr %X":       00 011 000 imm8                  |  # x=0, y=3, z=0
+  "jr %s, %X":   00 1 cc_jr(2) 000 imm8           |  # x=0, y=4..7, z=0
+  "ld %s, %X":   00 rp(2) 0 001 imm16             |  # x=0, p=rp, q=0, z=1
+  "add hl, %s":  00 rp(2) 1 001                   |  # x=0, p=rp, q=1, z=1
+  "ld (bc), a":  00 000 010                       |  # x=0, p=0, q=0, z=2
+  "ld (de), a":  00 010 010                       |  # x=0, p=1, q=0, z=2
+  ...
+
+cc_jr =
+  "nz": 00 |
+  "z":  01 |
+  "nc": 10 |
+  "c":  11 ;
+
+rp =
+  "bc": 00 |
+  "de": 01 |
+  "hl": 10 |
+  "sp": 11 ;
+
+imm8 = imm8: imm8(8);
+imm16 = imm16: imm16(16);
+
+%%
+
+"%s" = instruction cc_jr imm8;
+"%s" = instruction rp imm16;
+"%s" = instruction rp;
+"%s" = instruction imm8;
+```
+
+In this case, the disassembler will recognize formatting symbolics in the rule names, and recursively replaces the
+original disassembler format symbols with the actual values.
+
+So in the example, format `"%s" = instruction cc_jr imm8;` matches rule `"jr %s, %X":   00 1 cc_jr(2) 000 imm8`.
+This format has three arguments: `instruction`, `cc_jr` and `imm8`. So, the disassembler will:
+
+1. Replace format `"%s"` with argument `instruction`, which is a rule returning string `"jr %s, %X"`.
+2. Now the format `"jr %s, %X"` is recursively replacing first found format symbol (`%s`) with the next argument,
+   which is result of `cc_jr` (if bits in `cc_jr` are e.g. `10`, then the result would be `nc`). So the new
+   value of the format will now be: `"jr nc, %X"`.
+3. Lastly, the value of `imm8` is to be a replacement for last `%X`. The `imm8` is returning a 8-bit number,
+   the actual value of the binary match (e.g. for value `00100000` the `%X` would convert it to hexadecimal value
+   0x20). Now the format results in: `jr nc, 20` 
+
+*NOTE*: If you do not want formatting to be interpreted, just prepend another `%` to the unwanted format syntax, e.g.
+   for `%X` just do `%%X`.
+
