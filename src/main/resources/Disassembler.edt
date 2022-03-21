@@ -143,7 +143,7 @@ public class %disasm_class% implements Disassembler {
         
         return new DisassembledInstruction(memoryPosition, mnemonic, code);
     }
-    
+
     /**
      * Returns an address of the instruction located right after the current
      * instruction.
@@ -170,26 +170,22 @@ public class %disasm_class% implements Disassembler {
         int position = 0;
         
         for (Parameter parameter : format.getParameters()) {
-            position = mnemonic.indexOf("%", position);
+            position = mnemonic.indexOf("%");
             if (position == -1 || position == mnemonic.length()) {
                 break;
             }
             
+            String replaced;
             Bits value = instruction.getBits(parameter.getRuleCode());
             if (value != null) {
                 for (UnaryOperator<Bits> strategy : parameter.getStrategies()) {
                     value = strategy.apply(value);
                 }
+                replaced = formatter.format(mnemonic.charAt(position + 1), value);
             } else {
-                value = new Bits(
-                    NumberUtils.readInt(
-                        instruction.getString(parameter.getRuleCode()).getBytes(), NumberUtils.Strategy.BIG_ENDIAN
-                    ),
-                    instruction.getLength() * 8
-                );
+                replaced = instruction.getString(parameter.getRuleCode());
             }
 
-            String replaced = formatter.format(mnemonic.charAt(position + 1), value);
             mnemonic.replace(position, position + 2, replaced);
             position += replaced.length();
         }
