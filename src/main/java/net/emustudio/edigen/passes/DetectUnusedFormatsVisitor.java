@@ -47,11 +47,9 @@ public class DetectUnusedFormatsVisitor extends Visitor {
 
     @Override
     public void visit(Variant variant) throws SemanticException {
-        if (!subrules.isEmpty()) {
-            storeInstructionImage();
-            subrules.clear();
-        }
+        subrules.clear();
         super.visit(variant);
+        storeInstructionImage();
     }
 
     @Override
