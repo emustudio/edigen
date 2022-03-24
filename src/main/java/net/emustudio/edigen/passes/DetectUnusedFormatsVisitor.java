@@ -34,12 +34,10 @@ public class DetectUnusedFormatsVisitor extends Visitor {
 
     @Override
     public void visit(Rule rule) throws SemanticException {
-        if (currentRule != null) {
-            storeInstructionImage();
-        }
         this.currentRule = rule;
         this.subrules.clear();
         super.visit(rule);
+        storeInstructionImage();
     }
 
     @Override
