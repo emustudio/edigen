@@ -111,7 +111,8 @@ public class Translator {
                 new GroupVisitor(),
                 new DetectAmbiguousVisitor(),
                 new NarrowMasksVisitor(),
-                new RemoveUnreachablePatternsVisitor()
+                new RemoveUnreachablePatternsVisitor(),
+                new DetectUnusedFormatsVisitor()
         };
 
         if (settings.containsKey(DEBUG))
