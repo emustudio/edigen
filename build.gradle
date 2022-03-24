@@ -7,7 +7,7 @@ plugins {
 
 group = 'net.emustudio'
 description = 'Emulator Disassembler Generator'
-version = '1.5.0-SNAPSHOT'
+version = '1.5.0'
 ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
 
 dependencies {
