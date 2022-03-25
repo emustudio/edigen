@@ -126,9 +126,11 @@ public class Subrule extends TreeNode {
      * 
      * Used during name resolution.
      * @param rule the rule object
+     * @return this
      */
-    public void setRule(Rule rule) {
+    public Subrule setRule(Rule rule) {
         this.rule = rule;
+        return this;
     }
     
     /**
