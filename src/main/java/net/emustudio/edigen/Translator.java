@@ -112,7 +112,7 @@ public class Translator {
                 new DetectAmbiguousVisitor(),
                 new NarrowMasksVisitor(),
                 new RemoveUnreachablePatternsVisitor(),
-                new DetectUnusedFormatsVisitor()
+                new DetectUnreachableFormatsVisitor()
         };
 
         if (settings.containsKey(DEBUG))

@@ -5,23 +5,49 @@ import net.emustudio.edigen.nodes.*;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import static net.emustudio.edigen.passes.PassUtils.*;
 
-public class DetectUnusedFormatsVisitorTest {
+public class DetectUnreachableFormatsVisitorTest {
     private Decoder decoder;
     private Disassembler disassembler;
     private Specification specification;
+    private Rule rootRule;
 
     @Before
     public void setUp() {
-        decoder = new Decoder();
+        decoder = new Decoder("A");
+        rootRule = mkRule("A").setRoot(true, "A");
+        decoder.addChildren(rootRule);
+        Set<Rule> rootR = new HashSet<>();
+        rootR.add(rootRule);
+        decoder.setRootRules(rootR);
+
         disassembler = new Disassembler();
         specification = new Specification(decoder, disassembler);
     }
 
 
     @Test(expected = SemanticException.class)
-    public void testUnusedFormatIsDetected() throws SemanticException {
+    public void testUnreachableFormatIsDetected() throws SemanticException {
+        // Rule A
+        //   Variant (return "Bs")
+        //     Subrule B
+        //   Variant
+        //     Subrule C
+        //
+        // Rule B
+        //   Variant (return subrule B)
+        //
+        // Rule C
+        //   Variant (return "Cs")
+
+        // Possibilities:
+        //  A,B
+        //  A,C
+
         Rule rb = nest(
                 mkRule("B"),
                 mkVariant(new Subrule("B")));
@@ -29,19 +55,14 @@ public class DetectUnusedFormatsVisitorTest {
                 mkRule("C"),
                 mkVariant("Cs"));
 
-        decoder.addChildren(
-                mkRule("A")
-                        .setRoot(true, "A")
-                        .addChildren(
-                                nest(
-                                        mkVariant("Bs"),
-                                        mkSubrule("B").setRule(rb)),
-                                nest(
-                                        mkVariant(),
-                                        mkSubrule("C").setRule(rc))),
-                rb,
-                rc
-        );
+        rootRule.addChildren(
+                nest(
+                        mkVariant("Bs"),
+                        mkSubrule("B").setRule(rb)),
+                nest(
+                        mkVariant(),
+                        mkSubrule("C").setRule(rc)));
+        decoder.addChildren(rb, rc);
 
         disassembler.addChildren(
                 new Format("").addChildren(
@@ -55,11 +76,26 @@ public class DetectUnusedFormatsVisitorTest {
                 )
         );
 
-        new DetectUnusedFormatsVisitor().visit(specification);
+        runTest();
     }
 
     @Test
     public void testDifferentParamsOrderIsOk() throws SemanticException {
+        // Rule A
+        //   Variant (return "A")
+        //     Subrule B
+        //     Subrule C
+        //
+        // Rule B
+        //   Variant (return "Bs")
+        //     Subrule B
+        //
+        // Rule C
+        //   Variant (return "Cs")
+
+        // Possibilities:
+        // A,B,C
+
         Rule rb = nest(
                 mkRule("B"),
                 mkVariant("Bs"),
@@ -69,15 +105,12 @@ public class DetectUnusedFormatsVisitorTest {
                 mkRule("C"),
                 mkVariant("Cs"));
 
-        decoder.addChildren(
-                nest(
-                        mkRule("A").setRoot(true, "A"),
-                        mkVariant("A").addChildren(
-                                mkSubrule("B").setRule(rb),
-                                mkSubrule("C").setRule(rc))),
-                rb,
-                rc
-        );
+        rootRule.addChildren(
+                mkVariant("A").addChildren(
+                        mkSubrule("B").setRule(rb),
+                        mkSubrule("C").setRule(rc)));
+
+        decoder.addChildren(rb, rc);
 
         disassembler.addChildren(
                 new Format("").addChildren(
@@ -87,11 +120,26 @@ public class DetectUnusedFormatsVisitorTest {
                 )
         );
 
-        new DetectUnusedFormatsVisitor().visit(specification);
+        runTest();
     }
 
     @Test(expected = SemanticException.class)
     public void testPartialPathIsNotAllowed() throws SemanticException {
+        // Rule A
+        //   Variant (return "A")
+        //     Subrule B
+        //     Subrule C
+        //
+        // Rule B
+        //   Variant (return "Bs")
+        //     Subrule B
+        //
+        // Rule C
+        //   Variant (return "Cs")
+        //
+        // Possibilities:
+        //   A,B,C
+        //
         Rule rb = nest(
                 mkRule("B"),
                 mkVariant("Bs"),
@@ -101,15 +149,11 @@ public class DetectUnusedFormatsVisitorTest {
                 mkRule("C"),
                 mkVariant("Cs"));
 
-        decoder.addChildren(
-                nest(
-                        mkRule("A").setRoot(true, "A"),
-                        mkVariant("A").addChildren(
-                                mkSubrule("B").setRule(rb),
-                                mkSubrule("C").setRule(rc))),
-                rb,
-                rc
-        );
+        rootRule.addChildren(
+                mkVariant("A").addChildren(
+                        mkSubrule("B").setRule(rb),
+                        mkSubrule("C").setRule(rc)));
+        decoder.addChildren(rb, rc);
 
         disassembler.addChildren(
                 new Format("").addChildren(
@@ -118,25 +162,33 @@ public class DetectUnusedFormatsVisitorTest {
                 )
         );
 
-        new DetectUnusedFormatsVisitor().visit(specification);
+        runTest();
     }
 
     @Test(expected = SemanticException.class)
     public void testMissingParamsAreDetected() throws SemanticException {
+        // Rule A
+        //   Variant (return "As")
+        //     Subrule B
+        //     Subrule C
+        //
+        // Rule B
+        //   Variant (return "Bs")
+        //     Subrule B
+        //
+        // Possibilities:
+        //   A,B
         Rule rb = nest(
                 mkRule("B"),
                 mkVariant("Bs"),
                 mkSubrule("B", 7, null));
 
-        decoder.addChildren(
-                nest(
-                        mkRule("A").setRoot(true, "A"),
-                        mkVariant("As").addChildren(
-                                mkSubrule("B").setRule(rb),
-                                mkSubrule("C")
-                        )),
-                rb
-        );
+        rootRule.addChildren(
+                mkVariant("As").addChildren(
+                        mkSubrule("B").setRule(rb),
+                        mkSubrule("C")
+                ));
+        decoder.addChildren(rb);
 
         disassembler.addChildren(
                 new Format("").addChildren(
@@ -150,11 +202,28 @@ public class DetectUnusedFormatsVisitorTest {
                 )
         );
 
-        new DetectUnusedFormatsVisitor().visit(specification);
+        runTest();
     }
 
     @Test
     public void testNestedSubrulesAreOk() throws SemanticException {
+        // Rule A
+        //   Variant
+        //     Subrule B
+        //     Subrule C
+        //
+        // Rule B
+        //   Variant (return subrule B)
+        //
+        // Rule D
+        //   Variant (return "Ds")
+        //
+        // Rule C
+        //   Variant
+        //     Subrule D
+        //
+        // Possibilities:
+        //   B, D
         Rule rb = nest(
                 mkRule("B"),
                 mkVariant(new Subrule("B")));
@@ -169,17 +238,13 @@ public class DetectUnusedFormatsVisitorTest {
                         mkSubrule("D").setRule(rd)
                 ));
 
-        decoder.addChildren(
-                nest(
-                        mkRule("A").setRoot(true, "A"),
-                        mkVariant().addChildren(
-                                mkSubrule("B").setRule(rb),
-                                mkSubrule("C").setRule(rc)
-                        )),
-                rb,
-                rc,
-                rd
-        );
+        rootRule.addChildren(
+                mkVariant().addChildren(
+                        mkSubrule("B").setRule(rb),
+                        mkSubrule("C").setRule(rc)
+                ));
+
+        decoder.addChildren(rb, rc, rd);
 
         disassembler.addChildren(
                 new Format("").addChildren(
@@ -188,23 +253,31 @@ public class DetectUnusedFormatsVisitorTest {
                 )
         );
 
-        new DetectUnusedFormatsVisitor().visit(specification);
+        runTest();
     }
 
     @Test
     public void testMultipleRuleNamesAreOk() throws SemanticException {
+        // Rule A
+        //   Variant (return "A")
+        //     Subrule B2
+        //
+        // Rule B, B2
+        //   Variant (return "Bs")
+        //     Subrule B
+        //
+        // Possibilities:
+        //   A, B2
+
         Rule rb = nest(
                 mkRule("B", "B2"),
                 mkVariant("Bs"),
                 mkSubrule("B", 7, null));
 
-        decoder.addChildren(
-                nest(
-                        mkRule("A").setRoot(true, "A"),
-                        mkVariant("A").addChildren(
-                                mkSubrule("B2").setRule(rb))),
-                rb
-        );
+        rootRule.addChildren(
+                mkVariant("A").addChildren(
+                        mkSubrule("B2").setRule(rb)));
+        decoder.addChildren(rb);
 
         disassembler.addChildren(
                 new Format("").addChildren(
@@ -213,11 +286,30 @@ public class DetectUnusedFormatsVisitorTest {
                 )
         );
 
-        new DetectUnusedFormatsVisitor().visit(specification);
+        runTest();
     }
 
     @Test(expected = SemanticException.class)
     public void testDifferentVariantsInNotRootRule() throws SemanticException {
+        // Rule A
+        //   Variant (return "B")
+        //     Subrule B
+        //
+        // Rule B
+        //   Variant (return "C")
+        //     Subrule C
+        //   Variant (return "D")
+        //     Subrule D
+        //
+        // Rule C
+        //   Variant (return "nested1")
+        //
+        // Rule D
+        //   Variant (return "nested2")
+        //
+        // Possibilities:
+        //   A, B, C
+        //   A, B, D
         Rule rc = nest(
                 mkRule("nested1"),
                 mkVariant("nested1"));
@@ -233,13 +325,11 @@ public class DetectUnusedFormatsVisitorTest {
                         mkVariant("D"),
                         mkSubrule("D").setRule(rd)));
 
-        decoder.addChildren(
+        rootRule.addChildren(
                 nest(
-                        mkRule("A").setRoot(true, "A"),
                         mkVariant("B"),
-                        mkSubrule("B").setRule(rb)),
-                rb
-        );
+                        mkSubrule("B").setRule(rb)));
+        decoder.addChildren(rb);
 
         disassembler.addChildren(
                 new Format("").addChildren(
@@ -250,6 +340,11 @@ public class DetectUnusedFormatsVisitorTest {
                 )
         );
 
-        new DetectUnusedFormatsVisitor().visit(specification);
+        runTest();
+    }
+
+    private void runTest() throws SemanticException {
+        DetectUnreachableFormatsVisitor visitor = new DetectUnreachableFormatsVisitor();
+        visitor.visit(specification);
     }
 }
