@@ -129,13 +129,15 @@ public class Rule extends TreeNode {
      * Sets if this rule is a root rule.
      * @param isRoot true if it is a root rule, false otherwise
      * @param rootRuleName root rule name used in root rules declaration
+     * @return this
      */
-    public void setRoot(boolean isRoot, String rootRuleName) {
+    public Rule setRoot(boolean isRoot, String rootRuleName) {
         if (!names.contains(rootRuleName)) {
             throw new IllegalArgumentException("Root rule name must be one of rule names!");
         }
         this.isRoot = isRoot;
         this.rootRuleName = rootRuleName;
+        return this;
     }
     
     /**
