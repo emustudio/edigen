@@ -29,6 +29,70 @@ public class DetectUnreachableFormatsVisitorTest {
         specification = new Specification(decoder, disassembler);
     }
 
+    @Test
+    public void testMultipleVariants() throws SemanticException {
+        // R A
+        //   V (r)
+        //     S B
+        //     S D
+        //   V (r)
+        //     S E
+        //   V
+        //     S C
+        //       V (r)
+        //         S F
+        //         S G
+        //   V (r)
+        //     S K
+        //       V (r)
+        //         S F
+        //       V (r)
+        //         S G
+        //     S H
+        //       V (r)
+        //         S I
+        //       V (r)
+        //         S J
+
+        Rule b = nest(mkRule("B"), mkVariant(new Subrule("B")));
+        Rule d = nest(mkRule("D"), mkVariant(new Subrule("D")));
+        Rule e = nest(mkRule("E"), mkVariant(new Subrule("E")));
+        Rule f = nest(mkRule("F"), mkVariant(new Subrule("F")));
+        Rule g = nest(mkRule("G"), mkVariant(new Subrule("G")));
+        Rule i = nest(mkRule("I"), mkVariant(new Subrule("I")));
+        Rule j = nest(mkRule("J"), mkVariant(new Subrule("J")));
+
+        Rule c = nest(
+                mkRule("C"),
+                mkVariant("FG").addChildren(
+                        mkSubrule("F").setRule(f),
+                        mkSubrule("G").setRule(g)));
+
+        Rule k = (Rule) mkRule("K").addChildren(
+                nest(mkVariant("F"), mkSubrule("F").setRule(f)),
+                nest(mkVariant("G"), mkSubrule("G").setRule(g)));
+
+        Rule h = (Rule) mkRule("H").addChildren(
+                nest(mkVariant("I"), mkSubrule("I").setRule(i)),
+                nest(mkVariant("J"), mkSubrule("J").setRule(j)));
+
+
+        rootRule.addChildren(
+                mkVariant("BD").addChildren(
+                        mkSubrule("B").setRule(b),
+                        mkSubrule("D").setRule(d)),
+                nest(mkVariant("E"), mkSubrule("E").setRule(e)),
+                nest(mkVariant(), mkSubrule("C").setRule(c)),
+                mkVariant("K").addChildren(
+                        mkSubrule("K").setRule(k),
+                        mkSubrule("H").setRule(h)));
+        decoder.addChildren(
+                b, c, d, e, f, g, h, i, j, k
+        );
+
+        runTest();
+    }
+
 
     @Test(expected = SemanticException.class)
     public void testUnreachableFormatIsDetected() throws SemanticException {
@@ -255,6 +319,84 @@ public class DetectUnreachableFormatsVisitorTest {
 
         runTest();
     }
+
+    @Test
+    public void testMultipleNestedSubrulesAreOk() throws SemanticException {
+        // Rule A
+        //   Variant
+        //     Subrule B
+        //     Subrule F
+        //
+        // Rule B
+        //   Variant
+        //     Subrule E
+        //   Variant (return "aa")
+        //     Subrule C
+        //     Subrule D
+        //
+        // Rule C
+        //   Variant (return "Cs")
+        //
+        // Rule D
+        //   Variant (return "Ds")
+        //
+        // Rule E
+        //   Variant (return "Es")
+        //
+        // Rule F
+        //   Variant (return "Fs")
+        //
+        // Possibilities:
+        //   E, F
+        //   B, C, D, F
+        Rule rc = nest(
+                mkRule("C"),
+                mkVariant("Cs"));
+
+        Rule rd = nest(
+                mkRule("D"),
+                mkVariant("Ds"));
+
+        Rule re = nest(
+                mkRule("E"),
+                mkVariant("Es"));
+
+        Rule rf = nest(
+                mkRule("F"),
+                mkVariant("Fs"));
+
+
+        Rule rb = (Rule) mkRule("C").addChildren(
+                mkVariant().addChildren(
+                        mkSubrule("E").setRule(re)),
+                mkVariant("aa").addChildren(
+                        mkSubrule("C").setRule(rc),
+                        mkSubrule("D").setRule(rd)));
+
+        rootRule.addChildren(
+                mkVariant().addChildren(
+                        mkSubrule("B").setRule(rb),
+                        mkSubrule("F").setRule(rf)
+                ));
+
+        decoder.addChildren(rb, rc, rd, re, rf);
+
+        disassembler.addChildren(
+                new Format("").addChildren(
+                        new Value("B"),
+                        new Value("C"),
+                        new Value("D"),
+                        new Value("F")
+                ),
+                new Format("").addChildren(
+                        new Value("E"),
+                        new Value("F")
+                )
+        );
+
+        runTest();
+    }
+
 
     @Test
     public void testMultipleRuleNamesAreOk() throws SemanticException {

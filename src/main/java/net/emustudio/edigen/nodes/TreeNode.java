@@ -73,7 +73,7 @@ public abstract class TreeNode {
      * insertion during the iteration.
      * @return the iterable collection of all children
      */
-    public Iterable<TreeNode> getChildren() {
+    public List<TreeNode> getChildren() {
         return new ArrayList<>(children.values());
     }
     
@@ -107,6 +107,14 @@ public abstract class TreeNode {
         }
         return this;
     }
+
+    public TreeNode addChildren(List<TreeNode> children) {
+        for (TreeNode child : children) {
+            addChild(child);
+        }
+        return this;
+    }
+
 
     /**
      * Removes this node from the tree.
