@@ -75,4 +75,9 @@ public class Specification extends TreeNode {
     public String toString() {
         return "Specification";
     }
+
+    @Override
+    public TreeNode shallowCopy() {
+        return new Specification(decoder, disassembler);
+    }
 }

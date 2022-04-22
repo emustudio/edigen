@@ -173,4 +173,11 @@ public class Rule extends TreeNode {
     public int hashCode() {
         return names != null ? names.hashCode() : 0;
     }
+
+    @Override
+    public TreeNode shallowCopy() {
+        Rule cp = new Rule(names);
+        cp.setRoot(isRoot, rootRuleName);
+        return cp;
+    }
 }

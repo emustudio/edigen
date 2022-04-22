@@ -158,4 +158,12 @@ public class Variant extends TreeNode {
         return Objects.equals(returnSubrule, variant.returnSubrule);
     }
 
+    @Override
+    public TreeNode shallowCopy() {
+        Variant cp = new Variant();
+        cp.returnType = returnType;
+        cp.returnString = returnString;
+        cp.returnSubrule = returnSubrule;
+        return cp;
+    }
 }

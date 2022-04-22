@@ -43,4 +43,9 @@ public class Disassembler extends TreeNode {
     public String toString() {
         return "Disassembler";
     }
+
+    @Override
+    public TreeNode shallowCopy() {
+        return new Disassembler();
+    }
 }

@@ -117,4 +117,11 @@ public class Mask extends TreeNode {
         result = 31 * result + (start != null ? start.hashCode() : 0);
         return result;
     }
+
+    @Override
+    public TreeNode shallowCopy() {
+        Mask cp = new Mask(bits);
+        cp.setStart(start);
+        return cp;
+    }
 }

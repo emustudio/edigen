@@ -128,4 +128,11 @@ public class Decoder extends TreeNode {
     public String toString() {
         return "Decoder";
     }
+
+    @Override
+    public TreeNode shallowCopy() {
+        Decoder cp = new Decoder(declaredRootRuleNames);
+        cp.setRootRules(rootRules);
+        return cp;
+    }
 }

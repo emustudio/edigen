@@ -117,4 +117,12 @@ public class Value extends TreeNode {
         if (!Objects.equals(rule, value.rule)) return false;
         return Objects.equals(strategies, value.strategies);
     }
+
+    @Override
+    public TreeNode shallowCopy() {
+        Value cp = new Value(name);
+        cp.setRule(rule);
+        cp.setStrategies(strategies);
+        return cp;
+    }
 }
