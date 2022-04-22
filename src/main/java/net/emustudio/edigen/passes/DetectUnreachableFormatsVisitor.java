@@ -65,8 +65,14 @@ public class DetectUnreachableFormatsVisitor extends Visitor {
 
         // detects unreachable formats (missing formats are ok)
         if (!reachable.containsAll(formats)) {
-            formats.removeAll(reachable);
-            throw new SemanticException("Unreachable formats: " + formats, disassembler);
+            Set<Set<String>> cp = new HashSet<>(formats);
+            cp.removeAll(reachable);
+            throw new SemanticException("Unreachable formats: " + cp, disassembler);
+        }
+        if (!formats.containsAll(reachable)) {
+            Set<Set<String>> cp = new HashSet<>(reachable);
+            cp.removeAll(formats);
+            System.out.println("Missing formats: " + cp);
         }
     }
 
