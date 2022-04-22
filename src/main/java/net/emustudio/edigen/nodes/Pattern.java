@@ -88,4 +88,9 @@ public class Pattern extends TreeNode {
     public int hashCode() {
         return bits != null ? bits.hashCode() : 0;
     }
+
+    @Override
+    public TreeNode shallowCopy() {
+        return new Pattern(bits);
+    }
 }

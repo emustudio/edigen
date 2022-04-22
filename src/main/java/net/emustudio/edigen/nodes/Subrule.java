@@ -200,4 +200,14 @@ public class Subrule extends TreeNode {
         result = 31 * result + (rule != null ? rule.hashCode() : 0);
         return result;
     }
+
+    @Override
+    public TreeNode shallowCopy() {
+        Subrule cp = new Subrule(name, length, prePattern);
+        cp.setRule(rule);
+        if (start != null) {
+            cp.setStart(start);
+        }
+        return cp;
+    }
 }

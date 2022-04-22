@@ -63,4 +63,9 @@ public class Format extends TreeNode {
     public String toString() {
         return "Format: \"" + formatString + '"';
     }
+
+    @Override
+    public TreeNode shallowCopy() {
+        return new Format(formatString);
+    }
 }

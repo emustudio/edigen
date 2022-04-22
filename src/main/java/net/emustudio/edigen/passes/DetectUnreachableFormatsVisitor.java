@@ -8,11 +8,32 @@ import java.util.*;
 
 /**
  * Detects unreachable disassembler formats.
+ *
+ * root instruction;
+ * instruction =
+ *   "nop": 00000000 |
+ *   other
+ * ;
+ *
+ * other =
+ *   "hey": 10000000 |
+ *   "arg %d": 10000001 arg
+ *   ;
+ *
+ * arg = arg: arg(8);
+ *
+ * %%
+ *
+ * "%s" = instruction arg;    // unreachable
  */
 public class DetectUnreachableFormatsVisitor extends Visitor {
     private final Set<Set<String>> reachable = new HashSet<>();
-    public final Set<Set<String>> formats = new HashSet<>();
+    private final Set<Set<String>> formats = new HashSet<>();
     private Set<String> currentFormat;
+
+    public Set<Set<String>> getReachable() {
+        return new HashSet<>(reachable);
+    }
 
     @Override
     public void visit(Decoder decoder) throws SemanticException {
@@ -45,7 +66,7 @@ public class DetectUnreachableFormatsVisitor extends Visitor {
         // detects unreachable formats (missing formats are ok)
         if (!reachable.containsAll(formats)) {
             formats.removeAll(reachable);
-            throw new SemanticException("Some disassembler formats are unreachable: " + formats, disassembler);
+            throw new SemanticException("Unreachable formats: " + formats, disassembler);
         }
     }
 
@@ -139,14 +160,6 @@ public class DetectUnreachableFormatsVisitor extends Visitor {
                 subrule.acceptChildren(this);
             }
         }
-
-        @Override
-        public void visit(Variant variant) throws SemanticException {
-            variant.acceptChildren(this);
-            if (variant.returns() && variant.childCount() == 0) {
-                variant.remove();
-            }
-        }
     }
 
     /**
@@ -156,13 +169,13 @@ public class DetectUnreachableFormatsVisitor extends Visitor {
      *
      *  Rule A
      *    Variant
-     *      Subrule B                  : ?    <-- this should be eliminated for B - E (just "E" should exist)
-     *        Variant                  : N/A
-     *          Subrule E              : "E"
-     *        Variant (return "aa")    : "B"
-     *          Subrule C              : "C"
-     *          Subrule D              : "D"
-     *      Subrule F                  : "F"
+     *      Subrule B
+     *        Variant
+     *          Subrule E
+     *        Variant (return "aa")
+     *          Subrule C
+     *          Subrule D
+     *      Subrule F
      *
      * Result:
      *  Rule A
@@ -200,7 +213,7 @@ public class DetectUnreachableFormatsVisitor extends Visitor {
 
         private void addRecursively(TreeNode where, TreeNode what) {
             if (where.childCount() == 0) {
-                where.addChild(what);
+                where.addChild(what.copy());
             } else {
                 for (TreeNode child : where.getChildren()) {
                     addRecursively(child, what);
@@ -211,32 +224,45 @@ public class DetectUnreachableFormatsVisitor extends Visitor {
 
 
     /**
-     *  Rule A
-     *    Variant
-     *      Subrule B
-     *        Variant
-     *          Subrule E
-     *            Subrule F
-     *        Variant (return "aa")
-     *          Subrule C
-     *            Subrule D
-     *              Subrule F
+     * Tough logic of eliminating variants. Tough, because variants can but don't have to return.
      *
-     *   Rule A
-     *     Subrule E
-     *       Subrule F
-     *     Subrule B
-     *       Subrule C
-     *         Subrule D
-     *           Subrule F
+     * Returning variants peculiarities:
+     * - if the parent is rule, we must add artificial subrule and add variant's children to it before removing the
+     *   variant (otherwise rule "A" wont be recognized)
+     *
+     *   Rule A                        Rule A
+     *     Variant (return "a")   ->     Subrule A
+     *       ...                           ...
+     *
+     * - if variant has no children, instead just removing variant we must replace it with artificial subrule
+     *
+     *   Subrule C                         Subrule D
+     *     Variant                           Subrule D
+     *       Subrule D                ->   Subrule C
+     *         Variant (return "d")
+     *     Variant (return "c")
+     *
+     * Non-returning variants peculiarities:
+     * - non-returning variants and it's parent subrules must be eliminated when the parent has only one child
+     *   (this variant)
+     *
+     *   Rule A                            Rule A
+     *     Subrule B                         Subrule C
+     *       Variant                   ->
+     *         Subrule C
+     *           Variant (return "c")
+     *
+     * - if parent of non-returning variant has more children, we must keep it:
+     *
+     *   Rule A                            Rule A
+     *     Subrule B                         Subrule C
+     *       Variant                         Subrule B
+     *         Subrule C               ->      Subrule B
+     *           Variant (return "c")
+     *       Variant (return "b")
      *
      */
     private static class EliminateVariantsVisitor extends Visitor {
-
-        @Override
-        public void visit(Rule rule) throws SemanticException {
-            rule.acceptChildren(this);
-        }
 
         @Override
         public void visit(Variant variant) throws SemanticException {
@@ -247,14 +273,27 @@ public class DetectUnreachableFormatsVisitor extends Visitor {
             children.forEach(TreeNode::remove);
             if (!variant.returns() && parent != null) {
                 TreeNode parentParent = parent.getParent();
-                Objects.requireNonNullElse(parentParent, parent).addChildren(children);
+                if (parentParent != null) {
+                    parentParent.addChildren(children);
+                    if (parent.childCount() == 1) {
+                        parent.remove();
+                    }
+                } else {
+                    parent.addChildren(children);
+                }
             } else if (parent != null) {
+                // variant returns
                 if (parent instanceof Rule) {
                     Subrule artificial = new Subrule(((Rule)parent).getNames().get(0));
                     artificial.addChildren(children);
                     parent.addChild(artificial);
                 } else {
-                    parent.addChildren(children);
+                    if (children.isEmpty()) {
+                        Subrule artificial = new Subrule(((Subrule) parent).getName());
+                        parent.addChild(artificial);
+                    } else {
+                        parent.addChildren(children);
+                    }
                 }
             }
             variant.remove();
@@ -262,7 +301,7 @@ public class DetectUnreachableFormatsVisitor extends Visitor {
     }
 
     /**
-     * Collects all separate paths.
+     * Collects all unique paths.
      */
     private static class CollectPathsVisitor extends Visitor {
         final Set<Set<String>> allPaths = new HashSet<>();

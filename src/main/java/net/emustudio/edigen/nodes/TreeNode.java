@@ -115,6 +115,16 @@ public abstract class TreeNode {
         return this;
     }
 
+    public abstract TreeNode shallowCopy();
+
+    public TreeNode copy() {
+        TreeNode cp = shallowCopy();
+        for (TreeNode child : children.values()) {
+            cp.addChild(child.copy());
+        }
+        return cp;
+    }
+
 
     /**
      * Removes this node from the tree.

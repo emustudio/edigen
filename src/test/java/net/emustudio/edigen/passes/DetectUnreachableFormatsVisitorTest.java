@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static net.emustudio.edigen.passes.PassUtils.*;
+import static org.junit.Assert.assertEquals;
 
 public class DetectUnreachableFormatsVisitorTest {
     private Decoder decoder;
@@ -31,29 +32,6 @@ public class DetectUnreachableFormatsVisitorTest {
 
     @Test
     public void testMultipleVariants() throws SemanticException {
-        // R A
-        //   V (r)
-        //     S B
-        //     S D
-        //   V (r)
-        //     S E
-        //   V
-        //     S C
-        //       V (r)
-        //         S F
-        //         S G
-        //   V (r)
-        //     S K
-        //       V (r)
-        //         S F
-        //       V (r)
-        //         S G
-        //     S H
-        //       V (r)
-        //         S I
-        //       V (r)
-        //         S J
-
         Rule b = nest(mkRule("B"), mkVariant(new Subrule("B")));
         Rule d = nest(mkRule("D"), mkVariant(new Subrule("D")));
         Rule e = nest(mkRule("E"), mkVariant(new Subrule("E")));
@@ -90,76 +68,19 @@ public class DetectUnreachableFormatsVisitorTest {
                 b, c, d, e, f, g, h, i, j, k
         );
 
-        runTest();
-    }
-
-
-    @Test(expected = SemanticException.class)
-    public void testUnreachableFormatIsDetected() throws SemanticException {
-        // Rule A
-        //   Variant (return "Bs")
-        //     Subrule B
-        //   Variant
-        //     Subrule C
-        //
-        // Rule B
-        //   Variant (return subrule B)
-        //
-        // Rule C
-        //   Variant (return "Cs")
-
-        // Possibilities:
-        //  A,B
-        //  A,C
-
-        Rule rb = nest(
-                mkRule("B"),
-                mkVariant(new Subrule("B")));
-        Rule rc = nest(
-                mkRule("C"),
-                mkVariant("Cs"));
-
-        rootRule.addChildren(
-                nest(
-                        mkVariant("Bs"),
-                        mkSubrule("B").setRule(rb)),
-                nest(
-                        mkVariant(),
-                        mkSubrule("C").setRule(rc)));
-        decoder.addChildren(rb, rc);
-
-        disassembler.addChildren(
-                new Format("").addChildren(
-                        new Value("A"),
-                        new Value("B")
-                ),
-                new Format("").addChildren(
-                        new Value("A"),
-                        new Value("B"),
-                        new Value("C") // impossible both "B" and "C"
-                )
-        );
-
-        runTest();
+        runTest(Set.of(
+                Set.of("A", "B", "D"),
+                Set.of("A", "E"),
+                Set.of("C", "F", "G"),
+                Set.of("A", "K", "F", "H", "I"),
+                Set.of("A", "K", "F", "H", "J"),
+                Set.of("A", "K", "G", "H", "I"),
+                Set.of("A", "K", "G", "H", "J")
+        ));
     }
 
     @Test
-    public void testDifferentParamsOrderIsOk() throws SemanticException {
-        // Rule A
-        //   Variant (return "A")
-        //     Subrule B
-        //     Subrule C
-        //
-        // Rule B
-        //   Variant (return "Bs")
-        //     Subrule B
-        //
-        // Rule C
-        //   Variant (return "Cs")
-
-        // Possibilities:
-        // A,B,C
-
+    public void testUnorderedPath() throws SemanticException {
         Rule rb = nest(
                 mkRule("B"),
                 mkVariant("Bs"),
@@ -184,26 +105,11 @@ public class DetectUnreachableFormatsVisitorTest {
                 )
         );
 
-        runTest();
+        runTest(Set.of(Set.of("A", "B", "C")));
     }
 
     @Test(expected = SemanticException.class)
     public void testPartialPathIsNotAllowed() throws SemanticException {
-        // Rule A
-        //   Variant (return "A")
-        //     Subrule B
-        //     Subrule C
-        //
-        // Rule B
-        //   Variant (return "Bs")
-        //     Subrule B
-        //
-        // Rule C
-        //   Variant (return "Cs")
-        //
-        // Possibilities:
-        //   A,B,C
-        //
         Rule rb = nest(
                 mkRule("B"),
                 mkVariant("Bs"),
@@ -225,23 +131,11 @@ public class DetectUnreachableFormatsVisitorTest {
                         new Value("B")
                 )
         );
-
-        runTest();
+        runTest(Set.of(Set.of("A", "B", "C")));
     }
 
-    @Test(expected = SemanticException.class)
-    public void testMissingParamsAreDetected() throws SemanticException {
-        // Rule A
-        //   Variant (return "As")
-        //     Subrule B
-        //     Subrule C
-        //
-        // Rule B
-        //   Variant (return "Bs")
-        //     Subrule B
-        //
-        // Possibilities:
-        //   A,B
+    @Test
+    public void testSubruleEmptyRuleIsIgnored() throws SemanticException {
         Rule rb = nest(
                 mkRule("B"),
                 mkVariant("Bs"),
@@ -253,41 +147,11 @@ public class DetectUnreachableFormatsVisitorTest {
                         mkSubrule("C")
                 ));
         decoder.addChildren(rb);
-
-        disassembler.addChildren(
-                new Format("").addChildren(
-                        new Value("A"),
-                        new Value("B")
-                ),
-                new Format("").addChildren(
-                        new Value("A"),
-                        new Value("C"),
-                        new Value("B")
-                )
-        );
-
-        runTest();
+        runTest(Set.of(Set.of("A", "B")));
     }
 
     @Test
-    public void testNestedSubrulesAreOk() throws SemanticException {
-        // Rule A
-        //   Variant
-        //     Subrule B
-        //     Subrule C
-        //
-        // Rule B
-        //   Variant (return subrule B)
-        //
-        // Rule D
-        //   Variant (return "Ds")
-        //
-        // Rule C
-        //   Variant
-        //     Subrule D
-        //
-        // Possibilities:
-        //   B, D
+    public void testNestedSubrule() throws SemanticException {
         Rule rb = nest(
                 mkRule("B"),
                 mkVariant(new Subrule("B")));
@@ -309,46 +173,11 @@ public class DetectUnreachableFormatsVisitorTest {
                 ));
 
         decoder.addChildren(rb, rc, rd);
-
-        disassembler.addChildren(
-                new Format("").addChildren(
-                        new Value("B"),
-                        new Value("D")
-                )
-        );
-
-        runTest();
+        runTest(Set.of(Set.of("B", "D")));
     }
 
     @Test
-    public void testMultipleNestedSubrulesAreOk() throws SemanticException {
-        // Rule A
-        //   Variant
-        //     Subrule B
-        //     Subrule F
-        //
-        // Rule B
-        //   Variant
-        //     Subrule E
-        //   Variant (return "aa")
-        //     Subrule C
-        //     Subrule D
-        //
-        // Rule C
-        //   Variant (return "Cs")
-        //
-        // Rule D
-        //   Variant (return "Ds")
-        //
-        // Rule E
-        //   Variant (return "Es")
-        //
-        // Rule F
-        //   Variant (return "Fs")
-        //
-        // Possibilities:
-        //   E, F
-        //   B, C, D, F
+    public void testCombiningReturningAndNonReturningVariant() throws SemanticException {
         Rule rc = nest(
                 mkRule("C"),
                 mkVariant("Cs"));
@@ -380,37 +209,15 @@ public class DetectUnreachableFormatsVisitorTest {
                 ));
 
         decoder.addChildren(rb, rc, rd, re, rf);
-
-        disassembler.addChildren(
-                new Format("").addChildren(
-                        new Value("B"),
-                        new Value("C"),
-                        new Value("D"),
-                        new Value("F")
-                ),
-                new Format("").addChildren(
-                        new Value("E"),
-                        new Value("F")
-                )
-        );
-
-        runTest();
+        runTest(Set.of(
+                Set.of("E", "F"),
+                Set.of("B", "C", "D", "F")
+        ));
     }
 
 
     @Test
-    public void testMultipleRuleNamesAreOk() throws SemanticException {
-        // Rule A
-        //   Variant (return "A")
-        //     Subrule B2
-        //
-        // Rule B, B2
-        //   Variant (return "Bs")
-        //     Subrule B
-        //
-        // Possibilities:
-        //   A, B2
-
+    public void testMultipleRuleNames() throws SemanticException {
         Rule rb = nest(
                 mkRule("B", "B2"),
                 mkVariant("Bs"),
@@ -420,38 +227,13 @@ public class DetectUnreachableFormatsVisitorTest {
                 mkVariant("A").addChildren(
                         mkSubrule("B2").setRule(rb)));
         decoder.addChildren(rb);
-
-        disassembler.addChildren(
-                new Format("").addChildren(
-                        new Value("A"),
-                        new Value("B2")
-                )
-        );
-
-        runTest();
+        runTest(Set.of(
+                Set.of("A", "B2")
+        ));
     }
 
-    @Test(expected = SemanticException.class)
-    public void testDifferentVariantsInNotRootRule() throws SemanticException {
-        // Rule A
-        //   Variant (return "B")
-        //     Subrule B
-        //
-        // Rule B
-        //   Variant (return "C")
-        //     Subrule C
-        //   Variant (return "D")
-        //     Subrule D
-        //
-        // Rule C
-        //   Variant (return "nested1")
-        //
-        // Rule D
-        //   Variant (return "nested2")
-        //
-        // Possibilities:
-        //   A, B, C
-        //   A, B, D
+    @Test
+    public void testSplitVariants() throws SemanticException {
         Rule rc = nest(
                 mkRule("nested1"),
                 mkVariant("nested1"));
@@ -472,21 +254,37 @@ public class DetectUnreachableFormatsVisitorTest {
                         mkVariant("B"),
                         mkSubrule("B").setRule(rb)));
         decoder.addChildren(rb);
-
-        disassembler.addChildren(
-                new Format("").addChildren(
-                        new Value("A"),
-                        new Value("B"),
-                        new Value("C"),
-                        new Value("D")
-                )
-        );
-
-        runTest();
+        runTest(Set.of(
+                Set.of("A", "B", "C"),
+                Set.of("A", "B", "D")
+        ));
     }
 
-    private void runTest() throws SemanticException {
+    @Test
+    public void testOnlyVariant() throws SemanticException {
+        rootRule.addChild(mkVariant("aa"));
+        runTest(Set.of(Set.of("A")));
+    }
+
+    @Test
+    public void testCombiningPlainVariantWithNestedOne() throws SemanticException {
+        Rule rc = (Rule) mkRule("C").addChild(mkVariant(mkSubrule("C")));
+        Rule rb = (Rule) mkRule("B").addChildren(
+                mkVariant("b").addChild(mkSubrule("C").setRule(rc)),
+                mkVariant("c"));
+        rootRule.addChildren(
+                mkVariant("a"),
+                mkVariant().addChild(mkSubrule("B").setRule(rb)));
+        runTest(Set.of(
+                Set.of("A"),
+                Set.of("B", "C"),
+                Set.of("B")
+        ));
+    }
+
+    private void runTest(Set<Set<String>> expected) throws SemanticException {
         DetectUnreachableFormatsVisitor visitor = new DetectUnreachableFormatsVisitor();
         visitor.visit(specification);
+        assertEquals(expected, visitor.getReachable());
     }
 }
