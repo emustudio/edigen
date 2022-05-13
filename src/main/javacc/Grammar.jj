@@ -18,8 +18,8 @@
  */
 options {
     STATIC = false;
+    UNICODE_INPUT=true;
 }
-
 
 PARSER_BEGIN(Parser)
 package net.emustudio.edigen.parser;
