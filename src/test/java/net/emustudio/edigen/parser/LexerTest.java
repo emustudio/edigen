@@ -61,7 +61,7 @@ public class LexerTest {
                 assertEquals(tokenImages[i], token.image);
         }
         
-        assertEquals(parser.getNextToken().kind, EOF);
+        assertEquals(EOF, parser.getNextToken().kind);
     }
     
     /**
@@ -70,6 +70,12 @@ public class LexerTest {
     @Test
     public void testCommentsAndBlanks() {
         String input = "\r\n\t # comment\n#comment\r  # some comment\r\n#comment";
+        testTokens(input, new int[] {});
+    }
+
+    @Test
+    public void testUnicodeInput() {
+        String input = "/* Peter Jakubčo */";
         testTokens(input, new int[] {});
     }
     
