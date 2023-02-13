@@ -84,12 +84,12 @@ Decoder part consists of a set of **rules**. It starts with declaration of root 
 in defined order. In our case, the first rule will be `instruction` and if that is not matched, the other rule `data`
 will be tried.
 
-After root-rules declaration, rule definitions follow. Rule definition ends with a semi-colon `;`.
+After root-rules declaration, rule definitions follow. Rule definition ends with a semicolon `;`.
 
 A **rule** is composed of one or more **variants**, split with pipe `|`. A variant can optionally start with a name -
 in quotes, followed by a colon `;`. The variant name can be referenced in disassembler part by rule name. Optionally,
 the variant can return a binary value taken from a *subrule* - again by referencing its name without quotes, followed
-by a colon `;`. What follow after colon is a mixture of **constants** or **subrules**.
+by a colon `;`. What follows after colon is a mixture of **constants** or **subrules**.
 
 A **constant** can be hexadecimal (e.g., `0xF`) or binary (`01`). Constants are used to perform unambiguous match of
 exactly one variant for each rule.
@@ -158,7 +158,7 @@ instruction = "JMP": line(5)     ignore8(8) 000 ignore16(16) |
 
 ### Formatting in rule names
  
-This feature allows to specify formatting in rule names. This feature is enabled only in case a default disassembler
+This feature allows to specify formatting in variant names. This feature is enabled only in case a default disassembler
 template is used. An example follows (partial Z80 CPU decoder):
 
 ```
@@ -200,7 +200,7 @@ imm16 = imm16: imm16(16);
 "%s" = instruction imm8;
 ```
 
-In this case, the disassembler will recognize formatting symbolics in the rule names, and recursively replaces the
+In this case, the disassembler will recognize formatting symbolics in the variant names, and recursively replaces the
 original disassembler format symbols with the actual values.
 
 So in the example, format `"%s" = instruction cc_jr imm8;` matches rule `"jr %s, %X":   00 1 cc_jr(2) 000 imm8`.

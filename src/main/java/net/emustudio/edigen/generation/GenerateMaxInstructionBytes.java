@@ -9,8 +9,6 @@ import net.emustudio.edigen.nodes.Rule;
 import net.emustudio.edigen.nodes.Subrule;
 
 import java.io.Writer;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Finds out max instruction size in bytes.
@@ -18,8 +16,8 @@ import java.util.Map;
 public class GenerateMaxInstructionBytes extends Visitor  {
     private final PrettyPrinter printer;
     private int maxBitSize;
-    private final Map<String, Integer> subruleStarts = new HashMap<>();
     private int lastStart;
+    private int ruleLevel = 0;
 
     /**
      * Constructs the visitor.
@@ -38,8 +36,9 @@ public class GenerateMaxInstructionBytes extends Visitor  {
 
     @Override
     public void visit(Rule rule) throws SemanticException {
-        if (subruleStarts.containsKey(rule.getMethodName())) {
-            lastStart = subruleStarts.get(rule.getMethodName());
+        ruleLevel++;
+        if (ruleLevel == 1) {
+            lastStart = 0;
         }
         rule.acceptChildren(this);
     }
@@ -59,11 +58,8 @@ public class GenerateMaxInstructionBytes extends Visitor  {
 
     @Override
     public void visit(Subrule subrule) throws SemanticException {
-        String methodName = subrule.getRule().getMethodName();
-        int start = subrule.getStart();
-        if (subruleStarts.containsKey(methodName)) {
-            start = Math.max(start, subruleStarts.get(methodName));
-        }
-        subruleStarts.put(methodName, start);
+        lastStart += subrule.getStart();
+        subrule.getRule().accept(this);
+        lastStart -= subrule.getStart();
     }
 }
