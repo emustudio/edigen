@@ -1,10 +1,12 @@
 /*
- * Copyright (C) 2011-2022 Matúš Sulír, Peter Jakubčo
+ * This file is part of edigen.
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
+ * Copyright (C) 2011-2023 Matúš Sulír, Peter Jakubčo
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -12,8 +14,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package net.emustudio.edigen;
 
@@ -34,5 +35,5 @@ public class SemanticException extends Exception {
         super(((node.getLine() != null) ? "Line " + node.getLine() + ": " : "")
                 + message);
     }
-    
+
 }

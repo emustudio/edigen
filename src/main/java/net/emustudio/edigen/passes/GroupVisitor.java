@@ -1,10 +1,12 @@
 /*
- * Copyright (C) 2011-2022 Matúš Sulír, Peter Jakubčo
+ * This file is part of edigen.
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
+ * Copyright (C) 2011-2023 Matúš Sulír, Peter Jakubčo
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -12,8 +14,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package net.emustudio.edigen.passes;
 
@@ -31,9 +32,9 @@ import java.util.Map;
 /**
  * Groups sibling masks or patterns containing the same bit sequences into one
  * node.
- * 
+ * <p>
  * All children of the original nodes will be attached to the grouped node.
- *
+ * <p>
  * Expectation of a tree at input, e.g:
  * <pre>
  *   Rule
@@ -44,7 +45,7 @@ import java.util.Map;
  *       Pattern (111)
  *         Variant
  * </pre>
- *
+ * <p>
  * Expectation of the tree at output:
  * <pre>
  *   Rule
@@ -56,12 +57,13 @@ import java.util.Map;
  * </pre>
  */
 public class GroupVisitor extends Visitor {
-    
+
     private boolean savingBits;
     private BitSequence savedBits;
-    
+
     /**
      * Groups the rule recursively.
+     *
      * @param rule the rule node
      * @throws SemanticException never
      */
@@ -73,8 +75,9 @@ public class GroupVisitor extends Visitor {
     /**
      * If the current task is to save bits, saves them and returns the control;
      * otherwise groups the mask's children and thus continues the traversal.
+     *
      * @param mask the mask node
-     * @throws SemanticException never 
+     * @throws SemanticException never
      */
     @Override
     public void visit(Mask mask) throws SemanticException {
@@ -87,8 +90,9 @@ public class GroupVisitor extends Visitor {
     /**
      * If the current task is to save bits, saves them and returns the control;
      * otherwise groups the pattern's children and thus continues the traversal.
+     *
      * @param pattern the pattern node
-     * @throws SemanticException never 
+     * @throws SemanticException never
      */
     @Override
     public void visit(Pattern pattern) throws SemanticException {
@@ -97,15 +101,16 @@ public class GroupVisitor extends Visitor {
         else
             group(pattern);
     }
-    
+
     /**
      * Groups the children nodes and continues the traversal.
+     *
      * @param node a rule, mask or pattern
      * @throws SemanticException never
      */
     private void group(TreeNode node) throws SemanticException {
         Map<BitSequence, TreeNode> uniqueChildren = new LinkedHashMap<>();
-        
+
         // group children
         for (TreeNode child : node.getChildren()) {
             // obtain the bit sequence

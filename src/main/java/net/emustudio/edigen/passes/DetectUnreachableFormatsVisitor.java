@@ -1,10 +1,12 @@
 /*
- * Copyright (C) 2011-2022 Matúš Sulír, Peter Jakubčo
+ * This file is part of edigen.
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
+ * Copyright (C) 2011-2023 Matúš Sulír, Peter Jakubčo
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -12,8 +14,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package net.emustudio.edigen.passes;
 
@@ -25,22 +26,22 @@ import java.util.*;
 
 /**
  * Detects unreachable disassembler formats.
- *
+ * <p>
  * root instruction;
  * instruction =
- *   "nop": 00000000 |
- *   other
+ * "nop": 00000000 |
+ * other
  * ;
- *
+ * <p>
  * other =
- *   "hey": 10000000 |
- *   "arg %d": 10000001 arg
- *   ;
- *
+ * "hey": 10000000 |
+ * "arg %d": 10000001 arg
+ * ;
+ * <p>
  * arg = arg: arg(8);
- *
+ * <p>
  * %%
- *
+ * <p>
  * "%s" = instruction arg;    // unreachable
  */
 public class DetectUnreachableFormatsVisitor extends Visitor {
@@ -109,9 +110,9 @@ public class DetectUnreachableFormatsVisitor extends Visitor {
 
     /**
      * Creates a copy of current tree:
-     *   - preserves just root rules, variants and subrules.
-     *   - expands subrules - adds subule rule "pointers" as children.
-     *   - ignores masks and patterns.
+     * - preserves just root rules, variants and subrules.
+     * - expands subrules - adds subule rule "pointers" as children.
+     * - ignores masks and patterns.
      */
     private static class BuildSlimTreeVisitor extends Visitor {
         final List<Rule> slimTree = new ArrayList<>();
@@ -142,7 +143,7 @@ public class DetectUnreachableFormatsVisitor extends Visitor {
                 Subrule newSubrule = new Subrule(variant.getReturnSubrule().getName());
                 if (variant.getReturnSubrule().getRule() != null) {
                     variant.getReturnSubrule().getRule().accept(this);
-                    newSubrule.setRule((Rule)current);
+                    newSubrule.setRule((Rule) current);
                     current = old;
                 }
                 newCurrent.setReturnSubrule(newSubrule);
@@ -189,28 +190,28 @@ public class DetectUnreachableFormatsVisitor extends Visitor {
      * Transform a tree so each reachable path is a full path, so no siblings need to be considered anymore.
      * It means: all siblings are put under all reachable paths of the first child; recursively bottom up.
      * Generally, it is one possible implementation of generating combinations.
-     *
-     *  Rule A
-     *    Variant
-     *      Subrule B
-     *        Variant
-     *          Subrule E
-     *        Variant (return "aa")
-     *          Subrule C
-     *          Subrule D
-     *      Subrule F
-     *
+     * <p>
+     * Rule A
+     * Variant
+     * Subrule B
+     * Variant
+     * Subrule E
+     * Variant (return "aa")
+     * Subrule C
+     * Subrule D
+     * Subrule F
+     * <p>
      * Result:
-     *  Rule A
-     *    Variant
-     *      Subrule B
-     *        Variant
-     *          Subrule E
-     *            Subrule F
-     *        Variant (return "aa")
-     *          Subrule C
-     *            Subrule D
-     *              Subrule F
+     * Rule A
+     * Variant
+     * Subrule B
+     * Variant
+     * Subrule E
+     * Subrule F
+     * Variant (return "aa")
+     * Subrule C
+     * Subrule D
+     * Subrule F
      */
     private static class UniqueSubrulePathsVisitor extends Visitor {
 
@@ -248,42 +249,41 @@ public class DetectUnreachableFormatsVisitor extends Visitor {
 
     /**
      * Tough logic of eliminating variants. Tough, because variants can but don't have to return.
-     *
+     * <p>
      * Returning variants peculiarities:
      * - if the parent is rule, we must add artificial subrule and add variant's children to it before removing the
-     *   variant (otherwise rule "A" wont be recognized)
-     *
-     *   Rule A                        Rule A
-     *     Variant (return "a")   ->     Subrule A
-     *       ...                           ...
-     *
+     * variant (otherwise rule "A" wont be recognized)
+     * <p>
+     * Rule A                        Rule A
+     * Variant (return "a")   ->     Subrule A
+     * ...                           ...
+     * <p>
      * - if variant has no children, instead just removing variant we must replace it with artificial subrule
-     *
-     *   Subrule C                         Subrule D
-     *     Variant                           Subrule D
-     *       Subrule D                ->   Subrule C
-     *         Variant (return "d")
-     *     Variant (return "c")
-     *
+     * <p>
+     * Subrule C                         Subrule D
+     * Variant                           Subrule D
+     * Subrule D                ->   Subrule C
+     * Variant (return "d")
+     * Variant (return "c")
+     * <p>
      * Non-returning variants peculiarities:
      * - non-returning variants and it's parent subrules must be eliminated when the parent has only one child
-     *   (this variant)
-     *
-     *   Rule A                            Rule A
-     *     Subrule B                         Subrule C
-     *       Variant                   ->
-     *         Subrule C
-     *           Variant (return "c")
-     *
+     * (this variant)
+     * <p>
+     * Rule A                            Rule A
+     * Subrule B                         Subrule C
+     * Variant                   ->
+     * Subrule C
+     * Variant (return "c")
+     * <p>
      * - if parent of non-returning variant has more children, we must keep it:
-     *
-     *   Rule A                            Rule A
-     *     Subrule B                         Subrule C
-     *       Variant                         Subrule B
-     *         Subrule C               ->      Subrule B
-     *           Variant (return "c")
-     *       Variant (return "b")
-     *
+     * <p>
+     * Rule A                            Rule A
+     * Subrule B                         Subrule C
+     * Variant                         Subrule B
+     * Subrule C               ->      Subrule B
+     * Variant (return "c")
+     * Variant (return "b")
      */
     private static class EliminateVariantsVisitor extends Visitor {
 
@@ -307,7 +307,7 @@ public class DetectUnreachableFormatsVisitor extends Visitor {
             } else if (parent != null) {
                 // variant returns
                 if (parent instanceof Rule) {
-                    Subrule artificial = new Subrule(((Rule)parent).getNames().get(0));
+                    Subrule artificial = new Subrule(((Rule) parent).getNames().get(0));
                     artificial.addChildren(children);
                     parent.addChild(artificial);
                 } else {

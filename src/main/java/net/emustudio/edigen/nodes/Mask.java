@@ -1,10 +1,12 @@
 /*
- * Copyright (C) 2011-2022 Matúš Sulír, Peter Jakubčo
+ * This file is part of edigen.
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
+ * Copyright (C) 2011-2023 Matúš Sulír, Peter Jakubčo
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -12,8 +14,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package net.emustudio.edigen.nodes;
 
@@ -28,10 +29,10 @@ import java.util.Objects;
  * pattern matching.
  */
 public class Mask extends TreeNode {
-    
+
     private final BitSequence bits;
     private Integer start;
-    
+
     /**
      * Constructs the mask.
      * @param bits the bit sequence
@@ -39,7 +40,7 @@ public class Mask extends TreeNode {
     public Mask(BitSequence bits) {
         this.bits = bits;
     }
-    
+
     /**
      * Returns the bit sequence.
      * @return the bit sequence
@@ -50,7 +51,7 @@ public class Mask extends TreeNode {
 
     /**
      * Returns the starting offset relative to the variant start.
-     * 
+     *
      * The result is null if it is not yet determined.
      * @return the starting offset, in bits
      */
@@ -65,7 +66,7 @@ public class Mask extends TreeNode {
     public void setStart(int start) {
         this.start = start;
     }
-    
+
     /**
      * Returns a mask ANDed with an another mask.
      * @param other the second mask
@@ -74,7 +75,7 @@ public class Mask extends TreeNode {
     public Mask and(Mask other) {
         return new Mask(bits.and(other.bits));
     }
-    
+
     /**
      * Accepts the visitor.
      * @param visitor the visitor object
@@ -84,7 +85,7 @@ public class Mask extends TreeNode {
     public void accept(Visitor visitor) throws SemanticException {
         visitor.visit(this);
     }
-    
+
     /**
      * Returns the mask as a string in binary notation.
      * @return the string

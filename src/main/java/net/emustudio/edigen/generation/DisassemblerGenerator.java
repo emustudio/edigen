@@ -1,10 +1,12 @@
 /*
- * Copyright (C) 2011-2022 Matúš Sulír, Peter Jakubčo
+ * This file is part of edigen.
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
+ * Copyright (C) 2011-2023 Matúš Sulír, Peter Jakubčo
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -12,8 +14,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package net.emustudio.edigen.generation;
 
@@ -41,11 +42,11 @@ public class DisassemblerGenerator extends Generator {
     public DisassemblerGenerator(Disassembler disassembler,
             String disassemblerName, String decoderName) {
         super("/Disassembler.edt", disassemblerName);
-        
+
         this.disassembler = disassembler;
         this.decoderName = decoderName;
     }
-    
+
     /**
      * Fills the template with variables and the generated code.
      * @param template the template object
@@ -54,11 +55,11 @@ public class DisassemblerGenerator extends Generator {
     @Override
     protected void fillTemplate(Template template) throws SemanticException {
         super.fillTemplate(template);
-        
+
         template.setVariable("disasm_package", getPackageName());
         template.setVariable("disasm_class", getClassName());
         template.setVariable("decoder_name", decoderName);
-        
+
         Writer formats = new StringWriter();
         disassembler.accept(new GenerateFormatsVisitor(formats));
         template.setVariable("disasm_formats", formats.toString());
@@ -67,5 +68,5 @@ public class DisassemblerGenerator extends Generator {
         disassembler.accept(new GenerateParametersVisitor(values));
         template.setVariable("disasm_parameters", values.toString());
     }
-    
+
 }
