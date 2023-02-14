@@ -34,37 +34,48 @@ public class GenerateMaxInstructionBytesTest {
 
     @Test
     public void testNoSubruleReferences() throws ParseException, SemanticException {
-        StringReader input = new StringReader(
+        String maxBytes = generateMaxBytes(
                 "root instruction;\n" +
                         "instruction = \"a\": 0x00 0x01 | \"b\": 0x10;\n" +
                         "%%\n" +
                         "\"%s\" = instruction;");
-        Parser parser = new Parser(input);
-        Specification specification = parser.parse();
-        transform(specification);
-        StringWriter writer = new StringWriter();
-        new GenerateMaxInstructionBytes(writer).visit(specification.getDecoder());
-
-        assertEquals("2", writer.toString());
+        assertEquals("2", maxBytes);
     }
 
     @Test
     public void testSubruleReference() throws ParseException, SemanticException {
-        StringReader input = new StringReader(
+        String maxBytes = generateMaxBytes(
                 "root instruction;\n" +
                         "instruction = \"a\": 0x00 other | \"b\": 0x10;\n" +
                         "other = 0x11 ref16;\n" +
                         "ref16 = ref16: ref16(16);\n" +
                         "%%\n" +
                         "\"%s\" = instruction;");
-        Parser parser = new Parser(input);
+        assertEquals("4", maxBytes);
+    }
+
+    @Test
+    public void testMultipleSubruleReference() throws ParseException, SemanticException {
+        String maxBytes = generateMaxBytes(
+                "root instruction;\n" +
+                        "instruction = \"a\": 0xFF other | 0x20 bother;\n" +
+                        "other = 0x11 ref16;\n" +
+                        "bother = ref16(16) other;\n" +
+                        "ref16 = ref16: ref16(16);\n" +
+                        "%%\n" +
+                        "\"%s\" = instruction ref16;");
+        assertEquals("6", maxBytes);
+    }
+
+    private String generateMaxBytes(String input) throws ParseException, SemanticException {
+        Parser parser = new Parser(new StringReader(input));
         Specification specification = parser.parse();
         transform(specification);
 
         StringWriter writer = new StringWriter();
         new GenerateMaxInstructionBytes(writer).visit(specification.getDecoder());
 
-        assertEquals("4", writer.toString());
+        return writer.toString();
     }
 
     private void transform(Specification specification) throws SemanticException {

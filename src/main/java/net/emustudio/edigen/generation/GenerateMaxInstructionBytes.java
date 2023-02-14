@@ -34,7 +34,7 @@ public class GenerateMaxInstructionBytes extends Visitor  {
     private final PrettyPrinter printer;
     private int maxBitSize;
     private int lastStart;
-    private int ruleLevel = 0;
+    private int ruleLevel;
 
     /**
      * Constructs the visitor.
