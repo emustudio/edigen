@@ -1,10 +1,12 @@
 /*
- * Copyright (C) 2011-2022 Matúš Sulír, Peter Jakubčo
+ * This file is part of edigen.
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
+ * Copyright (C) 2011-2023 Matúš Sulír, Peter Jakubčo
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -12,8 +14,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package net.emustudio.edigen.nodes;
 
@@ -26,7 +27,7 @@ import java.util.*;
  * Instruction decoder rule node.
  */
 public class Rule extends TreeNode {
-    
+
     private final List<String> names;
     private boolean isRoot;
     private String rootRuleName;
@@ -54,7 +55,7 @@ public class Rule extends TreeNode {
     public List<String> getNames() {
         return Collections.unmodifiableList(names);
     }
-    
+
     /**
      * Returns true if this rule has only one name (not a list of names
      * separated by commas).
@@ -63,7 +64,7 @@ public class Rule extends TreeNode {
     public boolean hasOnlyOneName() {
         return names.size() == 1;
     }
-    
+
     /**
      * Returns a name of the method which should be generated for this rule.
      * @return the method name
@@ -71,7 +72,7 @@ public class Rule extends TreeNode {
     public String getMethodName() {
         return names.get(0);
     }
-    
+
     /**
      * Returns a field name which should be generated for this rule (key).
      * @param ruleName the particular rule name (one rule can have multiple
@@ -98,14 +99,14 @@ public class Rule extends TreeNode {
     public String getLabel() {
         Iterator<String> nameIterator = names.iterator();
         StringBuilder result = new StringBuilder();
-        
+
         while (nameIterator.hasNext()) {
             result.append(nameIterator.next());
-            
+
             if (nameIterator.hasNext())
                 result.append(", ");
         }
-        
+
         return result.toString();
     }
 
@@ -139,7 +140,7 @@ public class Rule extends TreeNode {
         this.rootRuleName = rootRuleName;
         return this;
     }
-    
+
     /**
      * Accepts the visitor.
      * @param visitor the visitor object
@@ -149,7 +150,7 @@ public class Rule extends TreeNode {
     public void accept(Visitor visitor) throws SemanticException {
         visitor.visit(this);
     }
-    
+
     /**
      * Returns a string representation of the object containing a rule name.
      * @return the string

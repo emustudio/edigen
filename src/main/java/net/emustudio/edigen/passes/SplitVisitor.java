@@ -1,10 +1,12 @@
 /*
- * Copyright (C) 2011-2022 Matúš Sulír, Peter Jakubčo
+ * This file is part of edigen.
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
+ * Copyright (C) 2011-2023 Matúš Sulír, Peter Jakubčo
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -12,8 +14,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package net.emustudio.edigen.passes;
 
@@ -30,11 +31,11 @@ import static net.emustudio.edigen.nodes.Decoder.UNIT_SIZE_BITS;
 /**
  * A visitor which splits the patterns and mask into smaller pieces of the same
  * length (max length is equal to decoder unit size).
- * 
+ * <p>
  * This is necessary to support instructions with variable length, especially
  * instructions with length larger than <code>int</code> or <code>long</code>
  * size.
- *
+ * <p>
  * Expectation of a tree at input, e.g.:
  * <pre>
  *   Rule
@@ -42,7 +43,7 @@ import static net.emustudio.edigen.nodes.Decoder.UNIT_SIZE_BITS;
  *     Mask (length &gt; UNIT_SIZE_BITS)
  *     Pattern (length &gt; UNIT_SIZE_BITS)
  * </pre>
- *
+ * <p>
  * Expectation of the tree at output:
  * <pre>
  *   Rule
@@ -58,42 +59,44 @@ public class SplitVisitor extends Visitor {
 
     private BitSequence maskBits;
     private BitSequence patternBits;
-    
+
     /**
      * Splits the mask and pattern and adds the split pieces to the variant.
-     * 
+     *
      * <p>The nodes are placed "vertically" - each pattern is a child of the
      * corresponding mask and each mask is a child of the previous pattern
      * (or variant, if there is no previous pattern).</p>
-     * 
+     *
      * <p>In addition, starting positions of the masks are set.</p>
+     *
      * @param variant the variant node
      * @throws SemanticException never
      */
     @Override
     public void visit(Variant variant) throws SemanticException {
         variant.acceptChildren(this);
-        
+
         BitSequence[] masks = maskBits.split(UNIT_SIZE_BITS);
         BitSequence[] patterns = patternBits.split(UNIT_SIZE_BITS);
-        
+
         TreeNode parent = variant;
-        
+
         for (int i = 0; i < masks.length; i++) {
             Mask mask = new Mask(masks[i]);
             mask.setStart(i * UNIT_SIZE_BITS);
-            
+
             Pattern pattern = new Pattern(patterns[i]);
-            
+
             parent.addChild(mask);
             mask.addChild(pattern);
-            
+
             parent = pattern;
         }
     }
 
     /**
      * Saves the mask bits and removes the node.
+     *
      * @param mask the mask node
      */
     @Override
@@ -104,6 +107,7 @@ public class SplitVisitor extends Visitor {
 
     /**
      * Saves the pattern bits and removes the node.
+     *
      * @param pattern the pattern node
      */
     @Override
