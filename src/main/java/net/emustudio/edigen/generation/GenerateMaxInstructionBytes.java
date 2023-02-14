@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2011-2022 Matúš Sulír, Peter Jakubčo
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
 package net.emustudio.edigen.generation;
 
 import net.emustudio.edigen.SemanticException;
@@ -9,8 +26,6 @@ import net.emustudio.edigen.nodes.Rule;
 import net.emustudio.edigen.nodes.Subrule;
 
 import java.io.Writer;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Finds out max instruction size in bytes.
@@ -18,8 +33,8 @@ import java.util.Map;
 public class GenerateMaxInstructionBytes extends Visitor  {
     private final PrettyPrinter printer;
     private int maxBitSize;
-    private final Map<String, Integer> subruleStarts = new HashMap<>();
     private int lastStart;
+    private int ruleLevel;
 
     /**
      * Constructs the visitor.
@@ -38,8 +53,9 @@ public class GenerateMaxInstructionBytes extends Visitor  {
 
     @Override
     public void visit(Rule rule) throws SemanticException {
-        if (subruleStarts.containsKey(rule.getMethodName())) {
-            lastStart = subruleStarts.get(rule.getMethodName());
+        ruleLevel++;
+        if (ruleLevel == 1) {
+            lastStart = 0;
         }
         rule.acceptChildren(this);
     }
@@ -59,11 +75,8 @@ public class GenerateMaxInstructionBytes extends Visitor  {
 
     @Override
     public void visit(Subrule subrule) throws SemanticException {
-        String methodName = subrule.getRule().getMethodName();
-        int start = subrule.getStart();
-        if (subruleStarts.containsKey(methodName)) {
-            start = Math.max(start, subruleStarts.get(methodName));
-        }
-        subruleStarts.put(methodName, start);
+        lastStart += subrule.getStart();
+        subrule.getRule().accept(this);
+        lastStart -= subrule.getStart();
     }
 }

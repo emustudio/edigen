@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Matúš Sulír
+ * Copyright (C) 2011-2022 Matúš Sulír, Peter Jakubčo
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
