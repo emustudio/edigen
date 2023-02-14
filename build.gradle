@@ -26,7 +26,7 @@ plugins {
 
 group = 'net.emustudio'
 description = 'Emulator Disassembler Generator'
-version = '1.5.2'
+version = '1.5.3-SNAPSHOT'
 
 dependencies {
     testImplementation 'junit:junit:4.13.2'
