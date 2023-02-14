@@ -1,10 +1,12 @@
 /*
- * Copyright (C) 2011-2022 Matúš Sulír, Peter Jakubčo
+ * This file is part of edigen.
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
+ * Copyright (C) 2011-2023 Matúš Sulír, Peter Jakubčo
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -12,8 +14,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package net.emustudio.edigen.nodes;
 
@@ -25,27 +26,28 @@ import java.util.regex.Pattern;
 
 /**
  * Rule variant node.
- * 
+ * <p>
  * One of the instruction decoder's task is to find out which variant of the
  * particular rule matches against the part of the decoded instruction.
  */
 public class Variant extends TreeNode {
-    
+
     private enum ReturnType {
         NOTHING,
         STRING,
         SUBRULE
     }
-    
+
     private static final Pattern LEADING_DIGITS = Pattern.compile("\\d.*");
     private static final Pattern NON_WORD = Pattern.compile("\\W");
-    
+
     private ReturnType returnType = ReturnType.NOTHING;
     private String returnString;
     private Subrule returnSubrule;
-    
+
     /**
      * Returns the string which this variant returns.
+     *
      * @return the string, or null if the variant returns a subrule or nothing
      */
     public String getReturnString() {
@@ -54,18 +56,20 @@ public class Variant extends TreeNode {
         else
             return null;
     }
-    
+
     /**
      * Tells the variant to return the string on match.
+     *
      * @param returnString the string to return
      */
     public void setReturnString(String returnString) {
         returnType = ReturnType.STRING;
         this.returnString = returnString;
     }
-    
+
     /**
      * Returns the subrule which this variant returns.
+     *
      * @return the subrule, or null if the variant returns a string or nothing
      */
     public Subrule getReturnSubrule() {
@@ -74,26 +78,29 @@ public class Variant extends TreeNode {
         else
             return null;
     }
-    
+
     /**
      * Tells the variant to return the value of the specified subrule.
+     *
      * @param returnRule the subrule, must be contained in the pattern
      */
     public void setReturnSubrule(Subrule returnRule) {
         returnType = ReturnType.SUBRULE;
         this.returnSubrule = returnRule;
     }
-    
+
     /**
      * Returns true if the variant returns a string or a subrule.
+     *
      * @return true if the variant returns, false otherwise
      */
     public boolean returns() {
         return returnType != ReturnType.NOTHING;
     }
-    
+
     /**
      * Returns the generated field name if the variant returns a string.
+     *
      * @return the field name, or null if the variant does not return a string
      */
     public String getFieldName() {
@@ -102,9 +109,10 @@ public class Variant extends TreeNode {
         else
             return null;
     }
-    
+
     /**
      * Accepts the visitor.
+     *
      * @param visitor the visitor object
      * @throws SemanticException depends on the specific visitor
      */
@@ -112,36 +120,38 @@ public class Variant extends TreeNode {
     public void accept(Visitor visitor) throws SemanticException {
         visitor.visit(this);
     }
-    
+
     /**
      * Returns the mask as a string in binary notation.
+     *
      * @return the string
      */
     @Override
     public String toString() {
         StringBuilder result = new StringBuilder("Variant");
-        
+
         if (returnType == ReturnType.STRING)
             result.append(": return \"").append(returnString).append('"');
         else if (returnType == ReturnType.SUBRULE)
             result.append(": return ").append(returnSubrule);
-        
+
         return result.toString();
     }
-    
+
     /**
      * Makes a valid Java identifier name from the string.
+     *
      * @param string the string
      * @return the identifier name
      */
     private String makeIdentifierName(String string) {
         string = string.trim().toUpperCase();
-        
-        if  (LEADING_DIGITS.matcher(string).matches())
+
+        if (LEADING_DIGITS.matcher(string).matches())
             string = '_' + string;
-        
+
         string = string.replace(' ', '_');
-        
+
         return NON_WORD.matcher(string).replaceAll("_");
     }
 

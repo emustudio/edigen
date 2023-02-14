@@ -1,10 +1,12 @@
 /*
- * Copyright (C) 2011-2022 Matúš Sulír, Peter Jakubčo
+ * This file is part of edigen.
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
+ * Copyright (C) 2011-2023 Matúš Sulír, Peter Jakubčo
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -12,8 +14,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package net.emustudio.edigen.passes;
 
@@ -23,7 +24,7 @@ import net.emustudio.edigen.nodes.*;
 
 /**
  * A visitor which pushes the variant nodes down to the bottom of the tree.
- *
+ * <p>
  * Expectation of a tree at input, e.g.:
  * <pre>
  *   Rule
@@ -34,7 +35,7 @@ import net.emustudio.edigen.nodes.*;
  *             Mask
  *               Pattern
  * </pre>
- *
+ * <p>
  * Expectation of the tree at output:
  * <pre>
  *   Rule
@@ -53,6 +54,7 @@ public class PushDownVariantsVisitor extends Visitor {
 
     /**
      * Attaches the top mask of each variant to the rule.
+     *
      * @param rule the rule node
      * @throws SemanticException never
      */
@@ -69,6 +71,7 @@ public class PushDownVariantsVisitor extends Visitor {
     /**
      * Saves the current variant and detaches the variant from the rule if at
      * least one variant's child is a mask.
+     *
      * @param variant the variant node
      * @throws SemanticException never
      */
@@ -77,16 +80,17 @@ public class PushDownVariantsVisitor extends Visitor {
         currentVariant = variant;
         topMask = null;
         TreeNode parent = variant.getParent();
-        
+
         variant.remove();
         variant.acceptChildren(this);
-        
+
         if (topMask == null)
             parent.addChild(variant);
     }
 
     /**
      * Saves the topmost mask of the variant and dettaches it from the variant.
+     *
      * @param mask the mask node
      * @throws SemanticException never
      */
@@ -102,6 +106,7 @@ public class PushDownVariantsVisitor extends Visitor {
 
     /**
      * Attaches the variant to the bottommost pattern.
+     *
      * @param pattern the pattern node
      * @throws SemanticException never
      */

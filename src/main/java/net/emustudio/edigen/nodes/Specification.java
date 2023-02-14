@@ -1,10 +1,12 @@
 /*
- * Copyright (C) 2011-2022 Matúš Sulír, Peter Jakubčo
+ * This file is part of edigen.
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
+ * Copyright (C) 2011-2023 Matúš Sulír, Peter Jakubčo
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -12,8 +14,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package net.emustudio.edigen.nodes;
 
@@ -24,7 +25,7 @@ import net.emustudio.edigen.Visitor;
  * The root node of the specification AST.
  */
 public class Specification extends TreeNode {
-    
+
     private final Decoder decoder;
     private final Disassembler disassembler;
 
@@ -36,7 +37,7 @@ public class Specification extends TreeNode {
     public Specification(Decoder decoder, Disassembler disassembler) {
         this.decoder = decoder;
         this.disassembler = disassembler;
-        
+
         addChild(decoder);
         addChild(disassembler);
     }
@@ -56,7 +57,7 @@ public class Specification extends TreeNode {
     public Disassembler getDisassembler() {
         return disassembler;
     }
-    
+
     /**
      * Accepts the visitor.
      * @param visitor the visitor object
@@ -66,7 +67,7 @@ public class Specification extends TreeNode {
     public void accept(Visitor visitor) throws SemanticException {
         visitor.visit(this);
     }
-    
+
     /**
      * Returns a string representation of the object.
      * @return the string
