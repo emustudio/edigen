@@ -1,6 +1,7 @@
 # Edigen - Emulator Disassembler Generator
 ![Edigen Build](https://github.com/emustudio/edigen/workflows/Edigen%20Build/badge.svg)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/net.emustudio/edigen/badge.svg)](https://maven-badges.herokuapp.com/maven-central/net.emustudio/edigen)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 Edigen is a command-line tool which generates Java source code of:
  * instruction decoder of an emulator
@@ -12,10 +13,6 @@ Writing disassemblers and emulator instruction decoders by hand is tedious and e
 unreadable and unmaintainable. *Edigen* takes a file containing the description of instruction formats, operation
 codes and mnemonics as an input. It generates Java classes compatible with
 [emuStudio](http://github.com/emustudio/emuStudio) platform, i.e. implementing interfaces from [emuLib](http://github.com/emustudio/emuLib).
-
-## License
-
-This project is released under [GNU GPL v2](https://www.gnu.org/licenses/gpl-2.0.html) license.
 
 ## Usage
 
