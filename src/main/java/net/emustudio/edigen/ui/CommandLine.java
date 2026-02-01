@@ -1,21 +1,5 @@
-/*
- * This file is part of edigen.
- *
- * Copyright (C) 2011-2023 Matúš Sulír, Peter Jakubčo
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
+/* SPDX-FileCopyrightText: 2011-2026 Matúš Sulír, Peter Jakubčo
+   SPDX-License-Identifier: GPL-3.0-or-later */
 package net.emustudio.edigen.ui;
 
 import net.emustudio.edigen.Setting;
@@ -34,6 +18,7 @@ public class CommandLine {
     /**
      * Constructs the command line parser for the given list of possible
      * arguments, their types, etc.
+     *
      * @param arguments the argument specification
      */
     public CommandLine(Argument[] arguments) {
@@ -48,8 +33,9 @@ public class CommandLine {
 
     /**
      * Parses the given argument list.
+     *
      * @param arguments the argument list, as obtained from the
-     *        <code>main()</code> method
+     *                  <code>main()</code> method
      * @return the configuration object (a set of key-value pairs)
      * @throws CommandLineException when the arguments are invalid
      */
@@ -76,6 +62,7 @@ public class CommandLine {
 
     /**
      * Returns a list of all expected mandatory arguments.
+     *
      * @return the iterable list
      */
     public Iterable<Argument> getMandatoryArguments() {
@@ -84,6 +71,7 @@ public class CommandLine {
 
     /**
      * Returns a list of all possible optional arguments.
+     *
      * @return the iterable list
      */
     public Iterable<Argument> getOptionalArguments() {
@@ -92,12 +80,13 @@ public class CommandLine {
 
     /**
      * Parses a named optional argument - a flag or a parameter with a value.
+     *
      * @param current the current argument
-     * @param all the iterator to all arguments, set to the current one
+     * @param all     the iterator to all arguments, set to the current one
      * @throws CommandLineException when the option is unknown or the value
-     *         argument does not have a value
+     *                              argument does not have a value
      */
-    private void parseOptional(String current, Iterator<String> all) throws CommandLineException  {
+    private void parseOptional(String current, Iterator<String> all) throws CommandLineException {
         String option = current.substring(1);
         Argument argument = optional.get(option);
 
@@ -118,9 +107,10 @@ public class CommandLine {
 
     /**
      * Parses an mandatory argument.
+     *
      * @param argument the current argument
      * @param expected the iterator of manatory arguments, set to the current
-     *        one
+     *                 one
      * @throws CommandLineException when too many arguments are given
      */
     private void parseMandatory(String argument, Iterator<Argument> expected)

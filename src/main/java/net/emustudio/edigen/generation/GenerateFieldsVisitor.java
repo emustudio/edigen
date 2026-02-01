@@ -1,21 +1,5 @@
-/*
- * This file is part of edigen.
- *
- * Copyright (C) 2011-2023 Matúš Sulír, Peter Jakubčo
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
+/* SPDX-FileCopyrightText: 2011-2026 Matúš Sulír, Peter Jakubčo
+   SPDX-License-Identifier: GPL-3.0-or-later */
 package net.emustudio.edigen.generation;
 
 import net.emustudio.edigen.SemanticException;
@@ -32,7 +16,7 @@ import java.util.Set;
 /**
  * A visitor which generates Java source code of the instruction decoder fields
  * for rules and values.
- *
+ * <p>
  * Each rule (which has at least one returning variant) and string-returning
  * variant is given a unique integral constant which can be later used in a
  * disassembler and emulator.
@@ -41,10 +25,11 @@ public class GenerateFieldsVisitor extends Visitor {
 
     private final PrettyPrinter printer;
     private boolean ruleReturns;
-    private final Set<String> fields = new LinkedHashSet<String>();
+    private final Set<String> fields = new LinkedHashSet<>();
 
     /**
-     * Constucts the visitor.
+     * Constructs the visitor.
+     *
      * @param writer the output stream to write the code to
      */
     public GenerateFieldsVisitor(Writer writer) {
@@ -53,6 +38,7 @@ public class GenerateFieldsVisitor extends Visitor {
 
     /**
      * Writes the constants.
+     *
      * @param decoder the decoder node
      * @throws SemanticException never
      */
@@ -63,12 +49,13 @@ public class GenerateFieldsVisitor extends Visitor {
 
         for (String field : fields) {
             printer.writeLine("public static final int "
-                    + field + " = " + ruleNumber++  + ";");
+                    + field + " = " + ruleNumber++ + ";");
         }
     }
 
     /**
      * Adds the field names for the particular rule to the list.
+     *
      * @param rule the rule node
      * @throws SemanticException never
      */
@@ -87,6 +74,7 @@ public class GenerateFieldsVisitor extends Visitor {
     /**
      * Adds the field to the list and sets the flag if the variant returns
      * something.
+     *
      * @param variant the variant node
      */
     @Override

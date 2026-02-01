@@ -1,21 +1,5 @@
-/*
- * This file is part of edigen.
- *
- * Copyright (C) 2011-2023 Matúš Sulír, Peter Jakubčo
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
+/* SPDX-FileCopyrightText: 2011-2026 Matúš Sulír, Peter Jakubčo
+   SPDX-License-Identifier: GPL-3.0-or-later */
 package net.emustudio.edigen.misc;
 
 import java.util.BitSet;
@@ -23,7 +7,7 @@ import java.util.regex.Pattern;
 
 /**
  * A sequence of bits with defined but modifiable length.
- *
+ * <p>
  * Unlike {@link BitSet}, where the length is determined by the position of the
  * highest bit set to 1, this sequence has an explicitly defined bit count, so
  * it can end with zeroes and the length is preserved. The sequence length can
@@ -49,8 +33,9 @@ public class BitSequence {
 
     /**
      * Constructs a bit sequence with the specified length.
-     *
+     * <p>
      * The bit sequence is initially filled with <code>false</code> values.
+     *
      * @param length the initial sequence length, in bits
      */
     public BitSequence(int length) {
@@ -61,8 +46,9 @@ public class BitSequence {
     /**
      * Constructs a bit sequence with the specified length and fills it with
      * the specified value.
+     *
      * @param length the initial sequence length, in bits
-     * @param value the value to fill the sequence with
+     * @param value  the value to fill the sequence with
      */
     public BitSequence(int length, boolean value) {
         this(length);
@@ -72,10 +58,11 @@ public class BitSequence {
     /**
      * Returns a new instance of bit sequence with the length and content
      * obtained from the binary number represented as a string.
-     *
+     * <p>
      * Leading zeroes are included in the resulting sequence.
+     *
      * @param binaryString the string representation of the binary number; can
-     *        contain only characters '0' and '1'
+     *                     contain only characters '0' and '1'
      * @return the constructed bit sequence
      * @throws NumberFormatException if the input contains invalid characters
      */
@@ -97,10 +84,11 @@ public class BitSequence {
     /**
      * Returns a new instance of bit sequence with the length and content
      * obtained from the hexadecimal number represented as a string.
-     *
+     * <p>
      * Leading zeroes are included in the resulting sequence.
+     *
      * @param hexString the string representation of the hexedecimal number; can
-     *        contain only characters '0' - '9', 'a' - 'f' (or uppercase)
+     *                  contain only characters '0' - '9', 'a' - 'f' (or uppercase)
      * @return the constructed bit sequence
      * @throws NumberFormatException if the input contains invalid characters
      */
@@ -125,6 +113,7 @@ public class BitSequence {
 
     /**
      * Returns the bit at the given index.
+     *
      * @param index the index to read, starting at zero
      * @return the bit as boolean
      * @throws IndexOutOfBoundsException when index is not in [0; length)
@@ -138,6 +127,7 @@ public class BitSequence {
 
     /**
      * Sets the bit at the given index to the specified value.
+     *
      * @param index the index to modify
      * @param value the boolean value
      */
@@ -150,6 +140,7 @@ public class BitSequence {
 
     /**
      * Returns the total length of this bit sequence.
+     *
      * @return the length, in bits
      */
     public int getLength() {
@@ -158,11 +149,12 @@ public class BitSequence {
 
     /**
      * Returns true if the sequence contains only bits of the specified value.
-     *
+     * <p>
      * If the sequence length is zero, <code>true</code> is returned.
+     *
      * @param value the expected bit value
      * @return true if the bit sequence contains only given bits, false
-     *         otherwise
+     * otherwise
      */
     public boolean containsOnly(boolean value) {
         for (int i = 0; i < length; i++) {
@@ -175,6 +167,7 @@ public class BitSequence {
 
     /**
      * Appends another bit sequence to the end of this sequence.
+     *
      * @param bits the sequence to be appended
      */
     public void append(BitSequence bits) {
@@ -188,6 +181,7 @@ public class BitSequence {
 
     /**
      * Appends one bit to the end of this sequence.
+     *
      * @param bit the value to be appended
      */
     public void append(boolean bit) {
@@ -202,6 +196,7 @@ public class BitSequence {
      *
      * <p>For a zero-length sequence, an array containing one empty sequence is
      * returned.</p>
+     *
      * @param bitsPerPiece the number of bits in each sequence
      * @return the array of shorter sequences
      */
@@ -209,7 +204,7 @@ public class BitSequence {
         int count = (int) Math.ceil((double) length / bitsPerPiece);
 
         if (count == 0) {
-            return new BitSequence[] {new BitSequence()};
+            return new BitSequence[]{new BitSequence()};
         } else {
             BitSequence[] sequences = new BitSequence[count];
 
@@ -228,11 +223,12 @@ public class BitSequence {
 
     /**
      * Returns the subsequence of the current bit sequence.
-     * @param start the index of the first bit, included
+     *
+     * @param start  the index of the first bit, included
      * @param length the length of the subsequence, in bits
      * @return the subsequence
      * @throws IndexOutOfBoundsException if the resulting subsequence exceeded
-     *         the sequence boundary
+     *                                   the sequence boundary
      */
     public BitSequence subSequence(int start, int length) {
         if (start < 0 || length < 0 || start + length > this.length)
@@ -248,6 +244,7 @@ public class BitSequence {
 
     /**
      * Returns a bit sequence ANDed with an other bit sequence.
+     *
      * @param other the second sequence
      * @return the result, truncated to the length of the shorter input sequence
      */
@@ -266,6 +263,7 @@ public class BitSequence {
     /**
      * Checks whether the other bit sequence has exactly the same content and
      * length as this sequence.
+     *
      * @param object the sequence to compare
      * @return true if the sequences are same, false otherwise
      */
@@ -281,8 +279,9 @@ public class BitSequence {
 
     /**
      * Returns the hash code of this sequence.
-     *
+     * <p>
      * The algorithm was automatically generated by NetBeans IDE.
+     *
      * @return the computed hash code
      */
     @Override
@@ -297,6 +296,7 @@ public class BitSequence {
 
     /**
      * Returns a string representation of the object.
+     *
      * @return the string
      */
     @Override
@@ -311,6 +311,7 @@ public class BitSequence {
 
     /**
      * Returns this sequence as an array of boolean values.
+     *
      * @return the boolean array
      */
     public boolean[] toBooleanArray() {
@@ -324,9 +325,10 @@ public class BitSequence {
 
     /**
      * Returns the hexadecimal representation of this sequence.
-     *
+     * <p>
      * Before computation, the sequence is zero-padded to whole nibbles from
      * the beginning.
+     *
      * @return the hexadecimal string, in lowercase
      */
     public String toHexadecimal() {

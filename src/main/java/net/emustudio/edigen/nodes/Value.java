@@ -1,21 +1,5 @@
-/*
- * This file is part of edigen.
- *
- * Copyright (C) 2011-2023 Matúš Sulír, Peter Jakubčo
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
+/* SPDX-FileCopyrightText: 2011-2026 Matúš Sulír, Peter Jakubčo
+   SPDX-License-Identifier: GPL-3.0-or-later */
 package net.emustudio.edigen.nodes;
 
 import net.emustudio.edigen.SemanticException;
@@ -34,6 +18,7 @@ public class Value extends TreeNode {
 
     /**
      * Constructs the value.
+     *
      * @param name the rule name
      */
     public Value(String name) {
@@ -42,6 +27,7 @@ public class Value extends TreeNode {
 
     /**
      * Returns the name, as obtained from the input.
+     *
      * @return the name
      */
     public String getName() {
@@ -50,6 +36,7 @@ public class Value extends TreeNode {
 
     /**
      * Returns the rule associated with this value.
+     *
      * @return the rule object
      */
     public Rule getRule() {
@@ -58,6 +45,7 @@ public class Value extends TreeNode {
 
     /**
      * Sets the rule associated with this value.
+     *
      * @param rule the rule object
      */
     public void setRule(Rule rule) {
@@ -66,6 +54,7 @@ public class Value extends TreeNode {
 
     /**
      * Returns the field name which should be generated for this value.
+     *
      * @return the field name
      */
     public String getFieldName() {
@@ -74,6 +63,7 @@ public class Value extends TreeNode {
 
     /**
      * Returns the constant decoding strategies.
+     *
      * @return list of strategy names - e.g., "little_endian"
      */
     public List<String> getStrategies() {
@@ -82,6 +72,7 @@ public class Value extends TreeNode {
 
     /**
      * Sets the constant decoding strategy.
+     *
      * @param strategies the strategy name - e.g., "big_endian"
      */
     public void setStrategies(List<String> strategies) {
@@ -90,6 +81,7 @@ public class Value extends TreeNode {
 
     /**
      * Accepts the visitor.
+     *
      * @param visitor the visitor object
      * @throws SemanticException depends on the specific visitor
      */
@@ -100,6 +92,7 @@ public class Value extends TreeNode {
 
     /**
      * Returns a string representation of the object.
+     *
      * @return the string
      */
     @Override

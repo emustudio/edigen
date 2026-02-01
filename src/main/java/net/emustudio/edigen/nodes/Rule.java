@@ -1,21 +1,5 @@
-/*
- * This file is part of edigen.
- *
- * Copyright (C) 2011-2023 Matúš Sulír, Peter Jakubčo
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
+/* SPDX-FileCopyrightText: 2011-2026 Matúš Sulír, Peter Jakubčo
+   SPDX-License-Identifier: GPL-3.0-or-later */
 package net.emustudio.edigen.nodes;
 
 import net.emustudio.edigen.SemanticException;
@@ -34,6 +18,7 @@ public class Rule extends TreeNode {
 
     /**
      * Constructs a rule with one or more names.
+     *
      * @param names the list of all names of this rule
      */
     public Rule(List<String> names) {
@@ -42,6 +27,7 @@ public class Rule extends TreeNode {
 
     /**
      * Constructs a rule with one name.
+     *
      * @param name the name of this rule
      */
     public Rule(String name) {
@@ -50,6 +36,7 @@ public class Rule extends TreeNode {
 
     /**
      * Returns a list of all names of this rule.
+     *
      * @return the list of names
      */
     public List<String> getNames() {
@@ -59,6 +46,7 @@ public class Rule extends TreeNode {
     /**
      * Returns true if this rule has only one name (not a list of names
      * separated by commas).
+     *
      * @return true if the rule has only one name, false otherwise
      */
     public boolean hasOnlyOneName() {
@@ -67,6 +55,7 @@ public class Rule extends TreeNode {
 
     /**
      * Returns a name of the method which should be generated for this rule.
+     *
      * @return the method name
      */
     public String getMethodName() {
@@ -75,8 +64,9 @@ public class Rule extends TreeNode {
 
     /**
      * Returns a field name which should be generated for this rule (key).
+     *
      * @param ruleName the particular rule name (one rule can have multiple
-     *        names - keys)
+     *                 names - keys)
      * @return the name of a constant for the given key
      */
     public String getFieldName(String ruleName) {
@@ -85,6 +75,7 @@ public class Rule extends TreeNode {
 
     /**
      * Returns a field name of this rule (key). If the rule has more names, return the key of the root rule name.
+     *
      * @return the name of a constant for the given key
      */
     public String getFieldName() {
@@ -94,6 +85,7 @@ public class Rule extends TreeNode {
     /**
      * Returns a human-readable label of this rule - a name or a list of names
      * separated by commas.
+     *
      * @return the label
      */
     public String getLabel() {
@@ -112,6 +104,7 @@ public class Rule extends TreeNode {
 
     /**
      * Determines if it is a root rule
+     *
      * @return true if it is a root rule, false otherwise
      */
     public boolean isRoot() {
@@ -120,6 +113,7 @@ public class Rule extends TreeNode {
 
     /**
      * Get root rule name (if this rule is root).
+     *
      * @return root rule name if this rule is root; null otherwise
      */
     public String getRootRuleName() {
@@ -128,7 +122,8 @@ public class Rule extends TreeNode {
 
     /**
      * Sets if this rule is a root rule.
-     * @param isRoot true if it is a root rule, false otherwise
+     *
+     * @param isRoot       true if it is a root rule, false otherwise
      * @param rootRuleName root rule name used in root rules declaration
      * @return this
      */
@@ -143,6 +138,7 @@ public class Rule extends TreeNode {
 
     /**
      * Accepts the visitor.
+     *
      * @param visitor the visitor object
      * @throws SemanticException depends on the specific visitor
      */
@@ -153,6 +149,7 @@ public class Rule extends TreeNode {
 
     /**
      * Returns a string representation of the object containing a rule name.
+     *
      * @return the string
      */
     @Override

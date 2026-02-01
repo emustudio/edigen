@@ -1,21 +1,5 @@
-/*
- * This file is part of edigen.
- *
- * Copyright (C) 2011-2023 Matúš Sulír, Peter Jakubčo
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
+/* SPDX-FileCopyrightText: 2011-2026 Matúš Sulír, Peter Jakubčo
+   SPDX-License-Identifier: GPL-3.0-or-later */
 package net.emustudio.edigen.nodes;
 
 import net.emustudio.edigen.SemanticException;
@@ -53,8 +37,9 @@ public abstract class TreeNode {
 
     /**
      * Returns the child at given index.
-     *
+     * <p>
      * <em>Note:</em> The average time complexity of this method is O(n).
+     *
      * @param index the index, starting at 0
      * @return the child node
      */
@@ -69,9 +54,10 @@ public abstract class TreeNode {
 
     /**
      * Returns all children of this node.
-     *
+     * <p>
      * A copy of the collection is returned to allow children removal and
      * insertion during the iteration.
+     *
      * @return the iterable collection of all children
      */
     public List<TreeNode> getChildren() {
@@ -80,6 +66,7 @@ public abstract class TreeNode {
 
     /**
      * Returns the number of all direct children of this node.
+     *
      * @return the child count
      */
     public int childCount() {
@@ -88,6 +75,7 @@ public abstract class TreeNode {
 
     /**
      * Adds a child to this node, placing it on the end.
+     *
      * @param child the child node
      * @return this
      */
@@ -99,6 +87,7 @@ public abstract class TreeNode {
 
     /**
      * Adds multiple children to this node, placing them on the end.
+     *
      * @param children the child nodes
      * @return this
      */
@@ -129,7 +118,7 @@ public abstract class TreeNode {
 
     /**
      * Removes this node from the tree.
-     *
+     * <p>
      * This can be described as "tearing off" the node. The link between this
      * node and the parent one is removed bilaterally.
      */
@@ -140,9 +129,10 @@ public abstract class TreeNode {
 
     /**
      * Calls the appropriate visitor method.
-     *
+     * <p>
      * Subclasses should override this method in order to support the visitor
      * design pattern properly.
+     *
      * @param visitor the visitor object
      * @throws SemanticException depends on situation
      */
@@ -152,6 +142,7 @@ public abstract class TreeNode {
 
     /**
      * Sequentially calls the {@link #accept(Visitor)} method for all children.
+     *
      * @param visitor the visitor object
      * @throws SemanticException depends on situation
      */
@@ -163,6 +154,7 @@ public abstract class TreeNode {
     /**
      * Returns the starting line number in the source file from which this node
      * was generated.
+     *
      * @return the line number; null if no line was associated with this node
      */
     public Integer getLine() {
@@ -171,9 +163,10 @@ public abstract class TreeNode {
 
     /**
      * Sets the starting source line number of this node.
-     *
+     * <p>
      * It is the starting position of one of the tokens from which this tree
      * node was generated (usually the first one).
+     *
      * @param line the line number
      */
     public void setLine(Integer line) {
@@ -182,6 +175,7 @@ public abstract class TreeNode {
 
     /**
      * Prints the whole tree recursively.
+     *
      * @param outStream the stream to write to
      */
     public void dump(PrintStream outStream) {
@@ -191,8 +185,9 @@ public abstract class TreeNode {
 
     /**
      * Prints the tree node recursively.
+     *
      * @param outStream the stream to write to
-     * @param indent the indentation level
+     * @param indent    the indentation level
      */
     private void print(PrintStream outStream, int indent) {
         for (int i = 0; i < indent; i++)
