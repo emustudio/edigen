@@ -22,6 +22,8 @@ import net.emustudio.edigen.SemanticException;
 import net.emustudio.edigen.misc.Template;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 
 /**
  * An output code generator.
@@ -126,11 +128,11 @@ public abstract class Generator {
      * @return the template reader
      * @throws FileNotFoundException when the file can not be open
      */
-    private BufferedReader openTemplate() throws FileNotFoundException {
+    private BufferedReader openTemplate() throws IOException {
         BufferedReader templateSource;
 
         if (templateFile != null) {
-            templateSource = new BufferedReader(new FileReader(templateFile));
+            templateSource = Files.newBufferedReader(new File(templateFile).toPath(), StandardCharsets.UTF_8);
         } else {
             InputStream stream = getClass().getResourceAsStream(defaultTemplate);
             templateSource = new BufferedReader(new InputStreamReader(stream));
