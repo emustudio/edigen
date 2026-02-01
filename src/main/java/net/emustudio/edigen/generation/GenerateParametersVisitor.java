@@ -1,21 +1,5 @@
-/*
- * This file is part of edigen.
- *
- * Copyright (C) 2011-2023 Matúš Sulír, Peter Jakubčo
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
+/* SPDX-FileCopyrightText: 2011-2026 Matúš Sulír, Peter Jakubčo
+   SPDX-License-Identifier: GPL-3.0-or-later */
 package net.emustudio.edigen.generation;
 
 import net.emustudio.edigen.SemanticException;
@@ -39,7 +23,8 @@ public class GenerateParametersVisitor extends Visitor {
     private final PrintWriter writer;
 
     /**
-     * Constucts the visitor.
+     * Constructs the visitor.
+     *
      * @param writer the output stream to write the code to
      */
     public GenerateParametersVisitor(Writer writer) {
@@ -48,6 +33,7 @@ public class GenerateParametersVisitor extends Visitor {
 
     /**
      * Writes the list of format sets separated by commas.
+     *
      * @param disassembler the disassembler node
      * @throws SemanticException never
      */
@@ -66,6 +52,7 @@ public class GenerateParametersVisitor extends Visitor {
     /**
      * Writes the list of parameters separated by commas and enclosed in curly
      * brackets.
+     *
      * @param format the format node
      * @throws SemanticException never
      */
@@ -88,6 +75,7 @@ public class GenerateParametersVisitor extends Visitor {
 
     /**
      * Writes the name of the field for the disassembler parameter.
+     *
      * @param value the value node (the parameter)
      * @throws SemanticException never
      */

@@ -1,21 +1,5 @@
-/*
- * This file is part of edigen.
- *
- * Copyright (C) 2011-2023 Matúš Sulír, Peter Jakubčo
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
+/* SPDX-FileCopyrightText: 2011-2026 Matúš Sulír, Peter Jakubčo
+   SPDX-License-Identifier: GPL-3.0-or-later */
 package net.emustudio.edigen.passes;
 
 import net.emustudio.edigen.SemanticException;
@@ -52,16 +36,17 @@ public class DetectRootRulesVisitor extends Visitor {
 
     /**
      * Assigns rule objects to the mapping of names to objects.
-     *
+     * <p>
      * Also checks if some declared root rule name points to already declared rule with another name. If this case
-     * isn't catched, there will be practically multiple tries of decoding the same thing - if it failed once, it
+     * isn't caught, there will be practically multiple tries of decoding the same thing - if it failed once, it
      * certainly fails second time (we assume reading memory is idempotent).
+     *
      * @param rule rule object
      * @throws SemanticException if the rule was already declared as root
      */
     @Override
     public void visit(Rule rule) throws SemanticException {
-        for (String name: rule.getNames()) {
+        for (String name : rule.getNames()) {
             if (visitedRuleNames.contains(name)) {
                 throw new SemanticException("The rule was declared as root more than once (with another name)", rule);
             }

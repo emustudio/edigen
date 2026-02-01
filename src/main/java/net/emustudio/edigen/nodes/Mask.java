@@ -1,21 +1,5 @@
-/*
- * This file is part of edigen.
- *
- * Copyright (C) 2011-2023 Matúš Sulír, Peter Jakubčo
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
+/* SPDX-FileCopyrightText: 2011-2026 Matúš Sulír, Peter Jakubčo
+   SPDX-License-Identifier: GPL-3.0-or-later */
 package net.emustudio.edigen.nodes;
 
 import net.emustudio.edigen.SemanticException;
@@ -35,6 +19,7 @@ public class Mask extends TreeNode {
 
     /**
      * Constructs the mask.
+     *
      * @param bits the bit sequence
      */
     public Mask(BitSequence bits) {
@@ -43,6 +28,7 @@ public class Mask extends TreeNode {
 
     /**
      * Returns the bit sequence.
+     *
      * @return the bit sequence
      */
     public BitSequence getBits() {
@@ -51,8 +37,9 @@ public class Mask extends TreeNode {
 
     /**
      * Returns the starting offset relative to the variant start.
-     *
+     * <p>
      * The result is null if it is not yet determined.
+     *
      * @return the starting offset, in bits
      */
     public Integer getStart() {
@@ -61,6 +48,7 @@ public class Mask extends TreeNode {
 
     /**
      * Sets the starting offset relative to the variant start.
+     *
      * @param start the starting offset, in bits
      */
     public void setStart(int start) {
@@ -69,6 +57,7 @@ public class Mask extends TreeNode {
 
     /**
      * Returns a mask ANDed with an another mask.
+     *
      * @param other the second mask
      * @return the resulting mask
      */
@@ -78,6 +67,7 @@ public class Mask extends TreeNode {
 
     /**
      * Accepts the visitor.
+     *
      * @param visitor the visitor object
      * @throws SemanticException depends on the specific visitor
      */
@@ -88,6 +78,7 @@ public class Mask extends TreeNode {
 
     /**
      * Returns the mask as a string in binary notation.
+     *
      * @return the string
      */
     @Override

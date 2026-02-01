@@ -1,21 +1,5 @@
-/*
- * This file is part of edigen.
- *
- * Copyright (C) 2011-2023 Matúš Sulír, Peter Jakubčo
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
+/* SPDX-FileCopyrightText: 2011-2026 Matúš Sulír, Peter Jakubčo
+   SPDX-License-Identifier: GPL-3.0-or-later */
 package net.emustudio.edigen.passes;
 
 import net.emustudio.edigen.SemanticException;
@@ -39,6 +23,7 @@ public class SemanticCheckVisitor extends Visitor {
     /**
      * Adds the rule to the set of returning rules if one of its variants
      * return.
+     *
      * @param rule the rule node
      * @throws SemanticException on semantic error
      */
@@ -55,8 +40,9 @@ public class SemanticCheckVisitor extends Visitor {
     /**
      * Sets the flag if the variant returns something and starts checking for
      * subrule errors.
-     *
+     * <p>
      * The subrule without length must occur only at the end of the variant.
+     *
      * @param variant the variant node
      * @throws SemanticException on subrule error
      */
@@ -72,6 +58,7 @@ public class SemanticCheckVisitor extends Visitor {
     /**
      * Checks whether a subrule without length was already defined in this
      * variant.
+     *
      * @param pattern the pattern node
      * @throws SemanticException if a subrule without length was defined
      */
@@ -84,6 +71,7 @@ public class SemanticCheckVisitor extends Visitor {
      * Checks whether a subrule without length was already defined in this
      * variant and sets the flag if this subrule does not have a specified
      * length.
+     *
      * @param subrule the surule node
      * @throws SemanticException if a subrule without length was defined
      */
@@ -97,12 +85,13 @@ public class SemanticCheckVisitor extends Visitor {
 
     /**
      * Finds out whether the particular set of rules was not already used.
-     *
+     * <p>
      * Otherwise it would be ambiguous which format to apply when the decoded
      * instruction contained this set of rules.
+     *
      * @param format the format node
      * @throws SemanticException if the set of values was used in multiple
-     *         formats
+     *                           formats
      */
     @Override
     public void visit(Format format) throws SemanticException {
@@ -128,13 +117,14 @@ public class SemanticCheckVisitor extends Visitor {
 
     /**
      * Finds out whether at least one rule's variant can return a value.
-     *
+     * <p>
      * Probably only the fields for variants returning a value will be present
      * in the generated code, so using other variants in a disassembler would
      * cause a syntax error.
+     *
      * @param value the value node
      * @throws SemanticException if the rule which this value refers to
-     *         never returns a value
+     *                           never returns a value
      */
     @Override
     public void visit(Value value) throws SemanticException {
@@ -149,13 +139,14 @@ public class SemanticCheckVisitor extends Visitor {
     /**
      * Checks whether a subrule without length was already defined in this
      * variant.
+     *
      * @throws SemanticException if a subrule without length was already defined
      */
     private void checkSubruleWithoutLength() throws SemanticException {
         if (subruleWithoutLength != null) {
             String name = subruleWithoutLength.getName();
             String message = "Subrule \"" + name + "\" does not have"
-            + " a specified length and is not contained at the variant end";
+                    + " a specified length and is not contained at the variant end";
 
             throw new SemanticException(message, subruleWithoutLength);
         }

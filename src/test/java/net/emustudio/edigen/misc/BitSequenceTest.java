@@ -1,26 +1,8 @@
-/*
- * This file is part of edigen.
- *
- * Copyright (C) 2011-2023 Matúš Sulír, Peter Jakubčo
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
+/* SPDX-FileCopyrightText: 2011-2026 Matúš Sulír, Peter Jakubčo
+   SPDX-License-Identifier: GPL-3.0-or-later */
 package net.emustudio.edigen.misc;
 
 import org.junit.Test;
-
-import java.util.Arrays;
 
 import static org.junit.Assert.*;
 
@@ -48,13 +30,13 @@ public class BitSequenceTest {
     public void testFromHexadecimal() {
         String hexString = "7bC";
         boolean[] expected = {
-            false, true, true, true,
-            true, false, true, true,
-            true, true, false, false
+                false, true, true, true,
+                true, false, true, true,
+                true, true, false, false
         };
         boolean[] result = BitSequence.fromHexadecimal(hexString).toBooleanArray();
 
-        assertTrue(Arrays.equals(expected, result));
+        assertArrayEquals(expected, result);
     }
 
     /**
@@ -65,13 +47,14 @@ public class BitSequenceTest {
         BitSequence bits = new BitSequence(2);
         bits.set(1, true);
 
-        assertEquals(false, bits.get(0));
-        assertEquals(true, bits.get(1));
+        assertFalse(bits.get(0));
+        assertTrue(bits.get(1));
 
         try {
             bits.get(2);
             fail("The expected exception was not thrown.");
-        } catch (IndexOutOfBoundsException ex) { }
+        } catch (IndexOutOfBoundsException ignored) {
+        }
     }
 
     /**
@@ -86,11 +69,11 @@ public class BitSequenceTest {
         bits.set(3, true);
         bits.set(4, false);
 
-        assertEquals(true, bits.get(0));
-        assertEquals(false, bits.get(1));
-        assertEquals(false, bits.get(2));
-        assertEquals(true, bits.get(3));
-        assertEquals(false, bits.get(4));
+        assertTrue(bits.get(0));
+        assertFalse(bits.get(1));
+        assertFalse(bits.get(2));
+        assertTrue(bits.get(3));
+        assertFalse(bits.get(4));
 
         assertEquals(5, bits.getLength());
     }
@@ -127,14 +110,14 @@ public class BitSequenceTest {
         bits.append(new BitSequence(2, true));
         boolean[] expected = {true, true};
         boolean[] result = bits.toBooleanArray();
-        assertTrue(Arrays.equals(expected, result));
+        assertArrayEquals(expected, result);
 
         BitSequence appended = new BitSequence(3);
         appended.set(0, true);
         bits.append(appended);
-        expected = new boolean[] {true, true, true, false, false};
+        expected = new boolean[]{true, true, true, false, false};
         result = bits.toBooleanArray();
-        assertTrue(Arrays.equals(expected, result));
+        assertArrayEquals(expected, result);
     }
 
     /**
@@ -148,15 +131,15 @@ public class BitSequenceTest {
         BitSequence[] result = bits.split(16);
 
         BitSequence[] expected = {
-            new BitSequence(16),
-            new BitSequence(16),
-            new BitSequence(3)
+                new BitSequence(16),
+                new BitSequence(16),
+                new BitSequence(3)
         };
 
         expected[0].set(3, true);
         expected[2].set(1, true);
 
-        assertTrue(Arrays.equals(expected, result));
+        assertArrayEquals(expected, result);
     }
 
     /**
@@ -176,8 +159,8 @@ public class BitSequenceTest {
         BitSequence unequal2 = new BitSequence(3);
 
         assertEquals(equal, test);
-        assertFalse(unequal1.equals(test));
-        assertFalse(unequal2.equals(test));
+        assertNotEquals(unequal1, test);
+        assertNotEquals(unequal2, test);
     }
 
     /**

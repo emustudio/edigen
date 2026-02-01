@@ -1,21 +1,5 @@
-/*
- * This file is part of edigen.
- *
- * Copyright (C) 2011-2023 Matúš Sulír, Peter Jakubčo
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
+/* SPDX-FileCopyrightText: 2011-2026 Matúš Sulír, Peter Jakubčo
+   SPDX-License-Identifier: GPL-3.0-or-later */
 package net.emustudio.edigen.generation;
 
 import net.emustudio.edigen.SemanticException;
@@ -31,7 +15,7 @@ import java.io.Writer;
 /**
  * Finds out max instruction size in bytes.
  */
-public class GenerateMaxInstructionBytes extends Visitor  {
+public class GenerateMaxInstructionBytes extends Visitor {
     private final PrettyPrinter printer;
     private int maxBitSize;
     private int lastStart;
@@ -39,6 +23,7 @@ public class GenerateMaxInstructionBytes extends Visitor  {
 
     /**
      * Constructs the visitor.
+     *
      * @param output the output stream to write the code to
      */
     public GenerateMaxInstructionBytes(Writer output) {
@@ -48,7 +33,7 @@ public class GenerateMaxInstructionBytes extends Visitor  {
     @Override
     public void visit(Decoder decoder) throws SemanticException {
         decoder.acceptChildren(this);
-        int maxBytes = (int)Math.max(1, Math.ceil(maxBitSize / 8.0));
+        int maxBytes = (int) Math.max(1, Math.ceil(maxBitSize / 8.0));
         printer.write(Integer.toString(maxBytes));
     }
 
@@ -63,6 +48,7 @@ public class GenerateMaxInstructionBytes extends Visitor  {
 
     /**
      * Detects max bits size of a mask and its children
+     *
      * @param mask the mask node
      * @throws SemanticException never
      */

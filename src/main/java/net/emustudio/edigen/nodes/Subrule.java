@@ -1,21 +1,5 @@
-/*
- * This file is part of edigen.
- *
- * Copyright (C) 2011-2023 Matúš Sulír, Peter Jakubčo
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
+/* SPDX-FileCopyrightText: 2011-2026 Matúš Sulír, Peter Jakubčo
+   SPDX-License-Identifier: GPL-3.0-or-later */
 package net.emustudio.edigen.nodes;
 
 import net.emustudio.edigen.SemanticException;
@@ -36,8 +20,9 @@ public class Subrule extends TreeNode {
 
     /**
      * Constructs the subrule with an unspecified length.
-     *
+     * <p>
      * Can be located only at the end of a variant.
+     *
      * @param name the subrule name
      */
     public Subrule(String name) {
@@ -46,9 +31,10 @@ public class Subrule extends TreeNode {
 
     /**
      * Constructs the subrule with the specified pre-pattern.
-     *
+     * <p>
      * Can be located only at the end of a variant.
-     * @param name the subrule name
+     *
+     * @param name       the subrule name
      * @param prePattern the forward pattern information
      */
     public Subrule(String name, Pattern prePattern) {
@@ -57,8 +43,9 @@ public class Subrule extends TreeNode {
 
     /**
      * Constructs the subrule with the specified length and pre-pattern.
-     * @param name the subrule name
-     * @param length the subrule length
+     *
+     * @param name       the subrule name
+     * @param length     the subrule length
      * @param prePattern the forward pattern information
      */
     public Subrule(String name, Integer length, Pattern prePattern) {
@@ -69,6 +56,7 @@ public class Subrule extends TreeNode {
 
     /**
      * Returns the subrule name, as obtained from the input.
+     *
      * @return the subrule name
      */
     public String getName() {
@@ -77,8 +65,9 @@ public class Subrule extends TreeNode {
 
     /**
      * Returns the starting offset relative to the variant start.
-     *
+     * <p>
      * The result is null if it is not yet determined.
+     *
      * @return the starting offset, in bits
      */
     public Integer getStart() {
@@ -87,6 +76,7 @@ public class Subrule extends TreeNode {
 
     /**
      * Sets the starting offset relative to the variant start.
+     *
      * @param start the starting offset, in bits
      */
     public void setStart(int start) {
@@ -95,8 +85,9 @@ public class Subrule extends TreeNode {
 
     /**
      * Returns the subrule length.
-     *
+     * <p>
      * The result is null for a rule with an unspecified length.
+     *
      * @return the length in bits
      */
     public Integer getLength() {
@@ -105,9 +96,10 @@ public class Subrule extends TreeNode {
 
     /**
      * Returns the rule to which this subrule refers.
-     *
+     * <p>
      * The result is null if the name was not yet resolved or the subrule
      * does not refer to any rule.
+     *
      * @return the rule object or null
      */
     public Rule getRule() {
@@ -116,6 +108,7 @@ public class Subrule extends TreeNode {
 
     /**
      * Returns the forward pattern information.
+     *
      * @return the pre-pattern
      */
     public Pattern getPrePattern() {
@@ -124,8 +117,9 @@ public class Subrule extends TreeNode {
 
     /**
      * Specifies to which rule this subrule refers.
-     *
+     * <p>
      * Used during name resolution.
+     *
      * @param rule the rule object
      * @return this
      */
@@ -136,6 +130,7 @@ public class Subrule extends TreeNode {
 
     /**
      * Returns the field name which should be generated for this subrule.
+     *
      * @return the field name
      */
     public String getFieldName() {
@@ -144,6 +139,7 @@ public class Subrule extends TreeNode {
 
     /**
      * Accepts the visitor.
+     *
      * @param visitor the visitor object
      * @throws SemanticException depends on the specific visitor
      */
@@ -155,6 +151,7 @@ public class Subrule extends TreeNode {
     /**
      * Returns a string representation of the object containing the rule name
      * and optionally start and length.
+     *
      * @return the string
      */
     @Override

@@ -1,21 +1,5 @@
-/*
- * This file is part of edigen.
- *
- * Copyright (C) 2011-2023 Matúš Sulír, Peter Jakubčo
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
+/* SPDX-FileCopyrightText: 2011-2026 Matúš Sulír, Peter Jakubčo
+   SPDX-License-Identifier: GPL-3.0-or-later */
 package net.emustudio.edigen.ui;
 
 /**
@@ -26,9 +10,10 @@ public class Help {
     private final CommandLine commandLine;
 
     /**
-     * Consturcts the help generator.
+     * Constructs the help generator.
+     *
      * @param executionCommand the command to execute this application
-     * @param commandLine the command line argument parser object
+     * @param commandLine      the command line argument parser object
      */
     public Help(String executionCommand, CommandLine commandLine) {
         this.executionCommand = executionCommand;
@@ -37,6 +22,7 @@ public class Help {
 
     /**
      * Generates the help text.
+     *
      * @return the help text
      */
     public String generate() {
@@ -51,6 +37,7 @@ public class Help {
 
     /**
      * Generates the help for all mandatory arguments.
+     *
      * @param help the string builder to append the text to
      */
     private void generateMandatory(StringBuilder help) {
@@ -69,6 +56,7 @@ public class Help {
 
     /**
      * Generates the help for all optional arguments.
+     *
      * @param help the string builder to append the text to
      */
     private void generateOptional(StringBuilder help) {

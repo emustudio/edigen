@@ -1,21 +1,5 @@
-/*
- * This file is part of edigen.
- *
- * Copyright (C) 2011-2023 Matúš Sulír, Peter Jakubčo
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
+/* SPDX-FileCopyrightText: 2011-2026 Matúš Sulír, Peter Jakubčo
+   SPDX-License-Identifier: GPL-3.0-or-later */
 package net.emustudio.edigen.misc;
 
 import java.io.BufferedReader;
@@ -60,8 +44,9 @@ public class Template {
 
     /**
      * Constructs a template system.
+     *
      * @param template the input template
-     * @param output the writer to write the result to
+     * @param output   the writer to write the result to
      */
     public Template(BufferedReader template, BufferedWriter output) {
         this.template = template;
@@ -70,8 +55,9 @@ public class Template {
 
     /**
      * Sets a value of a variable.
-     * @param name the variable name; must start with a letter or an underscore
-     *             and continue with letters, numbers and underscores
+     *
+     * @param name  the variable name; must start with a letter or an underscore
+     *              and continue with letters, numbers and underscores
      * @param value the variable value
      * @throws IllegalArgumentException if the variable name is invalid
      */
@@ -84,6 +70,7 @@ public class Template {
 
     /**
      * Writes the whole resulting output.
+     *
      * @throws IOException if an exception occurs during writing
      */
     public void write() throws IOException {
@@ -105,6 +92,7 @@ public class Template {
 
     /**
      * Replaces the block variable with its value (if it was already set).
+     *
      * @param matcher the matcher of the whole line containing the block
      *                variable
      * @return the new value of the line
@@ -124,12 +112,13 @@ public class Template {
     /**
      * Replaces the inline variables with their values (if they were already
      * set).
+     *
      * @param line the unmodified line of text
      * @return the new value of the line, with all variables replaced
      */
     private String replaceInlineVariables(String line) {
         Matcher matcher = INLINE_VARIABLE.matcher(line);
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
 
         while (matcher.find()) {
             String name = matcher.group(1);
