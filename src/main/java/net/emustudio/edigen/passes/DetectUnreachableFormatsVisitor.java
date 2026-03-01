@@ -29,10 +29,22 @@ import java.util.*;
  * "%s" = instruction arg;    // unreachable
  */
 public class DetectUnreachableFormatsVisitor extends Visitor {
+
+    /**
+     * Constructs a new detect-unreachable-formats visitor.
+     */
+    public DetectUnreachableFormatsVisitor() {
+    }
+
     private final Set<Set<String>> reachable = new HashSet<>();
     private final Set<Set<String>> formats = new HashSet<>();
     private Set<String> currentFormat;
 
+    /**
+     * Returns the set of reachable format sets.
+     *
+     * @return the reachable format sets
+     */
     public Set<Set<String>> getReachable() {
         return new HashSet<>(reachable);
     }

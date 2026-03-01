@@ -14,6 +14,13 @@ import java.util.*;
  * If one or more undefined root rules are found, an exception is thrown.
  */
 public class DetectRootRulesVisitor extends Visitor {
+
+    /**
+     * Constructs a new detect-root-rules visitor.
+     */
+    public DetectRootRulesVisitor() {
+    }
+
     private final Set<String> rootRuleNames = new LinkedHashSet<>();
     private final Map<String, Rule> rootRulesByName = new HashMap<>();
     private final Set<String> visitedRuleNames = new HashSet<>();

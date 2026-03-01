@@ -21,6 +21,12 @@ import net.emustudio.edigen.nodes.TreeNode;
 public class NarrowMasksVisitor extends Visitor {
 
     /**
+     * Constructs a new narrow-masks visitor.
+     */
+    public NarrowMasksVisitor() {
+    }
+
+    /**
      * Moves all child masks of the rule node except the first one.
      *
      * @param rule the rule node

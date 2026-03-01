@@ -19,6 +19,12 @@ import static net.emustudio.edigen.Setting.*;
  */
 public class Edigen {
 
+    /**
+     * Constructs a new Edigen instance.
+     */
+    public Edigen() {
+    }
+
     private static final Argument[] ARGUMENTS = {
             new Argument("<specification> - File containing the description of instructions",
                     SPECIFICATION),

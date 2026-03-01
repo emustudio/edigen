@@ -61,6 +61,12 @@ import java.util.List;
  */
 public class DetectAmbiguousVisitor extends Visitor {
 
+    /**
+     * Constructs a new detect-ambiguous visitor.
+     */
+    public DetectAmbiguousVisitor() {
+    }
+
     private static final String MESSAGE = "Ambiguity detected in rule \"%s\"";
     private Rule currentRule;
     private final List<Mask> masks = new ArrayList<>();

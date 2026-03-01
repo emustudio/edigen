@@ -18,6 +18,12 @@ import java.util.*;
  */
 public abstract class TreeNode {
 
+    /**
+     * Constructs a new tree node.
+     */
+    public TreeNode() {
+    }
+
     private TreeNode parent;
     // NOTE: Since almost all TreeNodes implement equals(), calling e.g. children.remove(this) can fail. Therefore we
     //       need a key which does not override equals() - so the comparison is the same as using `==`
@@ -98,6 +104,12 @@ public abstract class TreeNode {
         return this;
     }
 
+    /**
+     * Adds multiple children from a list to this node, placing them on the end.
+     *
+     * @param children the child nodes
+     * @return this
+     */
     public TreeNode addChildren(List<TreeNode> children) {
         for (TreeNode child : children) {
             addChild(child);
@@ -105,8 +117,18 @@ public abstract class TreeNode {
         return this;
     }
 
+    /**
+     * Creates a shallow copy of this node (without children).
+     *
+     * @return the shallow copy
+     */
     public abstract TreeNode shallowCopy();
 
+    /**
+     * Creates a deep copy of this node, including all children.
+     *
+     * @return the deep copy
+     */
     public TreeNode copy() {
         TreeNode cp = shallowCopy();
         for (TreeNode child : children.values()) {

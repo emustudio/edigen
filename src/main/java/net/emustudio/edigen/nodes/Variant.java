@@ -16,6 +16,12 @@ import java.util.regex.Pattern;
  */
 public class Variant extends TreeNode {
 
+    /**
+     * Constructs a new variant node.
+     */
+    public Variant() {
+    }
+
     private enum ReturnType {
         NOTHING,
         STRING,

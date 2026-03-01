@@ -16,6 +16,12 @@ import net.emustudio.edigen.nodes.TreeNode;
 public class RemoveUnreachablePatternsVisitor extends Visitor {
 
     /**
+     * Constructs a new remove-unreachable-patterns visitor.
+     */
+    public RemoveUnreachablePatternsVisitor() {
+    }
+
+    /**
      * Removes the child pattern if the mask contains only zeroes.
      *
      * @param mask the mask node

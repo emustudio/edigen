@@ -37,6 +37,12 @@ import net.emustudio.edigen.nodes.Variant;
  */
 public class MergePatternsVisitor extends Visitor {
 
+    /**
+     * Constructs a new merge-patterns visitor.
+     */
+    public MergePatternsVisitor() {
+    }
+
     private BitSequence maskBits;
     private BitSequence patternBits;
 
