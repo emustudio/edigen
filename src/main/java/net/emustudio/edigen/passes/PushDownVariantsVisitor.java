@@ -33,6 +33,12 @@ import net.emustudio.edigen.nodes.*;
  */
 public class PushDownVariantsVisitor extends Visitor {
 
+    /**
+     * Constructs a new push-down-variants visitor.
+     */
+    public PushDownVariantsVisitor() {
+    }
+
     private Variant currentVariant;
     private Mask topMask;
 

@@ -17,6 +17,12 @@ import java.util.Set;
  */
 public class DetectUnusedRulesVisitor extends Visitor {
 
+    /**
+     * Constructs a new detect-unused-rules visitor.
+     */
+    public DetectUnusedRulesVisitor() {
+    }
+
     private static final String MESSAGE = "Unused rule detected: \"%s\"";
     private boolean rootRuleVisited;
     private final Set<String> knownRules = new HashSet<>();

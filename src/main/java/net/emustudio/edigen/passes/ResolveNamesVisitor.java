@@ -19,6 +19,12 @@ import java.util.*;
  */
 public class ResolveNamesVisitor extends Visitor {
 
+    /**
+     * Constructs a new resolve-names visitor.
+     */
+    public ResolveNamesVisitor() {
+    }
+
     private final Map<String, Rule> rules = new LinkedHashMap<>();
     private final List<Rule> inferredRules = new ArrayList<>();
     private final Set<String> ruleFieldNames = new LinkedHashSet<>();

@@ -42,6 +42,12 @@ import java.util.Map;
  */
 public class GroupVisitor extends Visitor {
 
+    /**
+     * Constructs a new group visitor.
+     */
+    public GroupVisitor() {
+    }
+
     private boolean savingBits;
     private BitSequence savedBits;
 

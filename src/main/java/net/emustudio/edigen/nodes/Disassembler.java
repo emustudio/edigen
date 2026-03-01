@@ -11,6 +11,12 @@ import net.emustudio.edigen.Visitor;
 public class Disassembler extends TreeNode {
 
     /**
+     * Constructs a new disassembler node.
+     */
+    public Disassembler() {
+    }
+
+    /**
      * Accepts the visitor.
      *
      * @param visitor the visitor object

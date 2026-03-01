@@ -47,6 +47,12 @@ import java.util.List;
  */
 public class SortVisitor extends Visitor {
 
+    /**
+     * Constructs a new sort visitor.
+     */
+    public SortVisitor() {
+    }
+
     private final List<Mask> masks = new ArrayList<>();
     private final Comparator<Mask> byLength = Comparator.comparingInt((Mask mask) -> mask.getBits().getLength());
 

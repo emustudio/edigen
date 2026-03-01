@@ -14,6 +14,12 @@ import java.util.Set;
  */
 public class SemanticCheckVisitor extends Visitor {
 
+    /**
+     * Constructs a new semantic-check visitor.
+     */
+    public SemanticCheckVisitor() {
+    }
+
     private final Set<Set<String>> formatSet = new HashSet<>();
     private final Set<String> valueSet = new HashSet<>();
     private boolean variantReturns;

@@ -41,6 +41,12 @@ import static net.emustudio.edigen.nodes.Decoder.UNIT_SIZE_BITS;
  */
 public class SplitVisitor extends Visitor {
 
+    /**
+     * Constructs a new split visitor.
+     */
+    public SplitVisitor() {
+    }
+
     private BitSequence maskBits;
     private BitSequence patternBits;
 
