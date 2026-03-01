@@ -16,6 +16,11 @@ group = 'net.emustudio'
 description = 'Emulator Disassembler Generator'
 version = '1.5.3-SNAPSHOT'
 
+java {
+  sourceCompatibility = JavaVersion.VERSION_11
+  targetCompatibility = JavaVersion.VERSION_11
+}
+
 dependencies {
   testImplementation 'junit:junit:4.13.2'
 }
@@ -71,6 +76,7 @@ mavenPublishing {
 
 tasks.withType(JavaCompile) {
   options.encoding = 'UTF-8'
+  options.compilerArgs += ['-Xlint:-dep-ann']
 }
 
 signing {
