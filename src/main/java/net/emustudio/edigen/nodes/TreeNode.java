@@ -17,13 +17,6 @@ import java.util.*;
  * preserved.</p>
  */
 public abstract class TreeNode {
-
-    /**
-     * Constructs a new tree node.
-     */
-    public TreeNode() {
-    }
-
     private TreeNode parent;
     // NOTE: Since almost all TreeNodes implement equals(), calling e.g. children.remove(this) can fail. Therefore we
     //       need a key which does not override equals() - so the comparison is the same as using `==`
@@ -98,9 +91,7 @@ public abstract class TreeNode {
      * @return this
      */
     public TreeNode addChildren(TreeNode... children) {
-        for (TreeNode child : children) {
-            addChild(child);
-        }
+        Arrays.stream(children).forEach(this::addChild);
         return this;
     }
 
@@ -111,9 +102,7 @@ public abstract class TreeNode {
      * @return this
      */
     public TreeNode addChildren(List<TreeNode> children) {
-        for (TreeNode child : children) {
-            addChild(child);
-        }
+        children.forEach(this::addChild);
         return this;
     }
 

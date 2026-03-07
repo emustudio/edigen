@@ -181,22 +181,16 @@ public class Subrule extends TreeNode {
         if (o == null || getClass() != o.getClass()) return false;
 
         Subrule subrule = (Subrule) o;
-
-        if (!Objects.equals(name, subrule.name)) return false;
-        if (!Objects.equals(start, subrule.start)) return false;
-        if (!Objects.equals(length, subrule.length)) return false;
-        if (!Objects.equals(prePattern, subrule.prePattern)) return false;
-        return Objects.equals(rule, subrule.rule);
+        return Objects.equals(name, subrule.name) &&
+                Objects.equals(start, subrule.start) &&
+                Objects.equals(length, subrule.length) &&
+                Objects.equals(prePattern, subrule.prePattern) &&
+                Objects.equals(rule, subrule.rule);
     }
 
     @Override
     public int hashCode() {
-        int result = name != null ? name.hashCode() : 0;
-        result = 31 * result + (start != null ? start.hashCode() : 0);
-        result = 31 * result + (length != null ? length.hashCode() : 0);
-        result = 31 * result + (prePattern != null ? prePattern.hashCode() : 0);
-        result = 31 * result + (rule != null ? rule.hashCode() : 0);
-        return result;
+        return Objects.hash(name, start, length, prePattern, rule);
     }
 
     @Override

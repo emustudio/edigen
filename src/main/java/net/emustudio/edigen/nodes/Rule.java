@@ -89,17 +89,7 @@ public class Rule extends TreeNode {
      * @return the label
      */
     public String getLabel() {
-        Iterator<String> nameIterator = names.iterator();
-        StringBuilder result = new StringBuilder();
-
-        while (nameIterator.hasNext()) {
-            result.append(nameIterator.next());
-
-            if (nameIterator.hasNext())
-                result.append(", ");
-        }
-
-        return result.toString();
+        return String.join(", ", names);
     }
 
     /**
@@ -163,13 +153,12 @@ public class Rule extends TreeNode {
         if (o == null || getClass() != o.getClass()) return false;
 
         Rule rule = (Rule) o;
-
         return Objects.equals(names, rule.names);
     }
 
     @Override
     public int hashCode() {
-        return names != null ? names.hashCode() : 0;
+        return Objects.hash(names);
     }
 
     @Override

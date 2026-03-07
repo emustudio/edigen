@@ -41,10 +41,7 @@ public class Variant extends TreeNode {
      * @return the string, or null if the variant returns a subrule or nothing
      */
     public String getReturnString() {
-        if (returnType == ReturnType.STRING)
-            return returnString;
-        else
-            return null;
+        return returnType == ReturnType.STRING ? returnString : null;
     }
 
     /**
@@ -63,10 +60,7 @@ public class Variant extends TreeNode {
      * @return the subrule, or null if the variant returns a string or nothing
      */
     public Subrule getReturnSubrule() {
-        if (returnType == ReturnType.SUBRULE)
-            return returnSubrule;
-        else
-            return null;
+        return returnType == ReturnType.SUBRULE ? returnSubrule : null;
     }
 
     /**
@@ -94,10 +88,7 @@ public class Variant extends TreeNode {
      * @return the field name, or null if the variant does not return a string
      */
     public String getFieldName() {
-        if (returnType == ReturnType.STRING)
-            return makeIdentifierName(returnString);
-        else
-            return null;
+        return returnType == ReturnType.STRING ? makeIdentifierName(returnString) : null;
     }
 
     /**
@@ -137,8 +128,9 @@ public class Variant extends TreeNode {
     private String makeIdentifierName(String string) {
         string = string.trim().toUpperCase();
 
-        if (LEADING_DIGITS.matcher(string).matches())
+        if (LEADING_DIGITS.matcher(string).matches()) {
             string = '_' + string;
+        }
 
         string = string.replace(' ', '_');
 
@@ -152,10 +144,9 @@ public class Variant extends TreeNode {
 
         Variant variant = (Variant) o;
 
-        if (returnType != variant.returnType) return false;
-        if (!Objects.equals(returnString, variant.returnString))
-            return false;
-        return Objects.equals(returnSubrule, variant.returnSubrule);
+        return returnType == variant.returnType &&
+                Objects.equals(returnString, variant.returnString) &&
+                Objects.equals(returnSubrule, variant.returnSubrule);
     }
 
     @Override
