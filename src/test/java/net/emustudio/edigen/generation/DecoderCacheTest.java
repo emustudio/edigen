@@ -125,14 +125,6 @@ public class DecoderCacheTest {
                     new CacheEntry(instrBytes, instruction));
             return instruction;
         }
-
-        void invalidateCache() {
-            cache.clear();
-        }
-
-        void invalidateCache(int memoryPosition) {
-            cache.remove(memoryPosition);
-        }
     }
 
     /**
@@ -236,52 +228,6 @@ public class DecoderCacheTest {
                 uncachedDecoder.decodeCount);
     }
 
-    // ------- Manual invalidation (still available) -------
-
-    @Test
-    public void testInvalidateCache_fullClear_forcesRedecode() {
-        cachedDecoder.decode(0x100);
-        assertEquals(1, cachedDecoder.decodeCount);
-
-        cachedDecoder.invalidateCache();
-
-        cachedDecoder.decode(0x100);
-        assertEquals(
-                "After full invalidation, must re-decode",
-                2, cachedDecoder.decodeCount);
-    }
-
-    @Test
-    public void testInvalidateCache_singleAddress_forcesRedecode() {
-        cachedDecoder.decode(0x100);
-        cachedDecoder.decode(0x200);
-        assertEquals(2, cachedDecoder.decodeCount);
-
-        cachedDecoder.invalidateCache(0x100);
-
-        cachedDecoder.decode(0x100);  // must re-decode
-        cachedDecoder.decode(0x200);  // still cached
-        assertEquals(
-                "Only invalidated address should be re-decoded",
-                3, cachedDecoder.decodeCount);
-    }
-
-    @Test
-    public void testInvalidateCache_singleAddress_othersUnaffected() {
-        cachedDecoder.decode(0x100);
-        cachedDecoder.decode(0x200);
-        cachedDecoder.decode(0x300);
-        assertEquals(3, cachedDecoder.decodeCount);
-
-        cachedDecoder.invalidateCache(0x200);
-
-        cachedDecoder.decode(0x100);
-        cachedDecoder.decode(0x300);
-
-        assertEquals(
-                "Non-invalidated addresses stay cached",
-                3, cachedDecoder.decodeCount);
-    }
 
     // ------- LRU eviction -------
 

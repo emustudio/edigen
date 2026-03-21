@@ -97,22 +97,6 @@ public class %decoder_class% implements Decoder {
         return instruction;
     }
 
-    /**
-     * Invalidates the entire decoded instruction cache.
-     */
-    public void invalidateCache() {
-        cache.clear();
-    }
-
-    /**
-     * Invalidates cached decoded instruction at a specific
-     * memory position.
-     * @param memoryPosition the memory address to invalidate
-     */
-    public void invalidateCache(int memoryPosition) {
-        cache.remove(memoryPosition);
-    }
-
 
     /**
      * Reads an arbitrary number of bits of the current instruction.
