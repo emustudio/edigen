@@ -4,7 +4,6 @@ package %decoder_package%;
 import net.emustudio.emulib.plugins.cpu.DecodedInstruction;
 import net.emustudio.emulib.plugins.cpu.Decoder;
 import net.emustudio.emulib.plugins.cpu.InvalidInstructionException;
-import net.emustudio.emulib.plugins.memory.Memory.MemoryListener;
 import net.emustudio.emulib.plugins.memory.MemoryContext;
 import net.emustudio.emulib.runtime.helpers.NumberUtils;
 
@@ -18,11 +17,8 @@ import static net.emustudio.emulib.runtime.helpers.NumberUtils.*;
 
 /**
  * The instruction decoder.
- * <p>
- * Implements {@link MemoryListener} for automatic cache invalidation
- * when memory contents change (self-modifying code detection).
  */
-public class %decoder_class% implements Decoder, MemoryListener {
+public class %decoder_class% implements Decoder {
     private static final int MAX_INSTRUCTION_BYTES = %max_instruction_bytes%;
     private static final int CACHE_CAPACITY = 256;
 
@@ -50,18 +46,17 @@ public class %decoder_class% implements Decoder, MemoryListener {
 
     /**
      * The constructor.
-     * Automatically registers as a memory listener for cache invalidation.
      * @param memory the memory context which will be used to read instructions
      */
     public %decoder_class%(MemoryContext<? extends Number> memory) {
         this.memory = Objects.requireNonNull(memory);
-        this.memory.addMemoryListener(this);
     }
 
     /**
      * Decodes an instruction.
      * Results are cached by memory position for performance.
-     * The cache is automatically invalidated when memory changes.
+     * Call {@link #invalidateCache()} when memory contents change
+     * (e.g., program loading, self-modifying code).
      * @param memoryPosition the address of the start of the instruction
      * @return the decoded instruction object
      * @throws InvalidInstructionException when decoding is not successful
@@ -86,33 +81,9 @@ public class %decoder_class% implements Decoder, MemoryListener {
     }
 
     /**
-     * Called automatically when a memory cell changes.
-     * Invalidates all cached instructions whose byte range
-     * overlaps the changed memory position.
-     * @param memoryPosition the changed memory address
-     */
-    @Override
-    public void memoryChanged(int memoryPosition) {
-        // An instruction starting at any position in
-        // [memoryPosition - MAX_INSTRUCTION_BYTES + 1, memoryPosition]
-        // could span across the changed byte.
-        int from = Math.max(0, memoryPosition - MAX_INSTRUCTION_BYTES + 1);
-        for (int pos = from; pos <= memoryPosition; pos++) {
-            cache.remove(pos);
-        }
-    }
-
-    /**
-     * Called automatically when memory size changes.
-     * Invalidates the entire cache.
-     */
-    @Override
-    public void memorySizeChanged() {
-        cache.clear();
-    }
-
-    /**
      * Invalidates the entire decoded instruction cache.
+     * Should be called when memory contents change (e.g., program
+     * loading, self-modifying code).
      */
     public void invalidateCache() {
         cache.clear();
@@ -127,14 +98,6 @@ public class %decoder_class% implements Decoder, MemoryListener {
         cache.remove(memoryPosition);
     }
 
-    /**
-     * Removes this decoder from memory listener list.
-     * Should be called when the decoder is no longer needed.
-     */
-    public void close() {
-        memory.removeMemoryListener(this);
-        cache.clear();
-    }
 
     /**
      * Reads an arbitrary number of bits of the current instruction.

@@ -10,7 +10,6 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Tests the LRU cache pattern used in the generated Decoder template
@@ -44,18 +43,14 @@ public class DecoderCacheTest {
     }
 
     /**
-     * Simulates the generated decoder with the LRU cache and
-     * MemoryListener from Decoder.edt. The "expensive decoding" is
-     * replaced by a counter so we can measure real decodes.
-     * <p>
-     * maxInstructionBytes mirrors MAX_INSTRUCTION_BYTES from the
-     * template (configurable in tests to verify range invalidation).
+     * Simulates the generated decoder with the LRU cache from
+     * Decoder.edt. The "expensive decoding" is replaced by a
+     * counter so we can measure how many real decodes happen.
      */
     private static class CachedDecoder {
         private static final int CACHE_CAPACITY = 256;
 
         int decodeCount = 0;
-        final int maxInstructionBytes;
 
         private final Map<Integer, FakeDecodedInstruction> cache =
                 new LinkedHashMap<Integer, FakeDecodedInstruction>(
@@ -67,14 +62,6 @@ public class DecoderCacheTest {
                         return size() > CACHE_CAPACITY;
                     }
                 };
-
-        CachedDecoder(int maxInstructionBytes) {
-            this.maxInstructionBytes = maxInstructionBytes;
-        }
-
-        CachedDecoder() {
-            this(4); // default: 4-byte instructions
-        }
 
         FakeDecodedInstruction decode(int memoryPosition) {
             FakeDecodedInstruction cached = cache.get(memoryPosition);
@@ -90,38 +77,12 @@ public class DecoderCacheTest {
             return instruction;
         }
 
-        // --- MemoryListener methods (mirrors Decoder.edt) ---
-
-        void memoryChanged(int memoryPosition) {
-            int from = Math.max(0,
-                    memoryPosition - maxInstructionBytes + 1);
-            for (int pos = from; pos <= memoryPosition; pos++) {
-                cache.remove(pos);
-            }
-        }
-
-        void memorySizeChanged() {
-            cache.clear();
-        }
-
-        // --- Manual invalidation methods ---
-
         void invalidateCache() {
             cache.clear();
         }
 
         void invalidateCache(int memoryPosition) {
             cache.remove(memoryPosition);
-        }
-
-        void close() {
-            // In the real template, this calls
-            // memory.removeMemoryListener(this)
-            cache.clear();
-        }
-
-        int cacheSize() {
-            return cache.size();
         }
     }
 
@@ -318,176 +279,5 @@ public class DecoderCacheTest {
         assertEquals(
                 "LRU entry should have been evicted",
                 258, cachedDecoder.decodeCount);
-    }
-
-    // ----- Automatic memory-change invalidation tests -----
-
-    @Test
-    public void testMemoryChanged_invalidatesExactAddress() {
-        cachedDecoder.decode(10);
-        assertEquals(1, cachedDecoder.decodeCount);
-
-        cachedDecoder.memoryChanged(10);
-
-        cachedDecoder.decode(10);
-        assertEquals(
-                "Write at exact address forces re-decode",
-                2, cachedDecoder.decodeCount);
-    }
-
-    @Test
-    public void testMemoryChanged_invalidatesOverlappingInstructions() {
-        // MAX_INSTRUCTION_BYTES = 4 (default).
-        // Instructions starting at 7, 8, 9, 10 could all
-        // overlap a byte written at position 10.
-        CachedDecoder d = new CachedDecoder(4);
-        d.decode(7);
-        d.decode(8);
-        d.decode(9);
-        d.decode(10);
-        assertEquals(4, d.decodeCount);
-
-        d.memoryChanged(10);
-
-        // All four must be re-decoded
-        d.decode(7);
-        d.decode(8);
-        d.decode(9);
-        d.decode(10);
-        assertEquals(
-                "All overlapping instruction starts invalidated",
-                8, d.decodeCount);
-    }
-
-    @Test
-    public void testMemoryChanged_doesNotInvalidateBeyondRange() {
-        CachedDecoder d = new CachedDecoder(4);
-        d.decode(5);   // starts at 5, ends at 8 → does NOT cover 10
-        d.decode(6);   // starts at 6, ends at 9 → does NOT cover 10
-        d.decode(7);   // starts at 7, ends at 10 → covers 10
-        d.decode(10);
-        assertEquals(4, d.decodeCount);
-
-        d.memoryChanged(10);
-
-        // 5 and 6 should still be cached (out of range)
-        d.decode(5);
-        d.decode(6);
-        assertEquals(
-                "Addresses before overlap range stay cached",
-                4, d.decodeCount);
-
-        // 7 and 10 were invalidated
-        d.decode(7);
-        d.decode(10);
-        assertEquals(
-                "Addresses within overlap range re-decoded",
-                6, d.decodeCount);
-    }
-
-    @Test
-    public void testMemoryChanged_nearZero_clampedToZero() {
-        // Write at position 1 with MAX=4 → range [max(0,-2), 1]
-        CachedDecoder d = new CachedDecoder(4);
-        d.decode(0);
-        d.decode(1);
-        assertEquals(2, d.decodeCount);
-
-        d.memoryChanged(1);
-
-        d.decode(0);
-        d.decode(1);
-        assertEquals(
-                "Both addresses invalidated (range clamped to 0)",
-                4, d.decodeCount);
-    }
-
-    @Test
-    public void testMemoryChanged_singleByteInstruction() {
-        // MAX_INSTRUCTION_BYTES = 1 → only exact position
-        CachedDecoder d = new CachedDecoder(1);
-        d.decode(10);
-        d.decode(11);
-        assertEquals(2, d.decodeCount);
-
-        d.memoryChanged(10);
-
-        d.decode(10);  // re-decoded
-        d.decode(11);  // still cached
-        assertEquals(
-                "1-byte instr: only exact position invalidated",
-                3, d.decodeCount);
-    }
-
-    @Test
-    public void testMemoryChanged_doesNotAffectUncachedPositions() {
-        cachedDecoder.decode(100);
-        assertEquals(1, cachedDecoder.decodeCount);
-
-        // Write at distant position — nothing should happen
-        cachedDecoder.memoryChanged(500);
-
-        cachedDecoder.decode(100);
-        assertEquals(
-                "Distant write does not affect cached entry",
-                1, cachedDecoder.decodeCount);
-    }
-
-    @Test
-    public void testMemorySizeChanged_clearsEntireCache() {
-        cachedDecoder.decode(0);
-        cachedDecoder.decode(100);
-        cachedDecoder.decode(200);
-        assertEquals(3, cachedDecoder.decodeCount);
-
-        cachedDecoder.memorySizeChanged();
-
-        cachedDecoder.decode(0);
-        cachedDecoder.decode(100);
-        cachedDecoder.decode(200);
-        assertEquals(
-                "Memory resize clears entire cache",
-                6, cachedDecoder.decodeCount);
-    }
-
-    @Test
-    public void testSelfModifyingCode_loopWithWrite() {
-        // Simulate: tight loop where one instruction modifies
-        // another instruction inside the loop body.
-        // Loop body: addresses 0, 1, 2 (3-byte instructions)
-        // Address 2 is self-modified on each iteration.
-        CachedDecoder d = new CachedDecoder(3);
-
-        for (int iter = 0; iter < 100; iter++) {
-            d.decode(0);
-            d.decode(1);
-            d.decode(2);
-            // Self-modifying code: write at address 2
-            d.memoryChanged(2);
-        }
-
-        // Address 0: decoded once (never invalidated)
-        // Address 1: decoded once on iter 0, then invalidated
-        //   on every memoryChanged(2) because range = [0, 2]
-        //   so re-decoded 99 times → total 100
-        // Address 2: same — decoded 100 times
-        // With MAX=3, memoryChanged(2) invalidates [0, 1, 2]
-        // So all 3 get invalidated each iteration.
-        assertEquals(
-                "Self-modifying code: each iteration re-decodes",
-                300, d.decodeCount);
-    }
-
-    @Test
-    public void testClose_clearsCache() {
-        cachedDecoder.decode(0x100);
-        cachedDecoder.decode(0x200);
-        assertEquals(2, cachedDecoder.cacheSize());
-
-        cachedDecoder.close();
-
-        assertEquals(
-                "close() should clear the cache",
-                0, cachedDecoder.cacheSize());
     }
 }
