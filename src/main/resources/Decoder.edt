@@ -8,6 +8,8 @@ import net.emustudio.emulib.plugins.memory.MemoryContext;
 import net.emustudio.emulib.runtime.helpers.NumberUtils;
 
 import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Objects;
 
 import static net.emustudio.emulib.runtime.helpers.NumberUtils.*;
@@ -18,6 +20,7 @@ import static net.emustudio.emulib.runtime.helpers.NumberUtils.*;
  */
 public class %decoder_class% implements Decoder {
     private static final int MAX_INSTRUCTION_BYTES = %max_instruction_bytes%;
+    private static final int CACHE_CAPACITY = 256;
 
     private byte[] instructionBytes;
     private final MemoryContext<? extends Number> memory;
@@ -25,9 +28,22 @@ public class %decoder_class% implements Decoder {
     private int unit;
     private int bitsRead;
     private DecodedInstruction instruction;
-    
+
+    /**
+     * LRU cache of decoded instructions keyed by memory position.
+     * Evicts least-recently-used entries when capacity is exceeded.
+     */
+    private final Map<Integer, DecodedInstruction> cache = new LinkedHashMap<Integer, DecodedInstruction>(
+            CACHE_CAPACITY + 1, 0.75f, true
+    ) {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<Integer, DecodedInstruction> eldest) {
+            return size() > CACHE_CAPACITY;
+        }
+    };
+
     %decoder_fields%
-    
+
     /**
      * The constructor.
      * @param memory the memory context which will be used to read instructions
@@ -35,15 +51,23 @@ public class %decoder_class% implements Decoder {
     public %decoder_class%(MemoryContext<? extends Number> memory) {
         this.memory = Objects.requireNonNull(memory);
     }
-    
+
     /**
      * Decodes an instruction.
+     * Results are cached by memory position for performance; call
+     * {@link #invalidateCache()} or {@link #invalidateCache(int)} when
+     * memory contents change.
      * @param memoryPosition the address of the start of the instruction
      * @return the decoded instruction object
      * @throws InvalidInstructionException when decoding is not successful
      */
     @Override
     public DecodedInstruction decode(int memoryPosition) throws InvalidInstructionException {
+        DecodedInstruction cached = cache.get(memoryPosition);
+        if (cached != null) {
+            return cached;
+        }
+
         this.instructionBytes = numbersToNativeBytes(memory.read(memoryPosition, MAX_INSTRUCTION_BYTES));
 
         instruction = new DecodedInstruction();
@@ -52,7 +76,26 @@ public class %decoder_class% implements Decoder {
         %root_rule%;
 
         instruction.setImage(Arrays.copyOfRange(instructionBytes, 0, (int)Math.max(1, Math.ceil(bitsRead / 8.0))));
+        cache.put(memoryPosition, instruction);
         return instruction;
+    }
+
+    /**
+     * Invalidates the entire decoded instruction cache.
+     * Should be called when memory contents change (e.g., program loading,
+     * self-modifying code).
+     */
+    public void invalidateCache() {
+        cache.clear();
+    }
+
+    /**
+     * Invalidates cached decoded instruction at a specific memory position.
+     * Should be called when memory at that position changes.
+     * @param memoryPosition the memory address to invalidate
+     */
+    public void invalidateCache(int memoryPosition) {
+        cache.remove(memoryPosition);
     }
 
     /**
@@ -69,6 +112,6 @@ public class %decoder_class% implements Decoder {
         }
         return NumberUtils.readBits(instructionBytes, start, length, Strategy.BIG_ENDIAN);
     }
-    
+
     %decoder_methods%
 }
