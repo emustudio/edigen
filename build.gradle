@@ -14,7 +14,7 @@ plugins {
 
 group = 'net.emustudio'
 description = 'Emulator Disassembler Generator'
-version = '1.5.3.1-SNAPSHOT'
+version = '1.6.0-SNAPSHOT'
 
 java {
   sourceCompatibility = JavaVersion.VERSION_11
