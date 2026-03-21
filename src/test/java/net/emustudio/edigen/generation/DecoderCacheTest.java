@@ -5,35 +5,39 @@ package net.emustudio.edigen.generation;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertSame;
 
 /**
- * Tests the LRU cache pattern used in the generated Decoder template
- * (Decoder.edt). Verifies that caching reduces the number of actual
- * decode operations (memory reads + switch-cascade traversals) and
- * that automatic memory-change invalidation works correctly.
+ * Tests the verify-on-read LRU cache pattern used in the generated
+ * Decoder template (Decoder.edt).
  * <p>
- * The caching logic tested here mirrors the generated code exactly:
+ * The cache stores raw instruction bytes alongside each decoded
+ * result. On cache hit the current memory bytes are re-read and
+ * compared with the stored ones so that self-modifying code is
+ * detected automatically — no external listener or manual
+ * invalidation needed.
+ * <p>
+ * The caching logic tested here mirrors the generated code:
  * <pre>
- *   DecodedInstruction cached = cache.get(memoryPosition);
- *   if (cached != null) {
- *       return cached;
- *   }
+ *   instructionBytes = memory.read(pos, MAX);
+ *   CacheEntry e = cache.get(pos);
+ *   if (e != null &amp;&amp; Arrays.equals(e.rawBytes, instructionBytes))
+ *       return e.instruction;
  *   // ... expensive decoding ...
- *   cache.put(memoryPosition, instruction);
- *   return instruction;
+ *   cache.put(pos, new CacheEntry(instructionBytes, instr));
  * </pre>
  */
 public class DecoderCacheTest {
 
-    /**
-     * Simulates a decoded instruction (stands in for emuLib's
-     * DecodedInstruction which is not on the test classpath).
-     */
+    // --- Fakes mirroring the generated template types ---
+
     private static class FakeDecodedInstruction {
         final int address;
 
@@ -42,38 +46,83 @@ public class DecoderCacheTest {
         }
     }
 
+    private static class CacheEntry {
+        final byte[] rawBytes;
+        final FakeDecodedInstruction instruction;
+
+        CacheEntry(byte[] rawBytes, FakeDecodedInstruction instr) {
+            this.rawBytes = rawBytes;
+            this.instruction = instr;
+        }
+    }
+
     /**
-     * Simulates the generated decoder with the LRU cache from
-     * Decoder.edt. The "expensive decoding" is replaced by a
-     * counter so we can measure how many real decodes happen.
+     * Simple fake memory: each address maps to a byte array of
+     * MAX_INSTRUCTION_BYTES. Defaults to all-zeros.
+     */
+    private static class FakeMemory {
+        final int maxBytes;
+        private final Map<Integer, byte[]> data = new HashMap<>();
+
+        FakeMemory(int maxBytes) {
+            this.maxBytes = maxBytes;
+        }
+
+        byte[] read(int position) {
+            byte[] stored = data.get(position);
+            return stored != null
+                    ? Arrays.copyOf(stored, maxBytes)
+                    : new byte[maxBytes];
+        }
+
+        void write(int position, byte[] bytes) {
+            data.put(position, Arrays.copyOf(bytes, maxBytes));
+        }
+    }
+
+    /**
+     * Simulates the generated decoder with verify-on-read LRU
+     * cache from Decoder.edt.
      */
     private static class CachedDecoder {
         private static final int CACHE_CAPACITY = 256;
 
         int decodeCount = 0;
+        int memoryReadCount = 0;
+        final FakeMemory memory;
 
-        private final Map<Integer, FakeDecodedInstruction> cache =
-                new LinkedHashMap<Integer, FakeDecodedInstruction>(
+        private final Map<Integer, CacheEntry> cache =
+                new LinkedHashMap<Integer, CacheEntry>(
                         CACHE_CAPACITY + 1, 0.75f, true
                 ) {
                     @Override
                     protected boolean removeEldestEntry(
-                            Map.Entry<Integer, FakeDecodedInstruction> eldest) {
+                            Map.Entry<Integer, CacheEntry> eldest) {
                         return size() > CACHE_CAPACITY;
                     }
                 };
 
+        CachedDecoder(FakeMemory memory) {
+            this.memory = memory;
+        }
+
         FakeDecodedInstruction decode(int memoryPosition) {
-            FakeDecodedInstruction cached = cache.get(memoryPosition);
-            if (cached != null) {
-                return cached;
+            // Always read memory (mirrors the template)
+            byte[] instrBytes = memory.read(memoryPosition);
+            memoryReadCount++;
+
+            CacheEntry entry = cache.get(memoryPosition);
+            if (entry != null
+                    && Arrays.equals(entry.rawBytes, instrBytes)) {
+                return entry.instruction;
             }
 
-            // This is the "expensive" path
+            // Expensive path: full decode
             decodeCount++;
             FakeDecodedInstruction instruction =
                     new FakeDecodedInstruction(memoryPosition);
-            cache.put(memoryPosition, instruction);
+            cache.put(memoryPosition,
+                    new CacheEntry(instrBytes, instruction));
             return instruction;
         }
 
@@ -87,28 +136,35 @@ public class DecoderCacheTest {
     }
 
     /**
-     * Simulates the generated decoder WITHOUT the cache (the old
-     * Decoder.edt behavior). Every decode() call does the full work.
+     * Simulates the old Decoder.edt (no cache).
      */
     private static class UncachedDecoder {
         int decodeCount = 0;
+        final FakeMemory memory;
+
+        UncachedDecoder(FakeMemory memory) {
+            this.memory = memory;
+        }
 
         FakeDecodedInstruction decode(int memoryPosition) {
+            memory.read(memoryPosition);
             decodeCount++;
             return new FakeDecodedInstruction(memoryPosition);
         }
     }
 
+    private FakeMemory memory;
     private CachedDecoder cachedDecoder;
     private UncachedDecoder uncachedDecoder;
 
     @Before
     public void setUp() {
-        cachedDecoder = new CachedDecoder();
-        uncachedDecoder = new UncachedDecoder();
+        memory = new FakeMemory(4);
+        cachedDecoder = new CachedDecoder(memory);
+        uncachedDecoder = new UncachedDecoder(memory);
     }
 
-    // ------- Decoder cache tests -------
+    // ------- Basic cache behavior -------
 
     @Test
     public void testSingleDecode_noExtraWork() {
@@ -142,10 +198,8 @@ public class DecoderCacheTest {
         cachedDecoder.decode(0x100);
         cachedDecoder.decode(0x200);
         cachedDecoder.decode(0x300);
-
         assertEquals(3, cachedDecoder.decodeCount);
 
-        // Second pass — all from cache
         cachedDecoder.decode(0x100);
         cachedDecoder.decode(0x200);
         cachedDecoder.decode(0x300);
@@ -160,8 +214,6 @@ public class DecoderCacheTest {
         int loopIterations = 10_000;
         int loopBodyInstructions = 5;
 
-        // Simulate: 5 instructions at addresses 0..4,
-        // executed 10,000 times
         for (int iter = 0; iter < loopIterations; iter++) {
             for (int addr = 0; addr < loopBodyInstructions; addr++) {
                 cachedDecoder.decode(addr);
@@ -172,7 +224,6 @@ public class DecoderCacheTest {
                 "Only 5 real decodes for 50,000 decode() calls",
                 loopBodyInstructions, cachedDecoder.decodeCount);
 
-        // Compare: uncached decoder does ALL 50,000
         for (int iter = 0; iter < loopIterations; iter++) {
             for (int addr = 0; addr < loopBodyInstructions; addr++) {
                 uncachedDecoder.decode(addr);
@@ -184,6 +235,8 @@ public class DecoderCacheTest {
                 loopIterations * loopBodyInstructions,
                 uncachedDecoder.decodeCount);
     }
+
+    // ------- Manual invalidation (still available) -------
 
     @Test
     public void testInvalidateCache_fullClear_forcesRedecode() {
@@ -204,7 +257,6 @@ public class DecoderCacheTest {
         cachedDecoder.decode(0x200);
         assertEquals(2, cachedDecoder.decodeCount);
 
-        // Invalidate only address 0x100
         cachedDecoder.invalidateCache(0x100);
 
         cachedDecoder.decode(0x100);  // must re-decode
@@ -231,21 +283,20 @@ public class DecoderCacheTest {
                 3, cachedDecoder.decodeCount);
     }
 
+    // ------- LRU eviction -------
+
     @Test
     public void testLRUEviction_exceedCapacity() {
-        // Fill cache beyond capacity (256)
         for (int i = 0; i < 300; i++) {
             cachedDecoder.decode(i);
         }
         assertEquals(300, cachedDecoder.decodeCount);
 
-        // Address 0 should have been evicted (LRU)
         cachedDecoder.decode(0);
         assertEquals(
                 "Evicted entry should require re-decode",
                 301, cachedDecoder.decodeCount);
 
-        // Address 299 (most recent) should still be cached
         cachedDecoder.decode(299);
         assertEquals(
                 "Most recent entry should still be cached",
@@ -254,30 +305,124 @@ public class DecoderCacheTest {
 
     @Test
     public void testLRUEviction_accessOrderPreservesRecent() {
-        // Fill cache to capacity
         for (int i = 0; i < 256; i++) {
             cachedDecoder.decode(i);
         }
         assertEquals(256, cachedDecoder.decodeCount);
 
-        // Access address 0 again (moves it to most-recent)
         cachedDecoder.decode(0);
-        assertEquals(256, cachedDecoder.decodeCount); // still cached
+        assertEquals(256, cachedDecoder.decodeCount);
 
-        // Now add 1 more entry to trigger eviction
         cachedDecoder.decode(999);
         assertEquals(257, cachedDecoder.decodeCount);
 
-        // Address 0 was accessed recently, should survive eviction
         cachedDecoder.decode(0);
         assertEquals(
                 "Recently accessed entry should survive eviction",
                 257, cachedDecoder.decodeCount);
 
-        // Address 1 (least recently used) should be evicted
         cachedDecoder.decode(1);
         assertEquals(
                 "LRU entry should have been evicted",
                 258, cachedDecoder.decodeCount);
+    }
+
+    // --- Automatic self-modifying code detection ---
+
+    @Test
+    public void testSelfModifyingCode_bytesChanged_forcesRedecode() {
+        memory.write(0x100, new byte[]{1, 2, 3, 4});
+        cachedDecoder.decode(0x100);
+        assertEquals(1, cachedDecoder.decodeCount);
+
+        // Modify memory at the same address
+        memory.write(0x100, new byte[]{-1, 2, 3, 4});
+        cachedDecoder.decode(0x100);
+
+        assertEquals(
+                "Changed bytes at same address must re-decode",
+                2, cachedDecoder.decodeCount);
+    }
+
+    @Test
+    public void testSelfModifyingCode_returnsNewInstance() {
+        memory.write(0x100, new byte[]{1, 2, 3, 4});
+        FakeDecodedInstruction first = cachedDecoder.decode(0x100);
+
+        memory.write(0x100, new byte[]{-1, 2, 3, 4});
+        FakeDecodedInstruction second = cachedDecoder.decode(0x100);
+
+        assertNotSame(
+                "Modified bytes must produce a new instruction",
+                first, second);
+    }
+
+    @Test
+    public void testSelfModifyingCode_unchangedBytesStillCached() {
+        memory.write(0x100, new byte[]{1, 2, 3, 4});
+        cachedDecoder.decode(0x100);
+
+        // "Write" the exact same bytes back
+        memory.write(0x100, new byte[]{1, 2, 3, 4});
+        cachedDecoder.decode(0x100);
+
+        assertEquals(
+                "Same bytes written back should still hit cache",
+                1, cachedDecoder.decodeCount);
+    }
+
+    @Test
+    public void testSelfModifyingCode_otherAddressUnaffected() {
+        memory.write(0x100, new byte[]{1, 2, 3, 4});
+        memory.write(0x200, new byte[]{0x10, 0x20, 0x30, 0x40});
+        cachedDecoder.decode(0x100);
+        cachedDecoder.decode(0x200);
+        assertEquals(2, cachedDecoder.decodeCount);
+
+        // Modify only 0x100
+        memory.write(0x100, new byte[]{-1, 2, 3, 4});
+
+        cachedDecoder.decode(0x100);  // must re-decode
+        cachedDecoder.decode(0x200);  // still cached
+        assertEquals(
+                "Only the modified address should re-decode",
+                3, cachedDecoder.decodeCount);
+    }
+
+    @Test
+    public void testSelfModifyingCode_loopWithWrite() {
+        // Tight loop: address 0 is stable, address 1 is
+        // self-modified each iteration.
+        memory.write(0, new byte[]{1, 0, 0, 0});
+        memory.write(1, new byte[]{2, 0, 0, 0});
+
+        for (int iter = 0; iter < 100; iter++) {
+            cachedDecoder.decode(0);
+            cachedDecoder.decode(1);
+            // Self-modifying code at address 1
+            memory.write(1, new byte[]{
+                    (byte) (iter + 3), 0, 0, 0});
+        }
+
+        // Address 0: decoded once (never changed)
+        // Address 1: decoded 100 times (changed every iter)
+        assertEquals(
+                "Stable instr decoded once, modified one "
+                        + "re-decoded each iteration",
+                101, cachedDecoder.decodeCount);
+    }
+
+    @Test
+    public void testMemoryReadAlwaysHappens() {
+        cachedDecoder.decode(0x100);
+        cachedDecoder.decode(0x100);
+        cachedDecoder.decode(0x100);
+
+        assertEquals(
+                "Memory is read on every call (for verification)",
+                3, cachedDecoder.memoryReadCount);
+        assertEquals(
+                "But actual decoding happens only once",
+                1, cachedDecoder.decodeCount);
     }
 }

@@ -30,14 +30,30 @@ public class %decoder_class% implements Decoder {
     private DecodedInstruction instruction;
 
     /**
+     * A cache entry holding the decoded instruction together with
+     * the raw instruction bytes that produced it. On cache hit the
+     * current memory bytes are compared with the stored ones so
+     * that self-modifying code is detected automatically.
+     */
+    private static class CacheEntry {
+        final byte[] rawBytes;
+        final DecodedInstruction instruction;
+
+        CacheEntry(byte[] rawBytes, DecodedInstruction instruction) {
+            this.rawBytes = rawBytes;
+            this.instruction = instruction;
+        }
+    }
+
+    /**
      * LRU cache of decoded instructions keyed by memory position.
      * Evicts least-recently-used entries when capacity is exceeded.
      */
-    private final Map<Integer, DecodedInstruction> cache = new LinkedHashMap<Integer, DecodedInstruction>(
+    private final Map<Integer, CacheEntry> cache = new LinkedHashMap<Integer, CacheEntry>(
             CACHE_CAPACITY + 1, 0.75f, true
     ) {
         @Override
-        protected boolean removeEldestEntry(Map.Entry<Integer, DecodedInstruction> eldest) {
+        protected boolean removeEldestEntry(Map.Entry<Integer, CacheEntry> eldest) {
             return size() > CACHE_CAPACITY;
         }
     };
@@ -54,21 +70,22 @@ public class %decoder_class% implements Decoder {
 
     /**
      * Decodes an instruction.
-     * Results are cached by memory position for performance.
-     * Call {@link #invalidateCache()} when memory contents change
-     * (e.g., program loading, self-modifying code).
+     * Results are cached by memory position. On cache hit the raw
+     * instruction bytes are re-read and compared with the stored
+     * ones so that self-modifying code is detected automatically
+     * without any external listener or manual invalidation.
      * @param memoryPosition the address of the start of the instruction
      * @return the decoded instruction object
      * @throws InvalidInstructionException when decoding is not successful
      */
     @Override
     public DecodedInstruction decode(int memoryPosition) throws InvalidInstructionException {
-        DecodedInstruction cached = cache.get(memoryPosition);
-        if (cached != null) {
-            return cached;
-        }
-
         this.instructionBytes = numbersToNativeBytes(memory.read(memoryPosition, MAX_INSTRUCTION_BYTES));
+
+        CacheEntry entry = cache.get(memoryPosition);
+        if (entry != null && Arrays.equals(entry.rawBytes, instructionBytes)) {
+            return entry.instruction;
+        }
 
         instruction = new DecodedInstruction();
 
@@ -76,14 +93,12 @@ public class %decoder_class% implements Decoder {
         %root_rule%;
 
         instruction.setImage(Arrays.copyOfRange(instructionBytes, 0, (int)Math.max(1, Math.ceil(bitsRead / 8.0))));
-        cache.put(memoryPosition, instruction);
+        cache.put(memoryPosition, new CacheEntry(instructionBytes, instruction));
         return instruction;
     }
 
     /**
      * Invalidates the entire decoded instruction cache.
-     * Should be called when memory contents change (e.g., program
-     * loading, self-modifying code).
      */
     public void invalidateCache() {
         cache.clear();
