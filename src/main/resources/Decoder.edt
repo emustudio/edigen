@@ -8,6 +8,8 @@ import net.emustudio.emulib.plugins.memory.MemoryContext;
 import net.emustudio.emulib.runtime.helpers.NumberUtils;
 
 import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Objects;
 
 import static net.emustudio.emulib.runtime.helpers.NumberUtils.*;
@@ -18,6 +20,7 @@ import static net.emustudio.emulib.runtime.helpers.NumberUtils.*;
  */
 public class %decoder_class% implements Decoder {
     private static final int MAX_INSTRUCTION_BYTES = %max_instruction_bytes%;
+    private static final int CACHE_CAPACITY = 256;
 
     private byte[] instructionBytes;
     private final MemoryContext<? extends Number> memory;
@@ -25,9 +28,38 @@ public class %decoder_class% implements Decoder {
     private int unit;
     private int bitsRead;
     private DecodedInstruction instruction;
-    
+
+    /**
+     * A cache entry holding the decoded instruction together with
+     * the raw instruction bytes that produced it. On cache hit the
+     * current memory bytes are compared with the stored ones so
+     * that self-modifying code is detected automatically.
+     */
+    private static class CacheEntry {
+        final byte[] rawBytes;
+        final DecodedInstruction instruction;
+
+        CacheEntry(byte[] rawBytes, DecodedInstruction instruction) {
+            this.rawBytes = rawBytes;
+            this.instruction = instruction;
+        }
+    }
+
+    /**
+     * LRU cache of decoded instructions keyed by memory position.
+     * Evicts least-recently-used entries when capacity is exceeded.
+     */
+    private final Map<Integer, CacheEntry> cache = new LinkedHashMap<Integer, CacheEntry>(
+            CACHE_CAPACITY + 1, 0.75f, true
+    ) {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<Integer, CacheEntry> eldest) {
+            return size() > CACHE_CAPACITY;
+        }
+    };
+
     %decoder_fields%
-    
+
     /**
      * The constructor.
      * @param memory the memory context which will be used to read instructions
@@ -35,9 +67,13 @@ public class %decoder_class% implements Decoder {
     public %decoder_class%(MemoryContext<? extends Number> memory) {
         this.memory = Objects.requireNonNull(memory);
     }
-    
+
     /**
      * Decodes an instruction.
+     * Results are cached by memory position. On cache hit the raw
+     * instruction bytes are re-read and compared with the stored
+     * ones so that self-modifying code is detected automatically
+     * without any external listener or manual invalidation.
      * @param memoryPosition the address of the start of the instruction
      * @return the decoded instruction object
      * @throws InvalidInstructionException when decoding is not successful
@@ -46,14 +82,21 @@ public class %decoder_class% implements Decoder {
     public DecodedInstruction decode(int memoryPosition) throws InvalidInstructionException {
         this.instructionBytes = numbersToNativeBytes(memory.read(memoryPosition, MAX_INSTRUCTION_BYTES));
 
+        CacheEntry entry = cache.get(memoryPosition);
+        if (entry != null && Arrays.equals(entry.rawBytes, instructionBytes)) {
+            return entry.instruction;
+        }
+
         instruction = new DecodedInstruction();
 
         bitsRead = 0;
         %root_rule%;
 
         instruction.setImage(Arrays.copyOfRange(instructionBytes, 0, (int)Math.max(1, Math.ceil(bitsRead / 8.0))));
+        cache.put(memoryPosition, new CacheEntry(instructionBytes, instruction));
         return instruction;
     }
+
 
     /**
      * Reads an arbitrary number of bits of the current instruction.
@@ -69,6 +112,6 @@ public class %decoder_class% implements Decoder {
         }
         return NumberUtils.readBits(instructionBytes, start, length, Strategy.BIG_ENDIAN);
     }
-    
+
     %decoder_methods%
 }

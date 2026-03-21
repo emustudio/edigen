@@ -77,6 +77,11 @@ public class %disasm_class% implements Disassembler {
     private final Decoder decoder;
     private final Formatter formatter = Formatter.DEFAULT;
 
+    // Cache the last decoded instruction to avoid redundant decoding
+    // (disassemble + getNextInstructionPosition typically decode the same address)
+    private int lastDecodedPosition = -1;
+    private DecodedInstruction lastDecodedInstruction;
+
     static {
         String[] formats = {
           %disasm_formats%
@@ -120,7 +125,7 @@ public class %disasm_class% implements Disassembler {
         String code;
 
         try {
-            DecodedInstruction instruction = decoder.decode(memoryPosition);
+            DecodedInstruction instruction = cachedDecode(memoryPosition);
             MnemonicFormat format = formatMap.get(instruction.getKeys());
 
             if (format == null) {
@@ -153,10 +158,26 @@ public class %disasm_class% implements Disassembler {
     @Override
     public int getNextInstructionPosition(int memoryPosition) {
         try {
-            return memoryPosition + decoder.decode(memoryPosition).getLength();
+            return memoryPosition + cachedDecode(memoryPosition).getLength();
         } catch (InvalidInstructionException ex) {
             return memoryPosition + 1;
         }
+    }
+
+    /**
+     * Decodes an instruction, caching the result for the last accessed position.
+     * This avoids redundant decoding when disassemble() and getNextInstructionPosition()
+     * are called for the same address.
+     * @param memoryPosition the starting address of the instruction
+     * @return the decoded instruction
+     * @throws InvalidInstructionException when decoding is not successful
+     */
+    private DecodedInstruction cachedDecode(int memoryPosition) throws InvalidInstructionException {
+        if (memoryPosition != lastDecodedPosition || lastDecodedInstruction == null) {
+            lastDecodedInstruction = decoder.decode(memoryPosition);
+            lastDecodedPosition = memoryPosition;
+        }
+        return lastDecodedInstruction;
     }
 
     /**
