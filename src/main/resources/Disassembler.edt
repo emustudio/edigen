@@ -4,11 +4,9 @@ package %disasm_package%;
 import net.emustudio.emulib.plugins.cpu.*;
 import net.emustudio.emulib.plugins.memory.MemoryContext;
 import net.emustudio.emulib.runtime.helpers.Bits;
-import net.emustudio.emulib.runtime.helpers.NumberUtils;
 import net.emustudio.emulib.runtime.ui.Formatter;
 
 import java.util.*;
-import java.util.function.UnaryOperator;
 
 import static %decoder_name%.*;
 
@@ -16,6 +14,8 @@ import static %decoder_name%.*;
  * The disassembler implementation.
  */
 public class %disasm_class% implements Disassembler {
+    private static final char[] HEX_DIGITS = "0123456789ABCDEF".toCharArray();
+
     /**
     * An instruction mnemonic format string with associated parameters.
     */
@@ -37,15 +37,15 @@ public class %disasm_class% implements Disassembler {
     */
     private static class Parameter {
         private final int ruleCode;
-        private final List<UnaryOperator<Bits>> strategies;
+        private final byte[] strategies;
 
-        public Parameter(int ruleCode, List<UnaryOperator<Bits>> strategies) {
+        public Parameter(int ruleCode, byte[] strategies) {
             this.ruleCode = ruleCode;
             this.strategies = strategies;
         }
 
         public int getRuleCode() { return ruleCode; }
-        public List<UnaryOperator<Bits>> getStrategies() { return strategies; }
+        public byte[] getStrategies() { return strategies; }
     }
 
     /**
@@ -55,21 +55,11 @@ public class %disasm_class% implements Disassembler {
     * the big-endian order since they will be used in Java methods accepting big endian.
     */
     private static class Strategy {
-        public static Bits reverse_bytes(Bits bits) {
-            return bits.reverseBytes();
-        }
-        public static Bits bit_reverse(Bits bits) {
-            return bits.reverseBits();
-        }
-        public static Bits absolute(Bits bits) {
-            return bits.absolute();
-        }
-        public static Bits shift_left(Bits bits) {
-            return bits.shiftLeft();
-        }
-        public static Bits shift_right(Bits bits) {
-            return bits.shiftRight();
-        }
+        public static final byte reverse_bytes = 1;
+        public static final byte bit_reverse = 2;
+        public static final byte absolute = 3;
+        public static final byte shift_left = 4;
+        public static final byte shift_right = 5;
     }
 
     private static final Map<Set<Integer>, MnemonicFormat> formatMap;
@@ -81,6 +71,10 @@ public class %disasm_class% implements Disassembler {
     // (disassemble + getNextInstructionPosition typically decode the same address)
     private int lastDecodedPosition = -1;
     private DecodedInstruction lastDecodedInstruction;
+    private int lastRenderedPosition = -1;
+    private DecodedInstruction lastRenderedDecodedInstruction;
+    private String lastRenderedMnemonic;
+    private String lastRenderedCode;
 
     static {
         String[] formats = {
@@ -126,6 +120,10 @@ public class %disasm_class% implements Disassembler {
 
         try {
             DecodedInstruction instruction = cachedDecode(memoryPosition);
+            if (memoryPosition == lastRenderedPosition && instruction == lastRenderedDecodedInstruction) {
+                return new DisassembledInstruction(memoryPosition, lastRenderedMnemonic, lastRenderedCode);
+            }
+
             MnemonicFormat format = formatMap.get(instruction.getKeys());
 
             if (format == null) {
@@ -134,16 +132,14 @@ public class %disasm_class% implements Disassembler {
                 mnemonic = createMnemonic(instruction, format);
             }
 
-            StringBuilder codeBuilder = new StringBuilder();
-
-            for (byte number : instruction.getImage()) {
-                codeBuilder.append(String.format("%02X ", number));
-            }
-
-            code = codeBuilder.toString().trim();
+            code = formatImage(instruction.getImage());
+            lastRenderedPosition = memoryPosition;
+            lastRenderedDecodedInstruction = instruction;
+            lastRenderedMnemonic = mnemonic;
+            lastRenderedCode = code;
         } catch (InvalidInstructionException ex) {
             mnemonic = "unknown";
-            code = String.format("%02X", memory.read(memoryPosition).byteValue());
+            code = formatByte(memory.read(memoryPosition).intValue());
         }
 
         return new DisassembledInstruction(memoryPosition, mnemonic, code);
@@ -191,7 +187,7 @@ public class %disasm_class% implements Disassembler {
         int position = 0;
 
         for (Parameter parameter : format.getParameters()) {
-            position = mnemonic.indexOf("%");
+            position = mnemonic.indexOf("%", position);
             if (position == -1 || position == mnemonic.length()) {
                 break;
             }
@@ -199,8 +195,8 @@ public class %disasm_class% implements Disassembler {
             String replaced;
             Bits value = instruction.getBits(parameter.getRuleCode());
             if (value != null) {
-                for (UnaryOperator<Bits> strategy : parameter.getStrategies()) {
-                    value = strategy.apply(value);
+                for (byte strategy : parameter.getStrategies()) {
+                    value = applyStrategy(value, strategy);
                 }
                 replaced = formatter.format(mnemonic.charAt(position + 1), value);
             } else {
@@ -212,5 +208,50 @@ public class %disasm_class% implements Disassembler {
         }
 
         return mnemonic.toString();
+    }
+
+    private Bits applyStrategy(Bits bits, byte strategy) {
+        switch (strategy) {
+            case Strategy.reverse_bytes:
+                return bits.reverseBytes();
+            case Strategy.bit_reverse:
+                return bits.reverseBits();
+            case Strategy.absolute:
+                return bits.absolute();
+            case Strategy.shift_left:
+                return bits.shiftLeft();
+            case Strategy.shift_right:
+                return bits.shiftRight();
+            default:
+                throw new IllegalArgumentException("Unknown decoding strategy: " + strategy);
+        }
+    }
+
+    private String formatImage(byte[] image) {
+        if (image.length == 0) {
+            return "";
+        }
+
+        char[] formatted = new char[(image.length * 3) - 1];
+        int out = 0;
+
+        for (int i = 0; i < image.length; i++) {
+            int value = image[i] & 0xFF;
+            formatted[out++] = HEX_DIGITS[value >>> 4];
+            formatted[out++] = HEX_DIGITS[value & 0x0F];
+            if (i + 1 < image.length) {
+                formatted[out++] = ' ';
+            }
+        }
+
+        return new String(formatted);
+    }
+
+    private String formatByte(int value) {
+        char[] formatted = new char[2];
+        int normalized = value & 0xFF;
+        formatted[0] = HEX_DIGITS[normalized >>> 4];
+        formatted[1] = HEX_DIGITS[normalized & 0x0F];
+        return new String(formatted);
     }
 }

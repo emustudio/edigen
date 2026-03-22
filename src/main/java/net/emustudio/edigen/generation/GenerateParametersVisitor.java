@@ -82,9 +82,9 @@ public class GenerateParametersVisitor extends Visitor {
     @Override
     public void visit(Value value) throws SemanticException {
         String strategies = value.getStrategies().stream()
-                .map(s -> "Strategy::" + s)
-                .collect(Collectors.joining(","));
+                .map(s -> "Strategy." + s)
+                .collect(Collectors.joining(", "));
         writer.print("new Parameter(" + value.getFieldName()
-                + ", List.of(" + strategies + "))");
+                + ", new byte[]{" + strategies + "})");
     }
 }
