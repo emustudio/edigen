@@ -203,7 +203,6 @@ public class %disasm_class% implements Disassembler {
             }
 
             mnemonic.replace(position, position + 2, replaced);
-            position += replaced.length();
         }
 
         return mnemonic.toString();
