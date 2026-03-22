@@ -12,19 +12,18 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import static net.emustudio.emulib.runtime.helpers.NumberUtils.*;
-
-
 /**
  * The instruction decoder.
  */
 public class %decoder_class% implements Decoder {
     private static final int CACHE_CAPACITY = 256;
+    private static final int INITIAL_BUFFER_SIZE = 8;
 
-    private byte[] instructionBytes = new byte[0];
+    private byte[] instructionBytes = new byte[INITIAL_BUFFER_SIZE];
     private final MemoryContext<? extends Number> memory;
 
     private int memoryPosition;
+    private int loadedInstructionBytes;
     private int unit;
     private int bitsRead;
     private DecodedInstruction instruction;
@@ -81,32 +80,66 @@ public class %decoder_class% implements Decoder {
     @Override
     public DecodedInstruction decode(int memoryPosition) throws InvalidInstructionException {
         this.memoryPosition = memoryPosition;
+        this.loadedInstructionBytes = 0;
 
         CacheEntry entry = cache.get(memoryPosition);
         if (entry != null) {
-            byte[] currentBytes = numbersToNativeBytes(memory.read(memoryPosition, entry.rawBytes.length));
-            if (Arrays.equals(entry.rawBytes, currentBytes)) {
+            Number[] currentBytes = memory.read(memoryPosition, entry.rawBytes.length);
+            if (matchesCachedBytes(entry.rawBytes, currentBytes)) {
                 return entry.instruction;
             }
+            copyBytes(currentBytes, 0);
+            loadedInstructionBytes = currentBytes.length;
         }
 
-        this.instructionBytes = new byte[0];
         instruction = new DecodedInstruction();
-
         bitsRead = 0;
         %root_rule%;
 
-        byte[] image = Arrays.copyOfRange(instructionBytes, 0, (int)Math.max(1, Math.ceil(bitsRead / 8.0)));
+        int imageLength = Math.max(1, (bitsRead + 7) >>> 3);
+        byte[] image = Arrays.copyOf(instructionBytes, imageLength);
         instruction.setImage(image);
         cache.put(memoryPosition, new CacheEntry(image, instruction));
         return instruction;
     }
 
+    private boolean matchesCachedBytes(byte[] cachedBytes, Number[] currentBytes) {
+        for (int i = 0; i < cachedBytes.length; i++) {
+            if (cachedBytes[i] != currentBytes[i].byteValue()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void ensureInstructionCapacity(int requiredBytes) {
+        if (instructionBytes.length >= requiredBytes) {
+            return;
+        }
+
+        int newLength = instructionBytes.length;
+        while (newLength < requiredBytes) {
+            newLength <<= 1;
+        }
+        instructionBytes = Arrays.copyOf(instructionBytes, newLength);
+    }
+
+    private void copyBytes(Number[] bytes, int destinationOffset) {
+        ensureInstructionCapacity(destinationOffset + bytes.length);
+        for (int i = 0; i < bytes.length; i++) {
+            instructionBytes[destinationOffset + i] = bytes[i].byteValue();
+        }
+    }
 
     private void ensureInstructionBytesLength(int bitLength) {
-        int requiredBytes = (int) Math.max(1, Math.ceil(bitLength / 8.0));
-        if (instructionBytes.length < requiredBytes) {
-            instructionBytes = numbersToNativeBytes(memory.read(memoryPosition, requiredBytes));
+        int requiredBytes = Math.max(1, (bitLength + 7) >>> 3);
+        if (loadedInstructionBytes < requiredBytes) {
+            Number[] missingBytes = memory.read(
+                    memoryPosition + loadedInstructionBytes,
+                    requiredBytes - loadedInstructionBytes
+            );
+            copyBytes(missingBytes, loadedInstructionBytes);
+            loadedInstructionBytes = requiredBytes;
         }
     }
 
@@ -124,7 +157,7 @@ public class %decoder_class% implements Decoder {
             bitsRead = end;
         }
         ensureInstructionBytesLength(end);
-        return NumberUtils.readBits(instructionBytes, start, length, Strategy.BIG_ENDIAN);
+        return NumberUtils.readBits(instructionBytes, start, length, NumberUtils.Strategy.BIG_ENDIAN);
     }
 
     %decoder_methods%

@@ -16,6 +16,8 @@ import static %decoder_name%.*;
  * The disassembler implementation.
  */
 public class %disasm_class% implements Disassembler {
+    private static final char[] HEX_DIGITS = "0123456789ABCDEF".toCharArray();
+
     /**
     * An instruction mnemonic format string with associated parameters.
     */
@@ -81,6 +83,10 @@ public class %disasm_class% implements Disassembler {
     // (disassemble + getNextInstructionPosition typically decode the same address)
     private int lastDecodedPosition = -1;
     private DecodedInstruction lastDecodedInstruction;
+    private int lastRenderedPosition = -1;
+    private DecodedInstruction lastRenderedDecodedInstruction;
+    private String lastRenderedMnemonic;
+    private String lastRenderedCode;
 
     static {
         String[] formats = {
@@ -126,6 +132,10 @@ public class %disasm_class% implements Disassembler {
 
         try {
             DecodedInstruction instruction = cachedDecode(memoryPosition);
+            if (memoryPosition == lastRenderedPosition && instruction == lastRenderedDecodedInstruction) {
+                return new DisassembledInstruction(memoryPosition, lastRenderedMnemonic, lastRenderedCode);
+            }
+
             MnemonicFormat format = formatMap.get(instruction.getKeys());
 
             if (format == null) {
@@ -134,16 +144,14 @@ public class %disasm_class% implements Disassembler {
                 mnemonic = createMnemonic(instruction, format);
             }
 
-            StringBuilder codeBuilder = new StringBuilder();
-
-            for (byte number : instruction.getImage()) {
-                codeBuilder.append(String.format("%02X ", number));
-            }
-
-            code = codeBuilder.toString().trim();
+            code = formatImage(instruction.getImage());
+            lastRenderedPosition = memoryPosition;
+            lastRenderedDecodedInstruction = instruction;
+            lastRenderedMnemonic = mnemonic;
+            lastRenderedCode = code;
         } catch (InvalidInstructionException ex) {
             mnemonic = "unknown";
-            code = String.format("%02X", memory.read(memoryPosition).byteValue());
+            code = formatByte(memory.read(memoryPosition).intValue());
         }
 
         return new DisassembledInstruction(memoryPosition, mnemonic, code);
@@ -191,7 +199,7 @@ public class %disasm_class% implements Disassembler {
         int position = 0;
 
         for (Parameter parameter : format.getParameters()) {
-            position = mnemonic.indexOf("%");
+            position = mnemonic.indexOf("%", position);
             if (position == -1 || position == mnemonic.length()) {
                 break;
             }
@@ -212,5 +220,33 @@ public class %disasm_class% implements Disassembler {
         }
 
         return mnemonic.toString();
+    }
+
+    private String formatImage(byte[] image) {
+        if (image.length == 0) {
+            return "";
+        }
+
+        char[] formatted = new char[(image.length * 3) - 1];
+        int out = 0;
+
+        for (int i = 0; i < image.length; i++) {
+            int value = image[i] & 0xFF;
+            formatted[out++] = HEX_DIGITS[value >>> 4];
+            formatted[out++] = HEX_DIGITS[value & 0x0F];
+            if (i + 1 < image.length) {
+                formatted[out++] = ' ';
+            }
+        }
+
+        return new String(formatted);
+    }
+
+    private String formatByte(int value) {
+        char[] formatted = new char[2];
+        int normalized = value & 0xFF;
+        formatted[0] = HEX_DIGITS[normalized >>> 4];
+        formatted[1] = HEX_DIGITS[normalized & 0x0F];
+        return new String(formatted);
     }
 }
