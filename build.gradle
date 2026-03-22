@@ -23,6 +23,7 @@ java {
 
 dependencies {
   testImplementation 'junit:junit:4.13.2'
+  testImplementation 'net.emustudio:emulib:12.1.0-SNAPSHOT'
 }
 
 javacc {
