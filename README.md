@@ -14,6 +14,8 @@ unreadable and unmaintainable. *Edigen* takes a file containing the description 
 codes and mnemonics as an input. It generates Java classes compatible with
 [emuStudio](http://github.com/emustudio/emuStudio) platform, i.e. implementing interfaces from [emuLib](http://github.com/emustudio/emuLib).
 
+For system architecture and detailed technical documentation, visit https://www.emustudio.net/edigen/
+
 ## Usage
 
 The best way to use Edigen either with:
