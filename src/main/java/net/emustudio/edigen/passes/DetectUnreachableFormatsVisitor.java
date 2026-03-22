@@ -10,23 +10,39 @@ import java.util.*;
 
 /**
  * Detects unreachable disassembler formats.
+ * <pre>
+ * {@code
+ *   root instruction;
+ *   instruction = "nop": 00000000 | other ;
+ *
+ *   other = "hey": 10000000 | "arg %d": 10000001 arg ;
+ *   arg = arg: arg(8);
+ *
+ *   %%
+ *
+ *   "%s" = instruction arg;    // unreachable
+ * }
+ * </pre>
  * <p>
- * root instruction;
- * instruction =
- * "nop": 00000000 |
- * other
- * ;
- * <p>
- * other =
- * "hey": 10000000 |
- * "arg %d": 10000001 arg
- * ;
- * <p>
- * arg = arg: arg(8);
- * <p>
- * %%
- * <p>
- * "%s" = instruction arg;    // unreachable
+ * Current algorithm:
+ * <ul>
+ *     <li>Starting from the declared root rules, build the graph of reachable rule invocations. An invocation is
+ *     identified by the target rule object and the decoder key name used to reach it, because one rule can participate
+ *     in decoding under multiple names.</li>
+ *     <li>For each reachable invocation, compute the set of decoder key combinations that can be produced by that
+ *     invocation. The computation is repeated until no invocation gains any new key combination.</li>
+ *     <li>A returning variant contributes its own decoder key name to every combination it produces.</li>
+ *     <li>A non-returning variant contributes only the decoder keys produced by the subrules it reaches.</li>
+ *     <li>When one variant contains multiple subrules, their reachable key combinations are combined so that the
+ *     resulting format key set contains all decoder keys required by that variant.</li>
+ *     <li>Subrules without an associated rule do not contribute a decoder key and do not extend the reachable key set.</li>
+ *     <li>A variant that neither returns a decoder key nor reaches any variant that does return one produces no
+ *     reachable format key set.</li>
+ *     <li>Disassembler formats are compared as unordered sets of decoder keys, so value order in the format does not
+ *     matter.</li>
+ * </ul>
+ * The visitor therefore reports every disassembler format whose decoder key set cannot be produced by any reachable
+ * decoder path, while allowing recursive rule references to participate in the analysis.
  */
 public class DetectUnreachableFormatsVisitor extends Visitor {
 
@@ -51,25 +67,51 @@ public class DetectUnreachableFormatsVisitor extends Visitor {
 
     @Override
     public void visit(Decoder decoder) throws SemanticException {
-        BuildSlimTreeVisitor slimTreeVisitor = new BuildSlimTreeVisitor();
-        for (Rule rule : decoder.getRootRules()) {
-            rule.accept(slimTreeVisitor);
+        Map<Rule, List<Variant>> reachableRuleVariants = new IdentityHashMap<>();
+        for (Rule rootRule : decoder.getRootRules()) {
+            collectReachableRuleVariants(rootRule, reachableRuleVariants);
         }
 
-        List<Rule> slimTree = slimTreeVisitor.slimTree;
-        List<Visitor> additionalVisitors = List.of(
-                new RemoveOrphanSubrulesVisitor(),
-                new UniqueSubrulePathsVisitor(),
-                new EliminateVariantsVisitor()
-        );
-
-        for (Rule rule : slimTree) {
-            for (Visitor visitor : additionalVisitors) {
-                rule.accept(visitor);
+        Set<RuleInvocation> reachableInvocations = new LinkedHashSet<>();
+        for (Rule rootRule : decoder.getRootRules()) {
+            reachableInvocations.add(new RuleInvocation(rootRule, rootInvocationName(rootRule)));
+        }
+        for (List<Variant> variants : reachableRuleVariants.values()) {
+            for (Variant variant : variants) {
+                reachableInvocations.addAll(collectReferencedInvocations(variant));
             }
-            CollectPathsVisitor collectVisitor = new CollectPathsVisitor();
-            rule.accept(collectVisitor);
-            reachable.addAll(collectVisitor.allPaths);
+        }
+
+        Map<RuleInvocation, Set<Set<String>>> reachableFormatKeysByInvocation = new LinkedHashMap<>();
+        for (RuleInvocation invocation : reachableInvocations) {
+            reachableFormatKeysByInvocation.put(invocation, Set.of());
+        }
+
+        boolean changed;
+        do {
+            changed = false;
+            Map<RuleInvocation, Set<Set<String>>> nextReachableFormatKeysByInvocation = new LinkedHashMap<>();
+
+            for (RuleInvocation invocation : reachableInvocations) {
+                Set<Set<String>> nextReachableFormatKeys = computeReachableFormatKeysForInvocation(
+                        invocation,
+                        reachableRuleVariants,
+                        reachableFormatKeysByInvocation
+                );
+                nextReachableFormatKeysByInvocation.put(invocation, nextReachableFormatKeys);
+                if (!nextReachableFormatKeys.equals(reachableFormatKeysByInvocation.get(invocation))) {
+                    changed = true;
+                }
+            }
+
+            reachableFormatKeysByInvocation = nextReachableFormatKeysByInvocation;
+        } while (changed);
+
+        for (Rule rootRule : decoder.getRootRules()) {
+            reachable.addAll(reachableFormatKeysByInvocation.getOrDefault(
+                    new RuleInvocation(rootRule, rootInvocationName(rootRule)),
+                    Set.of()
+            ));
         }
     }
 
@@ -104,239 +146,151 @@ public class DetectUnreachableFormatsVisitor extends Visitor {
         currentFormat.add(value.getName());
     }
 
-    /**
-     * Creates a copy of current tree:
-     * - preserves just root rules, variants and subrules.
-     * - expands subrules - adds subule rule "pointers" as children.
-     * - ignores masks and patterns.
-     */
-    private static class BuildSlimTreeVisitor extends Visitor {
-        final List<Rule> slimTree = new ArrayList<>();
-        private TreeNode current;
-
-        @Override
-        public void visit(Rule rule) throws SemanticException {
-            Rule newCurrent = new Rule(rule.getNames());
-            if (rule.getRootRuleName() != null) {
-                newCurrent.setRoot(rule.isRoot(), rule.getRootRuleName());
-            }
-            if (rule.isRoot()) {
-                slimTree.add(newCurrent);
-            }
-            current = newCurrent;
-            rule.acceptChildren(this);
-            current = newCurrent;
+    private void collectReachableRuleVariants(Rule rule, Map<Rule, List<Variant>> reachableRuleVariants) {
+        if (reachableRuleVariants.containsKey(rule)) {
+            return;
         }
 
-        @Override
-        public void visit(Variant variant) throws SemanticException {
-            TreeNode old = current;
+        List<Variant> reachableVariants = collectReachableVariants(rule);
+        reachableRuleVariants.put(rule, reachableVariants);
 
-            Variant newCurrent = new Variant();
-            if (variant.getReturnString() != null) {
-                newCurrent.setReturnString(variant.getReturnString());
-            } else if (variant.getReturnSubrule() != null) {
-                Subrule newSubrule = new Subrule(variant.getReturnSubrule().getName());
-                if (variant.getReturnSubrule().getRule() != null) {
-                    variant.getReturnSubrule().getRule().accept(this);
-                    newSubrule.setRule((Rule) current);
-                    current = old;
-                }
-                newCurrent.setReturnSubrule(newSubrule);
-            }
-            current.addChild(newCurrent);
-            current = newCurrent;
-
-            variant.acceptChildren(this);
-            current = old;
-        }
-
-        @Override
-        public void visit(Subrule subrule) throws SemanticException {
-            TreeNode old = current;
-
-            // subrule has no children, except rule
-            Subrule newCurrent = new Subrule(subrule.getName());
-            current.addChild(newCurrent);
-            if (subrule.getRule() != null) {
-                current = newCurrent;
-                subrule.getRule().acceptChildren(this);
-                current = old;
+        for (Variant variant : reachableVariants) {
+            for (RuleInvocation invocation : collectReferencedInvocations(variant)) {
+                collectReachableRuleVariants(invocation.rule, reachableRuleVariants);
             }
         }
     }
 
-    /**
-     * Preserves only subrules used as the format key; removes empty "pointers" to itself.
-     * Subrules with no children do not add the format key (variants do).
-     */
-    private static class RemoveOrphanSubrulesVisitor extends Visitor {
+    private List<Variant> collectReachableVariants(TreeNode node) {
+        List<Variant> reachableVariants = new ArrayList<>();
 
-        @Override
-        public void visit(Subrule subrule) throws SemanticException {
-            if (subrule.childCount() == 0) {
-                subrule.remove();
+        for (TreeNode child : node.getChildren()) {
+            if (child instanceof Variant) {
+                reachableVariants.add((Variant) child);
             } else {
-                subrule.acceptChildren(this);
+                reachableVariants.addAll(collectReachableVariants(child));
             }
         }
+
+        return reachableVariants;
     }
 
-    /**
-     * Transform a tree so each reachable path is a full path, so no siblings need to be considered anymore.
-     * It means: all siblings are put under all reachable paths of the first child; recursively bottom up.
-     * Generally, it is one possible implementation of generating combinations.
-     * <p>
-     * Rule A
-     * Variant
-     * Subrule B
-     * Variant
-     * Subrule E
-     * Variant (return "aa")
-     * Subrule C
-     * Subrule D
-     * Subrule F
-     * <p>
-     * Result:
-     * Rule A
-     * Variant
-     * Subrule B
-     * Variant
-     * Subrule E
-     * Subrule F
-     * Variant (return "aa")
-     * Subrule C
-     * Subrule D
-     * Subrule F
-     */
-    private static class UniqueSubrulePathsVisitor extends Visitor {
+    private Set<RuleInvocation> collectReferencedInvocations(Variant variant) {
+        Set<RuleInvocation> referencedInvocations = new LinkedHashSet<>();
 
-        @Override
-        public void visit(Variant variant) throws SemanticException {
-            variant.acceptChildren(this);
-
-            // prepare subrule children on a side
-            List<Subrule> children = new ArrayList<>();
-            variant.getChildren().forEach(t -> children.add((Subrule) t));
-
-            if (!children.isEmpty()) {
-                Subrule firstChild = children.get(0);
-                children.remove(0);
-
-                // add siblings to the first child
-                for (Subrule child : children) {
-                    child.remove();
-                    addRecursively(firstChild, child);
+        for (TreeNode child : variant.getChildren()) {
+            if (child instanceof Subrule) {
+                Subrule subrule = (Subrule) child;
+                if (subrule.getRule() != null) {
+                    referencedInvocations.add(new RuleInvocation(subrule.getRule(), subrule.getName()));
                 }
             }
         }
 
-        private void addRecursively(TreeNode where, TreeNode what) {
-            if (where.childCount() == 0) {
-                where.addChild(what.copy());
-            } else {
-                for (TreeNode child : where.getChildren()) {
-                    addRecursively(child, what);
-                }
-            }
-        }
+        return referencedInvocations;
     }
 
+    private Set<Set<String>> computeReachableFormatKeysForInvocation(
+            RuleInvocation invocation,
+            Map<Rule, List<Variant>> reachableRuleVariants,
+            Map<RuleInvocation, Set<Set<String>>> knownReachableFormatKeysByInvocation
+    ) {
+        Set<Set<String>> reachableFormatKeys = new HashSet<>();
 
-    /**
-     * Tough logic of eliminating variants. Tough, because variants can but don't have to return.
-     * <p>
-     * Returning variants peculiarities:
-     * - if the parent is rule, we must add artificial subrule and add variant's children to it before removing the
-     * variant (otherwise rule "A" wont be recognized)
-     * <p>
-     * Rule A                        Rule A
-     * Variant (return "a")   ->     Subrule A
-     * ...                           ...
-     * <p>
-     * - if variant has no children, instead just removing variant we must replace it with artificial subrule
-     * <p>
-     * Subrule C                         Subrule D
-     * Variant                           Subrule D
-     * Subrule D                ->   Subrule C
-     * Variant (return "d")
-     * Variant (return "c")
-     * <p>
-     * Non-returning variants peculiarities:
-     * - non-returning variants and it's parent subrules must be eliminated when the parent has only one child
-     * (this variant)
-     * <p>
-     * Rule A                            Rule A
-     * Subrule B                         Subrule C
-     * Variant                   ->
-     * Subrule C
-     * Variant (return "c")
-     * <p>
-     * - if parent of non-returning variant has more children, we must keep it:
-     * <p>
-     * Rule A                            Rule A
-     * Subrule B                         Subrule C
-     * Variant                         Subrule B
-     * Subrule C               ->      Subrule B
-     * Variant (return "c")
-     * Variant (return "b")
-     */
-    private static class EliminateVariantsVisitor extends Visitor {
-
-        @Override
-        public void visit(Variant variant) throws SemanticException {
-            variant.acceptChildren(this);
-
-            TreeNode parent = variant.getParent();
-            List<TreeNode> children = variant.getChildren();
-            children.forEach(TreeNode::remove);
-            if (!variant.returns() && parent != null) {
-                TreeNode parentParent = parent.getParent();
-                if (parentParent != null) {
-                    parentParent.addChildren(children);
-                    if (parent.childCount() == 1) {
-                        parent.remove();
-                    }
-                } else {
-                    parent.addChildren(children);
-                }
-            } else if (parent != null) {
-                // variant returns
-                if (parent instanceof Rule) {
-                    Subrule artificial = new Subrule(((Rule) parent).getNames().get(0));
-                    artificial.addChildren(children);
-                    parent.addChild(artificial);
-                } else {
-                    if (children.isEmpty()) {
-                        Subrule artificial = new Subrule(((Subrule) parent).getName());
-                        parent.addChild(artificial);
-                    } else {
-                        parent.addChildren(children);
-                    }
-                }
-            }
-            variant.remove();
+        for (Variant variant : reachableRuleVariants.getOrDefault(invocation.rule, List.of())) {
+            reachableFormatKeys.addAll(
+                    computeReachableFormatKeysForVariant(
+                            invocation,
+                            variant,
+                            knownReachableFormatKeysByInvocation
+                    )
+            );
         }
+
+        return reachableFormatKeys;
     }
 
-    /**
-     * Collects all unique paths.
-     */
-    private static class CollectPathsVisitor extends Visitor {
-        final Set<Set<String>> allPaths = new HashSet<>();
-        private Set<String> currentPath = new HashSet<>();
+    private Set<Set<String>> computeReachableFormatKeysForVariant(
+            RuleInvocation invocation,
+            Variant variant,
+            Map<RuleInvocation, Set<Set<String>>> knownReachableFormatKeysByInvocation
+    ) {
+        List<RuleInvocation> childInvocations = new ArrayList<>();
+
+        for (TreeNode child : variant.getChildren()) {
+            if (child instanceof Subrule) {
+                Subrule subrule = (Subrule) child;
+                if (subrule.getRule() != null) {
+                    childInvocations.add(new RuleInvocation(subrule.getRule(), subrule.getName()));
+                }
+            }
+        }
+
+        if (childInvocations.isEmpty()) {
+            if (!variant.returns()) {
+                return Set.of();
+            }
+            return Set.of(new HashSet<>(Set.of(invocation.name)));
+        }
+
+        Set<Set<String>> combinedReachableFormatKeys = new HashSet<>();
+        if (variant.returns()) {
+            combinedReachableFormatKeys.add(new HashSet<>(Set.of(invocation.name)));
+        } else {
+            combinedReachableFormatKeys.add(new HashSet<>());
+        }
+
+        for (RuleInvocation childInvocation : childInvocations) {
+            Set<Set<String>> childReachableFormatKeys = knownReachableFormatKeysByInvocation.getOrDefault(
+                    childInvocation,
+                    Set.of()
+            );
+            if (childReachableFormatKeys.isEmpty()) {
+                return Set.of();
+            }
+
+            Set<Set<String>> nextCombinedReachableFormatKeys = new HashSet<>();
+            for (Set<String> combinedReachableFormatKey : combinedReachableFormatKeys) {
+                for (Set<String> childReachableFormatKey : childReachableFormatKeys) {
+                    Set<String> reachableFormatKey = new HashSet<>(combinedReachableFormatKey);
+                    reachableFormatKey.addAll(childReachableFormatKey);
+                    nextCombinedReachableFormatKeys.add(reachableFormatKey);
+                }
+            }
+            combinedReachableFormatKeys = nextCombinedReachableFormatKeys;
+        }
+
+        return combinedReachableFormatKeys;
+    }
+
+    private String rootInvocationName(Rule rule) {
+        String name = rule.getRootRuleName();
+        if (name != null) {
+            return name;
+        }
+        return rule.getNames().get(0);
+    }
+
+    private static final class RuleInvocation {
+        private final Rule rule;
+        private final String name;
+
+        private RuleInvocation(Rule rule, String name) {
+            this.rule = rule;
+            this.name = name;
+        }
 
         @Override
-        public void visit(Subrule subrule) throws SemanticException {
-            Set<String> old = new HashSet<>(currentPath);
-            currentPath.add(subrule.getName());
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            RuleInvocation that = (RuleInvocation) o;
+            return rule == that.rule && Objects.equals(name, that.name);
+        }
 
-            if (subrule.childCount() == 0) {
-                allPaths.add(currentPath);
-            } else {
-                subrule.acceptChildren(this);
-            }
-            currentPath = old;
+        @Override
+        public int hashCode() {
+            return 31 * System.identityHashCode(rule) + Objects.hashCode(name);
         }
     }
 }

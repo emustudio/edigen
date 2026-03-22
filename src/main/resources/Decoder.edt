@@ -19,12 +19,12 @@ import static net.emustudio.emulib.runtime.helpers.NumberUtils.*;
  * The instruction decoder.
  */
 public class %decoder_class% implements Decoder {
-    private static final int MAX_INSTRUCTION_BYTES = %max_instruction_bytes%;
     private static final int CACHE_CAPACITY = 256;
 
-    private byte[] instructionBytes;
+    private byte[] instructionBytes = new byte[0];
     private final MemoryContext<? extends Number> memory;
 
+    private int memoryPosition;
     private int unit;
     private int bitsRead;
     private DecodedInstruction instruction;
@@ -80,23 +80,35 @@ public class %decoder_class% implements Decoder {
      */
     @Override
     public DecodedInstruction decode(int memoryPosition) throws InvalidInstructionException {
-        this.instructionBytes = numbersToNativeBytes(memory.read(memoryPosition, MAX_INSTRUCTION_BYTES));
+        this.memoryPosition = memoryPosition;
 
         CacheEntry entry = cache.get(memoryPosition);
-        if (entry != null && Arrays.equals(entry.rawBytes, instructionBytes)) {
-            return entry.instruction;
+        if (entry != null) {
+            byte[] currentBytes = numbersToNativeBytes(memory.read(memoryPosition, entry.rawBytes.length));
+            if (Arrays.equals(entry.rawBytes, currentBytes)) {
+                return entry.instruction;
+            }
         }
 
+        this.instructionBytes = new byte[0];
         instruction = new DecodedInstruction();
 
         bitsRead = 0;
         %root_rule%;
 
-        instruction.setImage(Arrays.copyOfRange(instructionBytes, 0, (int)Math.max(1, Math.ceil(bitsRead / 8.0))));
-        cache.put(memoryPosition, new CacheEntry(instructionBytes, instruction));
+        byte[] image = Arrays.copyOfRange(instructionBytes, 0, (int)Math.max(1, Math.ceil(bitsRead / 8.0)));
+        instruction.setImage(image);
+        cache.put(memoryPosition, new CacheEntry(image, instruction));
         return instruction;
     }
 
+
+    private void ensureInstructionBytesLength(int bitLength) {
+        int requiredBytes = (int) Math.max(1, Math.ceil(bitLength / 8.0));
+        if (instructionBytes.length < requiredBytes) {
+            instructionBytes = numbersToNativeBytes(memory.read(memoryPosition, requiredBytes));
+        }
+    }
 
     /**
      * Reads an arbitrary number of bits of the current instruction.
@@ -107,9 +119,11 @@ public class %decoder_class% implements Decoder {
      * @return the bytes read
      */
     private int readBits(int start, int length) {
-        if (bitsRead < start + length) {
-            bitsRead = start + length;
+        int end = start + length;
+        if (bitsRead < end) {
+            bitsRead = end;
         }
+        ensureInstructionBytesLength(end);
         return NumberUtils.readBits(instructionBytes, start, length, Strategy.BIG_ENDIAN);
     }
 
