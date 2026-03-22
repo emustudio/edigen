@@ -126,7 +126,8 @@ public class EdigenTestCompiler {
                     "No JavaCompiler available — tests must run on a JDK (not a JRE)");
         }
 
-        String classpath = System.getProperty("java.class.path");
+        String classpath = System.getProperty("edigen.test.classpath",
+                System.getProperty("java.class.path"));
         int rc = compiler.run(null, null, null,
                 "-classpath", classpath,
                 "-d", tmpDir.toString(),
@@ -174,4 +175,3 @@ public class EdigenTestCompiler {
         }
     }
 }
-

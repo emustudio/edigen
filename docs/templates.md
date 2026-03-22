@@ -209,7 +209,7 @@ For each parameter:
 
 1. find the next `%`
 2. fetch the corresponding decoded value
-3. if the value is numeric, apply strategies and call `Formatter`
+3. if the value is numeric, apply strategies and call `StringUtils.format(...)`
 4. otherwise read the string value from `DecodedInstruction`
 5. replace the two-character placeholder with the rendered text
 
