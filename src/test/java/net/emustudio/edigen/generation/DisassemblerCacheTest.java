@@ -2,173 +2,107 @@
    SPDX-License-Identifier: GPL-3.0-or-later */
 package net.emustudio.edigen.generation;
 
+import net.emustudio.emulib.plugins.cpu.DecodedInstruction;
+import net.emustudio.emulib.plugins.cpu.Decoder;
+import net.emustudio.emulib.plugins.cpu.Disassembler;
+import net.emustudio.emulib.plugins.cpu.InvalidInstructionException;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
 
 /**
- * Tests the last-position cache pattern used in the generated
- * Disassembler template (Disassembler.edt). Verifies that the
- * disassembler's cachedDecode() avoids redundant decoder.decode()
- * calls when disassemble() and getNextInstructionPosition() are
- * called for the same memory address.
+ * Tests the last-position cache in the <em>real</em> generated
+ * disassembler produced from {@code Disassembler.edt}.
  * <p>
- * The caching logic tested here mirrors the generated code exactly:
- * <pre>
- *   private DecodedInstruction cachedDecode(int pos) {
- *       if (pos != lastDecodedPosition
- *               || lastDecodedInstruction == null) {
- *           lastDecodedInstruction = decoder.decode(pos);
- *           lastDecodedPosition = pos;
- *       }
- *       return lastDecodedInstruction;
- *   }
- * </pre>
+ * The generated disassembler's {@code cachedDecode()} avoids
+ * redundant {@code decoder.decode()} calls when
+ * {@link Disassembler#disassemble(int)} and
+ * {@link Disassembler#getNextInstructionPosition(int)} are called
+ * for the same memory address.
+ * <p>
+ * To count actual decode() invocations we inject a
+ * {@link CountingDecoder} wrapper around the real generated decoder.
  */
 public class DisassemblerCacheTest {
 
     /**
-     * Simulates a decoded instruction.
+     * Minimal Edigen specification: two 1-byte instructions.
      */
-    private static class FakeDecodedInstruction {
-        final int address;
-        final int length;
-
-        FakeDecodedInstruction(int address, int length) {
-            this.address = address;
-            this.length = length;
-        }
-    }
+    private static final String SPEC =
+            "root instruction;\n"
+                    + "instruction = \"nop\": 0x00 | \"halt\": 0xFF;\n"
+                    + "%%\n"
+                    + "\"%s\" = instruction;\n";
 
     /**
-     * Simulates a decoder whose decode() calls are counted.
+     * A transparent {@link Decoder} wrapper that counts
+     * {@code decode()} calls and delegates to the real decoder.
      */
-    private static class CountingDecoder {
+    private static class CountingDecoder implements Decoder {
+        private final Decoder delegate;
         int decodeCount = 0;
 
-        FakeDecodedInstruction decode(int memoryPosition) {
+        CountingDecoder(Decoder delegate) {
+            this.delegate = delegate;
+        }
+
+        @Override
+        public DecodedInstruction decode(int memoryPosition)
+                throws InvalidInstructionException {
             decodeCount++;
-            // Simulate: each instruction is 2 bytes long
-            return new FakeDecodedInstruction(memoryPosition, 2);
+            return delegate.decode(memoryPosition);
         }
     }
 
-    /**
-     * Disassembler WITHOUT cache — the old Disassembler.edt behavior.
-     * Both disassemble() and getNextInstructionPosition() call
-     * decoder.decode() directly.
-     */
-    private static class UncachedDisassembler {
-        private final CountingDecoder decoder;
+    private static EdigenTestCompiler.Compiled compiled;
 
-        UncachedDisassembler(CountingDecoder decoder) {
-            this.decoder = decoder;
-        }
+    private FakeByteMemory memory;
+    private CountingDecoder countingDecoder;
+    private Disassembler disassembler;
 
-        String disassemble(int memoryPosition) {
-            FakeDecodedInstruction instr =
-                    decoder.decode(memoryPosition);
-            return "instr@" + instr.address;
-        }
-
-        int getNextInstructionPosition(int memoryPosition) {
-            return memoryPosition
-                    + decoder.decode(memoryPosition).length;
-        }
+    @BeforeClass
+    public static void compileOnce() throws Exception {
+        compiled = EdigenTestCompiler.compile(SPEC);
     }
 
-    /**
-     * Disassembler WITH cache — the new Disassembler.edt behavior.
-     * Uses cachedDecode() to avoid redundant decoder.decode() calls.
-     */
-    private static class CachedDisassembler {
-        private final CountingDecoder decoder;
-        private int lastDecodedPosition = -1;
-        private FakeDecodedInstruction lastDecodedInstruction;
-
-        CachedDisassembler(CountingDecoder decoder) {
-            this.decoder = decoder;
-        }
-
-        String disassemble(int memoryPosition) {
-            FakeDecodedInstruction instr =
-                    cachedDecode(memoryPosition);
-            return "instr@" + instr.address;
-        }
-
-        int getNextInstructionPosition(int memoryPosition) {
-            return memoryPosition
-                    + cachedDecode(memoryPosition).length;
-        }
-
-        private FakeDecodedInstruction cachedDecode(
-                int memoryPosition) {
-            if (memoryPosition != lastDecodedPosition
-                    || lastDecodedInstruction == null) {
-                lastDecodedInstruction =
-                        decoder.decode(memoryPosition);
-                lastDecodedPosition = memoryPosition;
-            }
-            return lastDecodedInstruction;
-        }
+    @AfterClass
+    public static void cleanup() throws Exception {
+        compiled.close();
     }
-
-    private CountingDecoder decoderForCached;
-    private CountingDecoder decoderForUncached;
-    private CachedDisassembler cachedDisasm;
-    private UncachedDisassembler uncachedDisasm;
 
     @Before
     public void setUp() {
-        decoderForCached = new CountingDecoder();
-        decoderForUncached = new CountingDecoder();
-        cachedDisasm = new CachedDisassembler(decoderForCached);
-        uncachedDisasm = new UncachedDisassembler(decoderForUncached);
+        memory = new FakeByteMemory();
+        // Fill default valid instruction at every address we'll use
+        for (int addr = 0; addr < 2100; addr++) {
+            memory.writeBytes(addr, new byte[]{0x00});
+        }
+
+        Decoder realDecoder = compiled.newDecoder(memory);
+        countingDecoder = new CountingDecoder(realDecoder);
+        disassembler = compiled.newDisassembler(memory, countingDecoder);
     }
 
     // ------- Core double-decode fix -------
 
     @Test
-    public void testDisassembleThenGetNext_uncached_decodestwice() {
-        uncachedDisasm.disassemble(0x100);
-        uncachedDisasm.getNextInstructionPosition(0x100);
+    public void testDisassembleThenGetNext_decodesOnce() throws Exception {
+        disassembler.disassemble(0x100);
+        disassembler.getNextInstructionPosition(0x100);
 
         assertEquals(
-                "Old behavior: 2 decode calls for same address",
-                2, decoderForUncached.decodeCount);
-    }
-
-    @Test
-    public void testDisassembleThenGetNext_cached_decodesOnce() {
-        cachedDisasm.disassemble(0x100);
-        cachedDisasm.getNextInstructionPosition(0x100);
-
-        assertEquals(
-                "New behavior: only 1 decode call for same address",
-                1, decoderForCached.decodeCount);
-    }
-
-    @Test
-    public void testDisassembleThenGetNext_50percentReduction() {
-        // The typical disassembly loop pattern
-        cachedDisasm.disassemble(0x100);
-        cachedDisasm.getNextInstructionPosition(0x100);
-
-        uncachedDisasm.disassemble(0x100);
-        uncachedDisasm.getNextInstructionPosition(0x100);
-
-        assertEquals(
-                "Cached should use exactly half the decode calls",
-                decoderForUncached.decodeCount / 2,
-                decoderForCached.decodeCount);
+                "disassemble + getNext for same address: only 1 decode",
+                1, countingDecoder.decodeCount);
     }
 
     // ------- Sequential disassembly loop -------
 
     @Test
-    public void testSequentialDisassemblyLoop_halfTheDecodeCalls() {
+    public void testSequentialDisassemblyLoop_oneDecodePerInstruction()
+            throws Exception {
         int instructionCount = 1000;
 
         // Simulate typical disassembly loop:
@@ -177,105 +111,84 @@ public class DisassemblerCacheTest {
         //     addr = getNextInstructionPosition(addr)
         int addr = 0;
         for (int i = 0; i < instructionCount; i++) {
-            cachedDisasm.disassemble(addr);
-            addr = cachedDisasm.getNextInstructionPosition(addr);
+            disassembler.disassemble(addr);
+            addr = disassembler.getNextInstructionPosition(addr);
         }
 
         assertEquals(
                 "Cached: 1 decode per instruction in loop",
-                instructionCount, decoderForCached.decodeCount);
-
-        addr = 0;
-        for (int i = 0; i < instructionCount; i++) {
-            uncachedDisasm.disassemble(addr);
-            addr = uncachedDisasm.getNextInstructionPosition(addr);
-        }
-
-        assertEquals(
-                "Uncached: 2 decodes per instruction in loop",
-                instructionCount * 2, decoderForUncached.decodeCount);
+                instructionCount, countingDecoder.decodeCount);
     }
 
     // ------- Different addresses invalidate cache -------
 
     @Test
-    public void testDifferentAddress_invalidatesCache() {
-        cachedDisasm.disassemble(0x100);
-        cachedDisasm.disassemble(0x200);
+    public void testDifferentAddress_invalidatesCache() throws Exception {
+        disassembler.disassemble(0x100);
+        disassembler.disassemble(0x200);
 
         assertEquals(
                 "Different addresses should each trigger a decode",
-                2, decoderForCached.decodeCount);
+                2, countingDecoder.decodeCount);
     }
 
     @Test
-    public void testDifferentAddress_thenGetNext_newAddressCached() {
-        cachedDisasm.disassemble(0x100);
+    public void testDifferentAddress_thenGetNext_newAddressCached()
+            throws Exception {
+        disassembler.disassemble(0x100);
         // Moving to a different address
-        cachedDisasm.disassemble(0x200);
-        cachedDisasm.getNextInstructionPosition(0x200);
+        disassembler.disassemble(0x200);
+        disassembler.getNextInstructionPosition(0x200);
 
         assertEquals(
                 "getNext for new address uses its cached value",
-                2, decoderForCached.decodeCount);
+                2, countingDecoder.decodeCount);
     }
 
     @Test
-    public void testGetNextThenDisassemble_alsoWorks() {
+    public void testGetNextThenDisassemble_alsoWorks() throws Exception {
         // Reversed order — getNext first, then disassemble
-        cachedDisasm.getNextInstructionPosition(0x100);
-        cachedDisasm.disassemble(0x100);
+        disassembler.getNextInstructionPosition(0x100);
+        disassembler.disassemble(0x100);
 
         assertEquals(
                 "Cache works regardless of call order",
-                1, decoderForCached.decodeCount);
+                1, countingDecoder.decodeCount);
     }
 
     // ------- Edge cases -------
 
     @Test
-    public void testAddressZero_cached() {
-        cachedDisasm.disassemble(0);
-        cachedDisasm.getNextInstructionPosition(0);
+    public void testAddressZero_cached() throws Exception {
+        disassembler.disassemble(0);
+        disassembler.getNextInstructionPosition(0);
 
         assertEquals(
                 "Address 0 should also be cached",
-                1, decoderForCached.decodeCount);
+                1, countingDecoder.decodeCount);
     }
 
     @Test
-    public void testNegativeAddress_cached() {
-        // Some systems might use negative (signed int) addresses
-        cachedDisasm.disassemble(-1);
-        cachedDisasm.getNextInstructionPosition(-1);
-
-        assertEquals(
-                "Negative addresses should also be cached",
-                1, decoderForCached.decodeCount);
-    }
-
-    @Test
-    public void testRepeatedDisassembleOnly_sameAddress() {
-        cachedDisasm.disassemble(0x100);
-        cachedDisasm.disassemble(0x100);
-        cachedDisasm.disassemble(0x100);
+    public void testRepeatedDisassembleOnly_sameAddress() throws Exception {
+        disassembler.disassemble(0x100);
+        disassembler.disassemble(0x100);
+        disassembler.disassemble(0x100);
 
         assertEquals(
                 "Repeated disassemble at same address: 1 decode",
-                1, decoderForCached.decodeCount);
+                1, countingDecoder.decodeCount);
     }
 
     @Test
-    public void testAlternatingAddresses_noCacheBenefit() {
+    public void testAlternatingAddresses_noCacheBenefit() throws Exception {
         // Alternating between 2 addresses: cache holds only 1
         for (int i = 0; i < 100; i++) {
-            cachedDisasm.disassemble(0x100);
-            cachedDisasm.disassemble(0x200);
+            disassembler.disassemble(0x100);
+            disassembler.disassemble(0x200);
         }
 
         assertEquals(
                 "Alternating addresses: each switch forces a decode",
-                200, decoderForCached.decodeCount);
+                200, countingDecoder.decodeCount);
     }
 }
-
