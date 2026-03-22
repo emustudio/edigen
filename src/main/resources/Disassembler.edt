@@ -4,7 +4,7 @@ package %disasm_package%;
 import net.emustudio.emulib.plugins.cpu.*;
 import net.emustudio.emulib.plugins.memory.MemoryContext;
 import net.emustudio.emulib.runtime.helpers.Bits;
-import net.emustudio.emulib.runtime.ui.Formatter;
+import net.emustudio.emulib.runtime.helpers.StringUtils;
 
 import java.util.*;
 
@@ -65,7 +65,6 @@ public class %disasm_class% implements Disassembler {
     private static final Map<Set<Integer>, MnemonicFormat> formatMap;
     private final MemoryContext<? extends Number> memory;
     private final Decoder decoder;
-    private final Formatter formatter = Formatter.DEFAULT;
 
     // Cache the last decoded instruction to avoid redundant decoding
     // (disassemble + getNextInstructionPosition typically decode the same address)
@@ -198,7 +197,7 @@ public class %disasm_class% implements Disassembler {
                 for (byte strategy : parameter.getStrategies()) {
                     value = applyStrategy(value, strategy);
                 }
-                replaced = formatter.format(mnemonic.charAt(position + 1), value);
+                replaced = StringUtils.format(mnemonic.charAt(position + 1), value);
             } else {
                 replaced = instruction.getString(parameter.getRuleCode());
             }
