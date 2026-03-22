@@ -4,11 +4,9 @@ package %disasm_package%;
 import net.emustudio.emulib.plugins.cpu.*;
 import net.emustudio.emulib.plugins.memory.MemoryContext;
 import net.emustudio.emulib.runtime.helpers.Bits;
-import net.emustudio.emulib.runtime.helpers.NumberUtils;
 import net.emustudio.emulib.runtime.ui.Formatter;
 
 import java.util.*;
-import java.util.function.UnaryOperator;
 
 import static %decoder_name%.*;
 
@@ -39,15 +37,15 @@ public class %disasm_class% implements Disassembler {
     */
     private static class Parameter {
         private final int ruleCode;
-        private final List<UnaryOperator<Bits>> strategies;
+        private final byte[] strategies;
 
-        public Parameter(int ruleCode, List<UnaryOperator<Bits>> strategies) {
+        public Parameter(int ruleCode, byte[] strategies) {
             this.ruleCode = ruleCode;
             this.strategies = strategies;
         }
 
         public int getRuleCode() { return ruleCode; }
-        public List<UnaryOperator<Bits>> getStrategies() { return strategies; }
+        public byte[] getStrategies() { return strategies; }
     }
 
     /**
@@ -57,21 +55,11 @@ public class %disasm_class% implements Disassembler {
     * the big-endian order since they will be used in Java methods accepting big endian.
     */
     private static class Strategy {
-        public static Bits reverse_bytes(Bits bits) {
-            return bits.reverseBytes();
-        }
-        public static Bits bit_reverse(Bits bits) {
-            return bits.reverseBits();
-        }
-        public static Bits absolute(Bits bits) {
-            return bits.absolute();
-        }
-        public static Bits shift_left(Bits bits) {
-            return bits.shiftLeft();
-        }
-        public static Bits shift_right(Bits bits) {
-            return bits.shiftRight();
-        }
+        public static final byte reverse_bytes = 1;
+        public static final byte bit_reverse = 2;
+        public static final byte absolute = 3;
+        public static final byte shift_left = 4;
+        public static final byte shift_right = 5;
     }
 
     private static final Map<Set<Integer>, MnemonicFormat> formatMap;
@@ -207,8 +195,8 @@ public class %disasm_class% implements Disassembler {
             String replaced;
             Bits value = instruction.getBits(parameter.getRuleCode());
             if (value != null) {
-                for (UnaryOperator<Bits> strategy : parameter.getStrategies()) {
-                    value = strategy.apply(value);
+                for (byte strategy : parameter.getStrategies()) {
+                    value = applyStrategy(value, strategy);
                 }
                 replaced = formatter.format(mnemonic.charAt(position + 1), value);
             } else {
@@ -220,6 +208,23 @@ public class %disasm_class% implements Disassembler {
         }
 
         return mnemonic.toString();
+    }
+
+    private Bits applyStrategy(Bits bits, byte strategy) {
+        switch (strategy) {
+            case Strategy.reverse_bytes:
+                return bits.reverseBytes();
+            case Strategy.bit_reverse:
+                return bits.reverseBits();
+            case Strategy.absolute:
+                return bits.absolute();
+            case Strategy.shift_left:
+                return bits.shiftLeft();
+            case Strategy.shift_right:
+                return bits.shiftRight();
+            default:
+                throw new IllegalArgumentException("Unknown decoding strategy: " + strategy);
+        }
     }
 
     private String formatImage(byte[] image) {

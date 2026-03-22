@@ -5,12 +5,16 @@ import net.emustudio.emulib.plugins.cpu.DecodedInstruction;
 import net.emustudio.emulib.plugins.cpu.Decoder;
 import net.emustudio.emulib.plugins.cpu.InvalidInstructionException;
 import net.emustudio.emulib.plugins.memory.MemoryContext;
-import net.emustudio.emulib.runtime.helpers.NumberUtils;
+import net.emustudio.emulib.runtime.helpers.Bits;
 
+import java.util.AbstractSet;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * The instruction decoder.
@@ -18,6 +22,7 @@ import java.util.Objects;
 public class %decoder_class% implements Decoder {
     private static final int CACHE_CAPACITY = 256;
     private static final int INITIAL_BUFFER_SIZE = 8;
+    private static final long UNSIGNED_INT_MASK = 0xFFFFFFFFL;
 
     private byte[] instructionBytes = new byte[INITIAL_BUFFER_SIZE];
     private final MemoryContext<? extends Number> memory;
@@ -26,21 +31,174 @@ public class %decoder_class% implements Decoder {
     private int loadedInstructionBytes;
     private int unit;
     private int bitsRead;
-    private DecodedInstruction instruction;
+    private FastDecodedInstruction instruction;
 
     /**
-     * A cache entry holding the decoded instruction together with
-     * the raw instruction bytes that produced it. On cache hit the
-     * current memory bytes are compared with the stored ones so
-     * that self-modifying code is detected automatically.
+     * Primitive-array-backed instruction storage for the generated decoder hot
+     * path. String and numeric values are stored without maps, and Bits objects
+     * are materialized only when the disassembler actually asks for them.
      */
-    private static class CacheEntry {
-        final byte[] rawBytes;
-        final DecodedInstruction instruction;
+    private static final class FastDecodedInstruction extends DecodedInstruction {
+        private static final byte HAS_CONSTANT = 1;
+        private static final byte HAS_STRING = 2;
+        private static final byte HAS_BITS = 4;
+        private static final int INITIAL_KEY_CAPACITY = 8;
 
-        CacheEntry(byte[] rawBytes, DecodedInstruction instruction) {
-            this.rawBytes = rawBytes;
-            this.instruction = instruction;
+        private byte[] keyStates = new byte[INITIAL_KEY_CAPACITY];
+        private int[] constants = new int[INITIAL_KEY_CAPACITY];
+        private String[] strings = new String[INITIAL_KEY_CAPACITY];
+        private int[] bitValues = new int[INITIAL_KEY_CAPACITY];
+        private int[] bitLengths = new int[INITIAL_KEY_CAPACITY];
+        private Bits[] bitObjects = new Bits[INITIAL_KEY_CAPACITY];
+        private int[] keys = new int[INITIAL_KEY_CAPACITY];
+        private int keyCount;
+        private KeySetView keySetView;
+
+        @Override
+        public void add(int key, String string, int constant) {
+            ensureKeyCapacity(key);
+            if (keyStates[key] == 0) {
+                rememberKey(key);
+            }
+            keyStates[key] |= HAS_CONSTANT | HAS_STRING;
+            constants[key] = constant;
+            strings[key] = string;
+        }
+
+        @Override
+        public void add(int key, int bits, int length) {
+            ensureKeyCapacity(key);
+            if (keyStates[key] == 0) {
+                rememberKey(key);
+            }
+            keyStates[key] |= HAS_BITS;
+            bitValues[key] = bits;
+            bitLengths[key] = length;
+            bitObjects[key] = null;
+        }
+
+        @Override
+        public boolean hasKey(int key) {
+            return key >= 0 && key < keyStates.length && keyStates[key] != 0;
+        }
+
+        @Override
+        public int get(int key) {
+            return hasState(key, HAS_CONSTANT) ? constants[key] : -1;
+        }
+
+        @Override
+        public String getString(int key) {
+            return hasState(key, HAS_STRING) ? strings[key] : null;
+        }
+
+        @Override
+        public Bits getBits(int key) {
+            if (!hasState(key, HAS_BITS)) {
+                return null;
+            }
+
+            Bits bits = bitObjects[key];
+            if (bits == null) {
+                bits = new Bits(bitValues[key], bitLengths[key]);
+                bitObjects[key] = bits;
+            }
+            return bits;
+        }
+
+        @Override
+        public Set<Integer> getKeys() {
+            if (keySetView == null) {
+                keySetView = new KeySetView();
+            }
+            return keySetView;
+        }
+
+        private boolean hasState(int key, int state) {
+            return key >= 0 && key < keyStates.length && (keyStates[key] & state) != 0;
+        }
+
+        private void rememberKey(int key) {
+            if (keyCount == keys.length) {
+                keys = Arrays.copyOf(keys, keyCount << 1);
+            }
+            keys[keyCount++] = key;
+            if (keySetView != null) {
+                keySetView.invalidateHash();
+            }
+        }
+
+        private void ensureKeyCapacity(int key) {
+            if (key < keyStates.length) {
+                return;
+            }
+
+            int newLength = keyStates.length;
+            while (newLength <= key) {
+                newLength <<= 1;
+            }
+
+            keyStates = Arrays.copyOf(keyStates, newLength);
+            constants = Arrays.copyOf(constants, newLength);
+            strings = Arrays.copyOf(strings, newLength);
+            bitValues = Arrays.copyOf(bitValues, newLength);
+            bitLengths = Arrays.copyOf(bitLengths, newLength);
+            bitObjects = Arrays.copyOf(bitObjects, newLength);
+        }
+
+        private final class KeySetView extends AbstractSet<Integer> {
+            private boolean hashComputed;
+            private int hash;
+
+            @Override
+            public Iterator<Integer> iterator() {
+                return new Iterator<Integer>() {
+                    private int index;
+
+                    @Override
+                    public boolean hasNext() {
+                        return index < keyCount;
+                    }
+
+                    @Override
+                    public Integer next() {
+                        if (!hasNext()) {
+                            throw new NoSuchElementException();
+                        }
+                        return keys[index++];
+                    }
+                };
+            }
+
+            @Override
+            public int size() {
+                return keyCount;
+            }
+
+            @Override
+            public boolean contains(Object value) {
+                if (!(value instanceof Integer)) {
+                    return false;
+                }
+                return hasKey(((Integer) value).intValue());
+            }
+
+            @Override
+            public int hashCode() {
+                if (!hashComputed) {
+                    int computedHash = 0;
+                    for (int i = 0; i < keyCount; i++) {
+                        computedHash += keys[i];
+                    }
+                    hash = computedHash;
+                    hashComputed = true;
+                }
+                return hash;
+            }
+
+            private void invalidateHash() {
+                hashComputed = false;
+            }
         }
     }
 
@@ -48,11 +206,11 @@ public class %decoder_class% implements Decoder {
      * LRU cache of decoded instructions keyed by memory position.
      * Evicts least-recently-used entries when capacity is exceeded.
      */
-    private final Map<Integer, CacheEntry> cache = new LinkedHashMap<Integer, CacheEntry>(
+    private final Map<Integer, FastDecodedInstruction> cache = new LinkedHashMap<Integer, FastDecodedInstruction>(
             CACHE_CAPACITY + 1, 0.75f, true
     ) {
         @Override
-        protected boolean removeEldestEntry(Map.Entry<Integer, CacheEntry> eldest) {
+        protected boolean removeEldestEntry(Map.Entry<Integer, FastDecodedInstruction> eldest) {
             return size() > CACHE_CAPACITY;
         }
     };
@@ -82,28 +240,32 @@ public class %decoder_class% implements Decoder {
         this.memoryPosition = memoryPosition;
         this.loadedInstructionBytes = 0;
 
-        CacheEntry entry = cache.get(memoryPosition);
+        FastDecodedInstruction entry = cache.get(memoryPosition);
         if (entry != null) {
-            Number[] currentBytes = memory.read(memoryPosition, entry.rawBytes.length);
-            if (matchesCachedBytes(entry.rawBytes, currentBytes)) {
-                return entry.instruction;
+            byte[] cachedBytes = entry.getImage();
+            Number[] currentBytes = memory.read(memoryPosition, cachedBytes.length);
+            if (matchesCachedBytes(cachedBytes, currentBytes)) {
+                return entry;
             }
             copyBytes(currentBytes, 0);
             loadedInstructionBytes = currentBytes.length;
         }
 
-        instruction = new DecodedInstruction();
+        instruction = new FastDecodedInstruction();
         bitsRead = 0;
         %root_rule%;
 
         int imageLength = Math.max(1, (bitsRead + 7) >>> 3);
         byte[] image = Arrays.copyOf(instructionBytes, imageLength);
         instruction.setImage(image);
-        cache.put(memoryPosition, new CacheEntry(image, instruction));
+        cache.put(memoryPosition, instruction);
         return instruction;
     }
 
     private boolean matchesCachedBytes(byte[] cachedBytes, Number[] currentBytes) {
+        if (currentBytes.length != cachedBytes.length) {
+            return false;
+        }
         for (int i = 0; i < cachedBytes.length; i++) {
             if (cachedBytes[i] != currentBytes[i].byteValue()) {
                 return false;
@@ -152,12 +314,27 @@ public class %decoder_class% implements Decoder {
      * @return the bytes read
      */
     private int readBits(int start, int length) {
+        if (length == 0) {
+            return 0;
+        }
+
         int end = start + length;
         if (bitsRead < end) {
             bitsRead = end;
         }
         ensureInstructionBytesLength(end);
-        return NumberUtils.readBits(instructionBytes, start, length, NumberUtils.Strategy.BIG_ENDIAN);
+
+        int startByte = start >>> 3;
+        int endByte = (end + 7) >>> 3;
+        long value = 0;
+
+        for (int i = startByte; i < endByte; i++) {
+            value = (value << 8) | (instructionBytes[i] & 0xFFL);
+        }
+
+        int shift = ((endByte - startByte) << 3) - (start & 0x7) - length;
+        long mask = (length == 32) ? UNSIGNED_INT_MASK : ((1L << length) - 1L);
+        return (int) ((value >>> shift) & mask);
     }
 
     %decoder_methods%
