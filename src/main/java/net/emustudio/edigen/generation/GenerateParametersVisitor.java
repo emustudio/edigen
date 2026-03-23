@@ -12,7 +12,6 @@ import net.emustudio.edigen.nodes.Value;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.Iterator;
-import java.util.stream.Collectors;
 
 /**
  * A visitor which generates the code of the two-dimensional array of
@@ -81,10 +80,28 @@ public class GenerateParametersVisitor extends Visitor {
      */
     @Override
     public void visit(Value value) throws SemanticException {
-        String strategies = value.getStrategies().stream()
-                .map(s -> "Strategy." + s)
-                .collect(Collectors.joining(", "));
+        StringBuilder strategies = new StringBuilder();
+        for (String strategy : value.getStrategies()) {
+            strategies.append(findBitOperationForStrategy(strategy, value));
+        }
+
         writer.print("new Parameter(" + value.getFieldName()
-                + ", new byte[]{" + strategies + "})");
+                + ", BitOperations.builder()" + strategies + ")");
+    }
+
+    private String findBitOperationForStrategy(String strategy, Value value) throws SemanticException {
+        switch (strategy) {
+            case "reverse_bytes":
+                return ".reverseBytes()";
+            case "bit_reverse":
+                return ".reverseBits()";
+            case "absolute":
+                return ".absolute()";
+            case "shift_left":
+                return ".shiftLeft()";
+            case "shift_right":
+                return ".shiftRight()";
+        }
+        throw new SemanticException("Unknown disassembler strategy: " + strategy, value);
     }
 }

@@ -19,6 +19,19 @@ public class %decoder_class% implements Decoder {
     private static final int INITIAL_BUFFER_SIZE = 8;
     private static final long UNSIGNED_INT_MASK = 0xFFFFFFFFL;
 
+    // A rule key can carry the constant decoded from a string-returning variant.
+    private static final byte HAS_CONSTANT = 1;
+
+    // A rule key can carry the original string returned by a named variant.
+    private static final byte HAS_STRING = 2;
+
+    // A rule key can carry raw operand bits returned by a subrule.
+    private static final byte HAS_BITS = 4;
+
+    // Keep the default footprint small; sparse or high rule codes grow on demand.
+    private static final int INITIAL_KEY_CAPACITY = 8;
+
+
     private byte[] instructionBytes = new byte[INITIAL_BUFFER_SIZE];
     private final MemoryContext<? extends Number> memory;
 
@@ -26,7 +39,15 @@ public class %decoder_class% implements Decoder {
     private int loadedInstructionBytes;
     private int unit;
     private int bitsRead;
-    private DecodedInstruction instruction;
+
+    private byte[] keyStates = new byte[INITIAL_KEY_CAPACITY];
+    private int[] constants = new int[INITIAL_KEY_CAPACITY];
+    private String[] strings = new String[INITIAL_KEY_CAPACITY];
+    private int[] bitValues = new int[INITIAL_KEY_CAPACITY];
+    private int[] bitLengths = new int[INITIAL_KEY_CAPACITY];
+    private int[] keys = new int[INITIAL_KEY_CAPACITY];
+
+    private int keyCount;
 
     /**
      * LRU cache of decoded instructions keyed by memory position.
@@ -68,7 +89,7 @@ public class %decoder_class% implements Decoder {
 
         DecodedInstruction entry = cache.get(memoryPosition);
         if (entry != null) {
-            byte[] cachedBytes = entry.getImage();
+            byte[] cachedBytes = entry.image;
             Number[] currentBytes = memory.read(memoryPosition, cachedBytes.length);
             if (matchesCachedBytes(cachedBytes, currentBytes)) {
                 return entry;
@@ -77,13 +98,16 @@ public class %decoder_class% implements Decoder {
             loadedInstructionBytes = currentBytes.length;
         }
 
-        instruction = new DecodedInstruction();
-        bitsRead = 0;
+        reset();
         %root_rule%;
 
         int imageLength = Math.max(1, (bitsRead + 7) >>> 3);
         byte[] image = Arrays.copyOf(instructionBytes, imageLength);
-        instruction.setImage(image);
+
+        DecodedInstruction instruction = new DecodedInstruction(
+            image, keyCount, keyStates, constants, strings, bitValues, bitLengths
+        );
+
         cache.put(memoryPosition, instruction);
         return instruction;
     }
@@ -161,6 +185,78 @@ public class %decoder_class% implements Decoder {
         int shift = ((endByte - startByte) << 3) - (start & 0x7) - length;
         long mask = (length == 32) ? UNSIGNED_INT_MASK : ((1L << length) - 1L);
         return (int) ((value >>> shift) & mask);
+    }
+
+    /**
+     * Resets the decoder state for a new instruction.
+     */
+    private void reset() {
+        bitsRead = 0;
+        keyStates = new byte[INITIAL_KEY_CAPACITY];
+        constants = new int[INITIAL_KEY_CAPACITY];
+        strings = new String[INITIAL_KEY_CAPACITY];
+        bitValues = new int[INITIAL_KEY_CAPACITY];
+        bitLengths = new int[INITIAL_KEY_CAPACITY];
+        keys = new int[INITIAL_KEY_CAPACITY];
+        keyCount = 0;
+    }
+
+    /**
+     * Adds instruction: string-returning variant
+     *
+     * @param key      the key (rule code)
+     * @param string   the string which the recognized variant returned
+     * @param constant the constant obtained from the string
+     */
+    private void addInstruction(int key, String string, int constant) {
+        ensureKeyCapacity(key);
+        if (keyStates[key] == 0) {
+            rememberKey(key);
+        }
+        keyStates[key] |= HAS_CONSTANT | HAS_STRING;
+        constants[key] = constant;
+        strings[key] = string;
+    }
+
+    /**
+     * Adds instruction: subrule-returning variant
+     *
+     * @param key    the rule code
+     * @param bits   the bit sequence in little-endian, padded to whole bytes
+     * @param length bit length (in bits)
+     */
+    private void addInstruction(int key, int bits, int length) {
+        ensureKeyCapacity(key);
+        if (keyStates[key] == 0) {
+            rememberKey(key);
+        }
+        keyStates[key] |= HAS_BITS;
+        bitValues[key] = bits;
+        bitLengths[key] = length;
+    }
+
+    private void rememberKey(int key) {
+        if (keyCount == keys.length) {
+            keys = Arrays.copyOf(keys, keyCount << 1);
+        }
+        keys[keyCount++] = key;
+    }
+
+    private void ensureKeyCapacity(int key) {
+        if (key < keyStates.length) {
+            return;
+        }
+
+        int newLength = keyStates.length;
+        while (newLength <= key) {
+            newLength <<= 1;
+        }
+
+        keyStates = Arrays.copyOf(keyStates, newLength);
+        constants = Arrays.copyOf(constants, newLength);
+        strings = Arrays.copyOf(strings, newLength);
+        bitValues = Arrays.copyOf(bitValues, newLength);
+        bitLengths = Arrays.copyOf(bitLengths, newLength);
     }
 
     %decoder_methods%
