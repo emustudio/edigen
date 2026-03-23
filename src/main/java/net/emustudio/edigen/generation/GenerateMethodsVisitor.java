@@ -170,7 +170,7 @@ public class GenerateMethodsVisitor extends Visitor {
 
             if (variant.getReturnString() != null) {
                 value = '"' + variant.getReturnString() + "\", " + variant.getFieldName();
-                put(String.format("instruction.add(%s, %s);", field, value));
+                put(String.format("addInstruction(%s, %s);", field, value));
             } else {
                 int start = variant.getReturnSubrule().getStart();
                 int length = variant.getReturnSubrule().getLength();
@@ -188,7 +188,7 @@ public class GenerateMethodsVisitor extends Visitor {
                 } else {
                     value = String.format("readBits(start + %d, %d)", start, length);
                 }
-                put(String.format("instruction.add(%s, %s, %d);", field, value, length));
+                put(String.format("addInstruction(%s, %s, %d);", field, value, length));
             }
         }
 

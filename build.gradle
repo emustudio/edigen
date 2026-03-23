@@ -99,6 +99,8 @@ test {
 
 javadoc {
   exclude 'net/emustudio/edigen/parser/**'
+  options.addStringOption('Xdoclint:all,-missing', '-quiet')
+  options.memberLevel = JavadocMemberLevel.PROTECTED
   if (JavaVersion.current().isJava9Compatible()) {
     options.addBooleanOption('html5', true)
   }

@@ -4,6 +4,7 @@ package %disasm_package%;
 import net.emustudio.emulib.plugins.cpu.*;
 import net.emustudio.emulib.plugins.memory.MemoryContext;
 import net.emustudio.emulib.runtime.helpers.Bits;
+import net.emustudio.emulib.runtime.helpers.BitOperations;
 import net.emustudio.emulib.runtime.helpers.StringUtils;
 
 import java.util.*;
@@ -37,29 +38,15 @@ public class %disasm_class% implements Disassembler {
     */
     private static class Parameter {
         private final int ruleCode;
-        private final byte[] strategies;
+        private final BitOperations bitOperations;
 
-        public Parameter(int ruleCode, byte[] strategies) {
+        public Parameter(int ruleCode, BitOperations bitOperations) {
             this.ruleCode = ruleCode;
-            this.strategies = strategies;
+            this.bitOperations = bitOperations;
         }
 
         public int getRuleCode() { return ruleCode; }
-        public byte[] getStrategies() { return strategies; }
-    }
-
-    /**
-    * A class with constant-decoding strategies.
-    *
-    * If the value represents a number, a decoding method should return bytes in
-    * the big-endian order since they will be used in Java methods accepting big endian.
-    */
-    private static class Strategy {
-        public static final byte reverse_bytes = 1;
-        public static final byte bit_reverse = 2;
-        public static final byte absolute = 3;
-        public static final byte shift_left = 4;
-        public static final byte shift_right = 5;
+        public BitOperations getBitOperations() { return bitOperations; }
     }
 
     private static final Map<Set<Integer>, MnemonicFormat> formatMap;
@@ -123,7 +110,7 @@ public class %disasm_class% implements Disassembler {
                 return new DisassembledInstruction(memoryPosition, lastRenderedMnemonic, lastRenderedCode);
             }
 
-            MnemonicFormat format = formatMap.get(instruction.getKeys());
+            MnemonicFormat format = formatMap.get(getKeys(instruction));
 
             if (format == null) {
                 mnemonic = "N/A";
@@ -131,7 +118,7 @@ public class %disasm_class% implements Disassembler {
                 mnemonic = createMnemonic(instruction, format);
             }
 
-            code = formatImage(instruction.getImage());
+            code = formatImage(instruction.image);
             lastRenderedPosition = memoryPosition;
             lastRenderedDecodedInstruction = instruction;
             lastRenderedMnemonic = mnemonic;
@@ -153,10 +140,22 @@ public class %disasm_class% implements Disassembler {
     @Override
     public int getNextInstructionPosition(int memoryPosition) {
         try {
-            return memoryPosition + cachedDecode(memoryPosition).getLength();
+            return memoryPosition + cachedDecode(memoryPosition).image.length;
         } catch (InvalidInstructionException ex) {
             return memoryPosition + 1;
         }
+    }
+
+    private Set<Integer> getKeys(DecodedInstruction instruction) {
+        Set<Integer> keys = new HashSet<>(Math.max(1, instruction.keyCount));
+
+        for (int ruleCode = 0; ruleCode < instruction.strings.length && keys.size() < instruction.keyCount; ruleCode++) {
+            if (instruction.strings[ruleCode] != null || instruction.bits[ruleCode] != null) {
+                keys.add(ruleCode);
+            }
+        }
+
+        return keys;
     }
 
     /**
@@ -192,37 +191,18 @@ public class %disasm_class% implements Disassembler {
             }
 
             String replaced;
-            Bits value = instruction.getBits(parameter.getRuleCode());
+            Bits value = instruction.bits[parameter.getRuleCode()];
             if (value != null) {
-                for (byte strategy : parameter.getStrategies()) {
-                    value = applyStrategy(value, strategy);
-                }
+                value = parameter.getBitOperations().apply(value);
                 replaced = StringUtils.format(mnemonic.charAt(position + 1), value);
             } else {
-                replaced = instruction.getString(parameter.getRuleCode());
+                replaced = instruction.strings[parameter.getRuleCode()];
             }
 
             mnemonic.replace(position, position + 2, replaced);
         }
 
         return mnemonic.toString();
-    }
-
-    private Bits applyStrategy(Bits bits, byte strategy) {
-        switch (strategy) {
-            case Strategy.reverse_bytes:
-                return bits.reverseBytes();
-            case Strategy.bit_reverse:
-                return bits.reverseBits();
-            case Strategy.absolute:
-                return bits.absolute();
-            case Strategy.shift_left:
-                return bits.shiftLeft();
-            case Strategy.shift_right:
-                return bits.shiftRight();
-            default:
-                throw new IllegalArgumentException("Unknown decoding strategy: " + strategy);
-        }
     }
 
     private String formatImage(byte[] image) {

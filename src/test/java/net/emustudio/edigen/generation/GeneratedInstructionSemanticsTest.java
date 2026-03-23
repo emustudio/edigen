@@ -20,19 +20,23 @@ public class GeneratedInstructionSemanticsTest {
                     + "instruction =\n"
                     + "    \"load\": 0x01 imm8 |\n"
                     + "    \"shift\": 0x02 shift8 |\n"
+                    + "    \"wide\": 0x03 imm16 |\n"
                     + "    \"op\": 1111 imm32(32) 0000;\n"
                     + "imm8 = imm8: imm8(8);\n"
                     + "shift8 = shift8: shift8(8);\n"
+                    + "imm16 = imm16: imm16(16);\n"
                     + "imm32 = imm32: imm32(32);\n"
                     + "%%\n"
                     + "\"%s %X\" = instruction imm8;\n"
                     + "\"%s %X\" = instruction shift8(shift_left);\n"
+                    + "\"%s %X\" = instruction imm16(reverse_bytes);\n"
                     + "\"%s %X\" = instruction imm32;\n";
 
     private static EdigenTestCompiler.Compiled compiled;
     private static int instructionKey;
     private static int imm8Key;
     private static int shift8Key;
+    private static int imm16Key;
     private static int imm32Key;
 
     private FakeByteMemory memory;
@@ -45,6 +49,7 @@ public class GeneratedInstructionSemanticsTest {
         instructionKey = getRuleCode("INSTRUCTION");
         imm8Key = getRuleCode("IMM8");
         shift8Key = getRuleCode("SHIFT8");
+        imm16Key = getRuleCode("IMM16");
         imm32Key = getRuleCode("IMM32");
     }
 
@@ -67,25 +72,22 @@ public class GeneratedInstructionSemanticsTest {
         memory.writeBytes(0x100, new byte[]{0x01, (byte) 0xAB});
 
         DecodedInstruction instruction = decoder.decode(0x100);
-        Bits bits = instruction.getBits(imm8Key);
+        Bits bits = instruction.bits[imm8Key];
 
-        assertTrue(instruction.hasKey(instructionKey));
-        assertTrue(instruction.hasKey(imm8Key));
-        assertEquals("load", instruction.getString(instructionKey));
+        assertEquals(2, instruction.keyCount);
+        assertEquals("load", instruction.strings[instructionKey]);
+        assertNotNull(instruction.bits[imm8Key]);
         assertNotNull(bits);
         assertEquals(0xAB, bits.number);
-        assertSame(bits, instruction.getBits(imm8Key));
-        assertEquals(2, instruction.getKeys().size());
-        assertTrue(instruction.getKeys().contains(instructionKey));
-        assertTrue(instruction.getKeys().contains(imm8Key));
-        assertEquals("load AB", disassembler.disassemble(0x100).getMnemo());
+        assertSame(bits, instruction.bits[imm8Key]);
+        assertEquals("load AB", disassembler.disassemble(0x100).mnemo);
     }
 
     @Test
     public void testGeneratedDisassemblerAppliesStrategies() throws Exception {
         memory.writeBytes(0x200, new byte[]{0x02, (byte) 0x81});
 
-        assertEquals("shift 2", disassembler.disassemble(0x200).getMnemo());
+        assertEquals("shift 2", disassembler.disassemble(0x200).mnemo);
     }
 
     @Test
@@ -94,15 +96,29 @@ public class GeneratedInstructionSemanticsTest {
         memory.writeBytes(0x300, image);
 
         DecodedInstruction instruction = decoder.decode(0x300);
-        Bits bits = instruction.getBits(imm32Key);
+        Bits bits = instruction.bits[imm32Key];
 
-        assertTrue(instruction.hasKey(instructionKey));
-        assertTrue(instruction.hasKey(imm32Key));
-        assertFalse(instruction.hasKey(shift8Key));
+        assertEquals(2, instruction.keyCount);
+        assertEquals("op", instruction.strings[instructionKey]);
+        assertNull(instruction.bits[shift8Key]);
         assertNotNull(bits);
         assertEquals(0x12345678, bits.number);
-        assertArrayEquals(image, instruction.getImage());
-        assertEquals("op 12345678", disassembler.disassemble(0x300).getMnemo());
+        assertArrayEquals(image, instruction.image);
+        assertEquals("op 12345678", disassembler.disassemble(0x300).mnemo);
+    }
+
+    @Test
+    public void testRepeatedDisassemblyDoesNotMutateDecodedOperands() throws Exception {
+        memory.writeBytes(0x220, new byte[]{0x03, 0x00, (byte) 0xFF});
+
+        DecodedInstruction instruction = decoder.decode(0x220);
+        Bits bits = instruction.bits[imm16Key];
+
+        assertEquals(0x00FF, bits.number);
+        assertEquals("wide FF00", disassembler.disassemble(0x220).mnemo);
+        assertEquals("wide FF00", disassembler.disassemble(0x220).mnemo);
+        assertEquals(0x00FF, bits.number);
+        assertEquals(0x00FF, instruction.bits[imm16Key].number);
     }
 
     private static int getRuleCode(String fieldName) throws Exception {

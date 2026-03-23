@@ -55,12 +55,12 @@ public class RecursiveRulesDecoderTest {
         DecodedInstruction onePrefix = decoder.decode(0x200);
         DecodedInstruction twoPrefixes = decoder.decode(0x300);
 
-        assertEquals(1, noPrefix.getLength());
-        assertEquals(2, onePrefix.getLength());
-        assertEquals(3, twoPrefixes.getLength());
-        assertArrayEquals(new byte[]{(byte) 0xEF}, noPrefix.getImage());
-        assertArrayEquals(new byte[]{(byte) 0xFF, (byte) 0xEF}, onePrefix.getImage());
-        assertArrayEquals(new byte[]{(byte) 0xFF, (byte) 0xFF, (byte) 0xEF}, twoPrefixes.getImage());
+        assertEquals(1, noPrefix.image.length);
+        assertEquals(2, onePrefix.image.length);
+        assertEquals(3, twoPrefixes.image.length);
+        assertArrayEquals(new byte[]{(byte) 0xEF}, noPrefix.image);
+        assertArrayEquals(new byte[]{(byte) 0xFF, (byte) 0xEF}, onePrefix.image);
+        assertArrayEquals(new byte[]{(byte) 0xFF, (byte) 0xFF, (byte) 0xEF}, twoPrefixes.image);
     }
 
     @Test
