@@ -4,12 +4,14 @@
 - `edigen` owns the `.eds` language, parser, and generation of Java instruction decoders and disassemblers.
 
 ## Sibling Repositories
-- `/home/vbmacher/projects/emustudio/emuLib`: shared plugin API, runtime services, shared UI helpers, and reusable utilities.
-- `/home/vbmacher/projects/emustudio/edigen`: decoder/disassembler generator from `.eds` specifications.
-- `/home/vbmacher/projects/emustudio/emuStudio`: desktop application, CLI launcher, bundled plugins, bundled virtual computers, configs, and packaging.
-- `/home/vbmacher/projects/emustudio/emustudio.github.io`: website, user documentation, developer documentation, and release-facing pages.
-- `/home/vbmacher/projects/emustudio/edigen-gradle-plugin`: Gradle task and DSL integration for Edigen source generation.
-- `/home/vbmacher/projects/emustudio/cpu-testsuite`: shared CPU instruction test framework and reusable verification helpers.
+- [emuLib](https://github.com/emustudio/emuLib): shared plugin API, runtime services, shared UI helpers, and reusable utilities.
+- [edigen](https://github.com/emustudio/edigen): decoder/disassembler generator from `.eds` specifications.
+- [emuStudio](https://github.com/emustudio/emuStudio): desktop application, CLI launcher, bundled plugins, bundled virtual computers, configs, and packaging.
+- [emustudio.github.io](https://github.com/emustudio/emustudio.github.io): website, user documentation, developer documentation, and release-facing pages.
+- [edigen-gradle-plugin](https://github.com/emustudio/edigen-gradle-plugin): Gradle task and DSL integration for Edigen source generation.
+- [cpu-testsuite](https://github.com/emustudio/cpu-testsuite): shared CPU instruction test framework and reusable verification helpers.
+
+Before checking or updating a sibling repository, verify that it is cloned locally. If it is not available locally, report this to the user instead of assuming its contents.
 
 ## When To Update Which Repository
 - `.eds` syntax, parser behavior, decoder generation, disassembler generation, or generated code shape: update `edigen`.
