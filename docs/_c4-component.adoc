@@ -1,0 +1,98 @@
+== Components
+
+Zooming into the *Edigen CLI Application* container reveals the internal components
+and the direction of data flow between them. Each Java package maps onto one
+component; the AST model is the shared data structure that the passes and generators
+operate on.
+
+[plantuml,c4-component,svg]
+....
+@startuml
+skinparam defaultTextAlignment center
+skinparam shadowing false
+skinparam rectangle {
+  roundCorner 12
+  BorderColor #2E4E7E
+}
+skinparam ArrowColor #4A4A4A
+
+rectangle "Build / User\n<<External>>" as user #999999
+
+package "Edigen CLI Application" {
+  rectangle "**CLI / UI Layer**\nEdigen, ui.*\n\nArgument parsing,\nhelp, error reporting,\nexit codes" as cli #438DD5
+  rectangle "**Translator**\n\nOrchestrates the\nparse -> transform ->\ngenerate pipeline" as tr #1168BD
+  rectangle "**Parser**\nparser.* (JavaCC)\n\nBuilds the initial AST\nfrom .eds text" as parser #438DD5
+  rectangle "**AST Model**\nnodes.*\n\nSpecification, Decoder,\nDisassembler, Rule,\nVariant, Mask, Pattern..." as ast #63BEF2
+  rectangle "**Transformation Passes**\npasses.*\n\n13 in-place Visitor\npasses: validate +\nnormalize the AST" as passes #438DD5
+  rectangle "**Code Generators**\ngeneration.*\n\nDecoder/Disassembler\ngenerators + emitting\nvisitors" as gen #438DD5
+  rectangle "**Templating**\nmisc.Template,\nPrettyPrinter\n\nVariable substitution\n+ indentation" as tmplsys #438DD5
+}
+
+rectangle "Templates\nDecoder.edt / Disassembler.edt\n<<Resource>>" as edt #E8F0FE
+rectangle "Generated .java\n<<Output>>" as out #E8F0FE
+
+user --> cli : args
+cli --> tr : configuration (Setting map)
+tr --> parser : parse(.eds)
+parser --> ast : builds
+tr --> passes : run in fixed order
+passes --> ast : mutate in place
+tr --> gen : generate
+gen --> ast : read (visit)
+gen --> tmplsys : fill variables
+tmplsys --> edt : read template
+tmplsys --> out : write Java
+
+@enduml
+....
+
+=== Component responsibilities
+
+[cols="1,1,3",options="header"]
+|===
+| Component | Package | Responsibility
+
+| CLI / UI Layer | `net.emustudio.edigen`, `net.emustudio.edigen.ui`
+| `Edigen` is the `main()` entry point; it prints messages, maps exceptions to exit
+  codes, and delegates to `Translator`. `ui.CommandLine`, `Argument` and `Help`
+  parse arguments into a `Map<Setting,String>` and render usage. This layer keeps
+  the compiler core independent of the command line.
+
+| Translator | `net.emustudio.edigen.Translator`
+| The application core. Opens the specification, invokes the `Parser`, runs the
+  fixed pass pipeline over the AST, and finally runs the two generators. Its
+  `transform(...)` method is the authoritative definition of pass order.
+
+| Parser | `net.emustudio.edigen.parser` (generated from `Grammar.jj`)
+| Recognizes decoder and disassembler syntax and constructs AST nodes with source
+  line numbers. It deliberately does *not* resolve names or normalize structure –
+  that is the job of the passes.
+
+| AST Model | `net.emustudio.edigen.nodes`
+| The shared tree. `Specification` is the root and always contains a `Decoder` and a
+  `Disassembler` subtree. All nodes extend `TreeNode`, which provides parent/child
+  links (insertion-ordered), in-place mutation, deep `copy()`, and `dump(...)`.
+
+| Transformation Passes | `net.emustudio.edigen.passes`
+| Thirteen `Visitor` subclasses that validate the specification and rewrite the
+  decoder subtree into a decision tree. Detailed in <<Code>>.
+
+| Code Generators | `net.emustudio.edigen.generation`
+| `DecoderGenerator` and `DisassemblerGenerator` (both extend `Generator`) compute
+  template variables and delegate code fragments to emitting visitors
+  (`GenerateFieldsVisitor`, `GenerateMethodsVisitor`, `GenerateFormatsVisitor`,
+  `GenerateParametersVisitor`).
+
+| Templating | `net.emustudio.edigen.misc`
+| `Template` replaces `%name%` variables (with block-variable indentation support);
+  `PrettyPrinter` indents emitted Java line-by-line; `BitSequence` supports bit-level
+  computations used by the passes.
+|===
+
+=== The Visitor mechanism
+
+Every analysis, validation, transformation and emission step is a subclass of the
+base `Visitor`. The base implementation simply traverses children, so each concrete
+visitor overrides only the node types it cares about. This is the central extension
+mechanism: adding a new pass usually means adding one `Visitor` subclass and slotting
+it into `Translator.transform(...)`, without touching the node classes.

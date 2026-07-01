@@ -1,5 +1,0 @@
-title: Edigen Internals
-description: Architecture, AST transformation pipeline, code generation, and template internals.
-theme: jekyll-theme-cayman
-markdown: kramdown
-permalink: pretty

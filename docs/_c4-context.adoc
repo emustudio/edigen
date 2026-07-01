@@ -1,0 +1,69 @@
+== System Context
+
+At the highest level, Edigen is a single command-line tool used while _building_ a
+CPU emulator plugin. A developer describes an instruction set in a `.eds` file; a
+build integration (Gradle or Maven plugin) runs Edigen during the build; Edigen
+emits Java source that implements the emuLib decoder and disassembler contracts and
+ultimately runs inside emuStudio.
+
+[plantuml,c4-context,svg]
+....
+@startuml
+skinparam defaultTextAlignment center
+skinparam shadowing false
+skinparam rectangle {
+  roundCorner 12
+  BorderColor #2E4E7E
+}
+skinparam ArrowColor #4A4A4A
+left to right direction
+
+actor "CPU / Emulator\nDeveloper" as dev #08427B
+
+rectangle "**Edigen**\n<<Software System>>\n\nGenerates Java source of an\ninstruction decoder and a\ndisassembler from a .eds file" as edigen #1168BD
+
+rectangle "**Build Integration**\n<<External System>>\n\nedigen-gradle-plugin /\nedigen-maven-plugin" as build #999999
+rectangle "**emuStudio / emuLib**\n<<External System>>\n\nPlugin API (Decoder,\nDisassembler) and runtime" as emulib #999999
+rectangle "**Generated Java Sources**\n<<Artifact>>\n\nDecoder.java,\nDisassembler.java" as gen #63BEF2
+
+dev --> edigen : writes .eds spec,\nconfigures generation
+build --> edigen : invokes generator\nduring the build
+edigen --> gen : emits
+gen ..> emulib : implements Decoder /\nDisassembler interfaces
+dev --> emulib : builds the CPU plugin\nusing generated code
+build --> gen : compiles into\nthe plugin
+
+@enduml
+....
+
+=== People and systems
+
+[cols="1,1,3",options="header"]
+|===
+| Element | Type | Responsibility
+
+| CPU / Emulator Developer | Person
+| Author of the `.eds` specification. Configures the build to run Edigen and
+  integrates the generated decoder/disassembler into a CPU plugin.
+
+| Edigen | Software System (this project)
+| Reads a `.eds` file, validates it, and generates Java source of a decoder and a
+  disassembler.
+
+| Build Integration | External System
+| The https://github.com/emustudio/edigen-gradle-plugin[edigen-gradle-plugin] or
+  the edigen-maven-plugin. Wires generation into a normal build lifecycle and calls
+  Edigen with the right arguments.
+
+| emuStudio / emuLib | External System
+| Provides the `Decoder` and `Disassembler` interfaces the generated code
+  implements, and the runtime that executes the resulting CPU plugin.
+
+| Generated Java Sources | Artifact
+| The `Decoder.java` and `Disassembler.java` files produced by Edigen and compiled
+  into the developer's CPU plugin.
+|===
+
+NOTE: Edigen can also be launched directly from the command line
+(`java -jar edigen.jar ...`); the build plugins are simply the recommended way to
+invoke it.
