@@ -1,0 +1,103 @@
+= Edigen Architecture (C4 Model)
+Matúš Sulír; Peter Jakubčo
+:description: C4 architecture documentation of Edigen, the Emulator Disassembler Generator.
+:keywords: edigen, emustudio, c4, architecture, decoder, disassembler
+
+[.lead]
+This document describes the architecture of *Edigen* – the _Emulator Disassembler
+Generator_ – using the https://c4model.com[C4 model]. It is written for
+contributors and integrators who need to understand how a `.eds` specification is
+turned into Java source code of an instruction decoder and a disassembler.
+
+TIP: For the syntax and semantics of the `.eds` input language itself, see the
+<<the-eds-language,EDS Language>> chapter below.
+
+== About Edigen
+
+Edigen is a source-to-source compiler for a small domain-specific language (DSL).
+Its input is an `.eds` file describing instruction formats, operation codes and
+mnemonics; its output is Java source code for:
+
+* an instruction *decoder* implementing `net.emustudio.emulib.plugins.cpu.Decoder`,
+* a *disassembler* implementing `net.emustudio.emulib.plugins.cpu.Disassembler`.
+
+The generated classes are compatible with the
+https://github.com/emustudio/emuStudio[emuStudio] platform and rely on interfaces
+from https://github.com/emustudio/emuLib[emuLib].
+
+The core architectural idea is a *pipeline*: Edigen never emits code directly from
+the parser. It first builds a generic abstract syntax tree (AST), then rewrites
+that AST in place through a fixed sequence of visitor passes until it has a shape
+that is trivial to render as Java. Only then do the generators walk the normalized
+tree and fill text templates.
+
+.End-to-end pipeline
+[source,text]
+----
+.eds specification
+    -> JavaCC parser (Grammar.jj)
+    -> AST (Specification)
+    -> semantic + structural visitor passes
+    -> generator visitors
+    -> template expansion (Decoder.edt, Disassembler.edt)
+    -> generated Java classes
+----
+
+== About the C4 Model
+
+The https://c4model.com[C4 model] describes software at four increasing levels of
+detail. This document follows that structure:
+
+[cols="1,2,4",options="header"]
+|===
+| Level | Name | Question it answers
+
+| 1 | <<System Context>>   | How does Edigen fit into the world around it?
+| 2 | <<Containers>>       | What are the high-level building blocks and data stores?
+| 3 | <<Components>>       | What are the internal components of the application?
+| 4 | <<Code>>             | How are the key components implemented?
+|===
+
+TIP: Diagrams on this page are rendered from PlantUML at build time via
+`asciidoctor-diagram`. Regenerate this document with `./gradlew doc`.
+
+include::_c4-context.adoc[]
+
+include::_c4-container.adoc[]
+
+include::_c4-component.adoc[]
+
+include::_c4-code.adoc[]
+
+== Cross-cutting Concerns
+
+=== In-place AST mutation
+
+Edigen does not build a separate intermediate representation for every compiler
+phase. Instead, the original AST is progressively rewritten toward a
+code-generation-friendly shape. The benefits are that passes reuse the same node
+types and tree utilities, and that the generator visitors stay simple because the
+hard structural work is already done. The trade-off is that *pass ordering is part
+of the architecture* and must not be changed casually.
+
+=== Extension points
+
+The architecture exposes two supported extension points without changing Java code:
+
+* a custom decoder template via the `-dt` option,
+* a custom disassembler template via the `-at` option.
+
+Because the generators produce template variables rather than final files directly,
+template replacement is a first-class way to customize the emitted runtime while
+keeping the AST pipeline unchanged.
+
+=== Debugging the pipeline
+
+`Translator` supports a debug mode (`-d`) that dumps the AST after every pass. Since
+most of the real compiler logic lives in the transformation pipeline, inspecting the
+post-pass tree is usually the fastest way to reason about unexpected generated output.
+
+[[the-eds-language]]
+== The EDS Language
+
+include::_eds-language.adoc[leveloffset=+1]

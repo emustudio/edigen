@@ -1,0 +1,338 @@
+[.lead]
+The *EDS* language is the domain-specific language read by Edigen. An `.eds` file
+describes the instruction formats, operation codes and mnemonics of a processor, and
+Edigen compiles it into Java source code of an instruction *decoder* and a
+*disassembler*.
+
+This chapter is a reference for people who *write* `.eds` files. How the compiler turns
+a specification into Java is covered by the architecture chapters above.
+
+== Overview
+
+An `.eds` file is a plain-text, UTF-8 encoded specification composed of two parts,
+separated by a `%%` line:
+
+[source,text]
+----
+# decoder
+root: instruction, data;
+
+instruction =
+    "add": 0xE dst_reg(2) src_reg(2) |
+    "sub": 0xF dst_reg(2) immediate(10);
+
+data =
+    data: data(32);
+
+src_reg, dst_reg =
+    "X": 00 |
+    "Y": 01;
+
+%%
+
+# disassembler
+"%s %s, %s" = instruction dst_reg src_reg;
+"%s %s, %d" = instruction dst_reg immediate;
+"%0x"       = data;
+----
+
+* The *decoder* part (before `%%`) maps a sequence of bits to an associative array of
+  decoded fields, in the form `{rule: value, ...}`.
+* The *disassembler* part (after `%%`) maps that associative array to a human-readable
+  mnemonic string.
+
+== Lexical elements
+
+=== Comments
+
+Three comment styles are recognized and treated as whitespace:
+
+[cols="1,3",options="header"]
+|===
+| Syntax | Meaning
+
+| `# ...`  | One-line comment until end of line.
+| `// ...` | One-line comment until end of line.
+| `/* ... */` | Multi-line, C-style comment.
+|===
+
+=== Whitespace
+
+Spaces, tabs, carriage returns and newlines are insignificant except as token
+separators.
+
+=== Tokens
+
+[cols="1,3",options="header"]
+|===
+| Token | Definition
+
+| Identifier   | `[A-Za-z_]+ [A-Za-z_0-9]*` – starts with a letter or underscore, followed by letters, underscores or digits.
+| String       | A sequence of characters enclosed in double quotes, e.g. `"add"`. It may not contain a double quote or a line break.
+| Hexadecimal constant | `0x` followed by one or more hexadecimal digits, e.g. `0xE`, `0xFF`.
+| Binary constant | One or more `0` / `1` characters, e.g. `00`, `1011`. The number of digits is significant – it is the bit width.
+| Length | A positive decimal number enclosed in parentheses, e.g. `(2)`, `(32)`. The first digit must be non-zero, so `(0)` is not a valid length.
+| Reserved word | `root`.
+| Punctuation | `=` `,` `;` `:` `|` `[` `]` `(` `)` `%%`.
+|===
+
+NOTE: A binary constant's *bit width equals the number of digits written*: `00` is two
+zero bits, whereas `0x0` is four zero bits.
+
+== Decoder
+
+[source,text]
+----
+Rule               instruction =
+  Variant              "add":
+    Constant             0xE
+    Subrule              dst_reg(2)
+    Subrule              src_reg(2) |
+  Variant              "sub":
+    Constant             0xF
+    Subrule              dst_reg(2)
+    Subrule              immediate(10) ;
+
+Rule               data =
+  Variant              data:
+    Subrule              data(32) ;
+
+Rule               src_reg, dst_reg =
+  Variant              "X":
+    Constant             00 |
+  Variant              "Y":
+    Constant             01 ;
+----
+
+The decoder part starts with a *root-rule declaration* and is followed by one or more
+*rule definitions*.
+
+=== Root-rule declaration
+
+[source,text]
+----
+root: instruction, data;
+----
+
+The declaration begins with the reserved word `root`, followed by a comma-separated
+list of rule names and terminated by a semicolon. Root rules are attempted in the order
+written: decoding first tries `instruction`, and if that does not match, it tries
+`data`. Every listed name must refer to a defined rule.
+
+NOTE: The `root` keyword may be followed by a colon (`root: instruction;`) or written
+without one (`root instruction;`); both forms are accepted.
+
+=== Rules
+
+[source,text]
+----
+name =
+    variant |
+    variant ;
+----
+
+A *rule* is a named group of *variants* separated by a pipe `|`, and it is terminated by
+a semicolon `;`. Exactly one variant of a rule matches a given input.
+
+A rule may declare *several names* at once by separating them with commas
+(`src_reg, dst_reg = ...`). This defines the same set of variants under each name, which
+is convenient when different fields share an identical encoding.
+
+=== Variants
+
+A *variant* is one alternative of a rule. It optionally begins with a *return value*
+followed by a colon `:`, and then contains one or more *constants* and *subrules*:
+
+[source,text]
+----
+"add": 0xE dst_reg(2) src_reg(2)
+----
+
+A variant's return value is what the rule contributes to the decoded result when it
+matches. It is one of:
+
+* a *string*, e.g. `"add"` – typically an operation mnemonic; or
+* a *subrule name* (without quotes), e.g. `data` – the binary value captured by that
+  subrule is returned as the rule's value.
+
+A variant without a return value matches bits but contributes nothing to the result on
+its own; it is used purely for structural matching.
+
+=== Constants
+
+A *constant* is a hexadecimal (`0xF`) or binary (`01`) literal. Constants are the bits
+that must match exactly for the variant to be selected; they make the choice between
+variants unambiguous.
+
+=== Subrules
+
+A *subrule* is a reference to another rule. Its full form is:
+
+[source,text]
+----
+name [pre-pattern] (length)
+----
+
+* `name` – the referenced rule name.
+* `[pre-pattern]` – *optional* constant that must prefix the matched bits. For example,
+  `dst_reg[1](2)` matches two bits only if the sequence starts with binary `1`.
+* `(length)` – *optional* number of bits the subrule consumes.
+
+The referenced rule need not be defined explicitly: a subrule with an explicit length
+and no matching rule definition acts as an anonymous field that simply captures that many
+bits (for example `immediate(10)` or `data(32)`).
+
+A subrule without a length is *unbounded* – it consumes all remaining bits. An unbounded
+subrule is only allowed as the last element of a variant.
+
+=== Decoding semantics
+
+The result of decoding is an associative array of the form `{rule: value, ...}`.
+
+Given the input `1111 0100 0000 0011` and the decoder above:
+
+. The second variant of `instruction` matches, because `0xF` is `1111`. Result so far:
+  `{instruction: "sub"}`.
+. The next two bits `01` are passed to `dst_reg`, whose second variant matches. Result:
+  `{instruction: "sub", dst_reg: "Y"}`.
+. The remaining bits `00 0000 0011` are passed to `immediate`, which returns the raw
+  binary value. Final result:
+  `{instruction: "sub", dst_reg: "Y", immediate: 3}`.
+
+== Disassembler
+
+The disassembler part maps a decoded result to a mnemonic string. It consists of one or
+more *formats*:
+
+[source,text]
+----
+"format string" = rule rule ... ;
+----
+
+The right side of `=` is a *set of rule names*; the left side is a format string. During
+disassembly, Edigen selects the *first* format whose rule set is a subset of the decoded
+result's keys, and substitutes the format specifiers with the corresponding values.
+
+For the result `{instruction: "sub", dst_reg: "Y", immediate: 3}`, the first format
+`"%s %s, %s" = instruction dst_reg src_reg` does not apply (the result has no `src_reg`),
+but the second `"%s %s, %d" = instruction dst_reg immediate` matches, producing
+`sub Y, 3`.
+
+=== Format specifiers
+
+The following specifiers are available in format strings (as implemented by emuLib's
+`StringUtils.format`):
+
+[cols="1,3",options="header"]
+|===
+| Specifier | Meaning
+
+| `%c` | One character, in the platform's default charset.
+| `%d` | Signed integer, decimal.
+| `%f` | A 4-byte (or 8-byte) floating-point number.
+| `%s` | A string – typically a string constant returned from a variant.
+| `%x` | Unsigned integer, hexadecimal, lowercase.
+| `%X` | Unsigned integer, hexadecimal, uppercase.
+| `%%` | A literal percent sign.
+|===
+
+=== Decoding strategies
+
+A rule reference on the right side of a format may take one or more *decoding
+strategies* in parentheses. Strategies post-process the captured bits before formatting
+and are applied left-to-right:
+
+[source,text]
+----
+"%s %X" = instruction line(shift_left, shift_left, bit_reverse, absolute) ignore8;
+----
+
+[cols="1,3",options="header"]
+|===
+| Strategy | Effect
+
+| `reverse_bytes` | Reverses the byte order (endianness swap).
+| `bit_reverse`   | Reverses the order of the bits.
+| `absolute`      | Interprets the bits as a two's-complement value and takes its absolute value; the sign is discarded.
+| `shift_left`    | Shifts the value left by one bit, in big-endian order. Bytes `[0]=1, [1]=2` become `[0]=2, [1]=4`.
+| `shift_right`   | Shifts the value right by one bit, in big-endian order. Bytes `[0]=1, [1]=2` become `[0]=0, [1]=0x81`.
+|===
+
+An unknown strategy name is reported as an error at generation time.
+
+=== Formatting in variant names
+
+When the default disassembler template is used, format specifiers may also appear inside
+*variant return strings*. In that case the disassembler recognizes them and recursively
+substitutes them with the remaining arguments of the matching format.
+
+[source,text]
+----
+root instruction;
+
+# http://www.z80.info/decoding.htm
+instruction =
+  "nop":         00 000 000                       |
+  "djnz %X":     00 010 000 imm8                  |
+  "jr %s, %X":   00 1 cc_jr(2) 000 imm8           |
+  ...
+
+cc_jr =
+  "nz": 00 | "z": 01 | "nc": 10 | "c": 11 ;
+
+imm8 = imm8: imm8(8);
+
+%%
+
+"%s" = instruction cc_jr imm8;
+"%s" = instruction imm8;
+----
+
+Here the format `"%s" = instruction cc_jr imm8` matches the variant
+`"jr %s, %X": 00 1 cc_jr(2) 000 imm8`. The disassembler:
+
+. Replaces `%s` with `instruction`, whose value is the string `"jr %s, %X"`.
+. Recursively replaces the first specifier `%s` in `"jr %s, %X"` with the value of
+  `cc_jr` (e.g. `nc`), giving `"jr nc, %X"`.
+. Replaces the last `%X` with the value of `imm8` (e.g. `0x20`), giving `jr nc, 20`.
+
+TIP: To emit a format-like sequence literally without interpretation, prefix it with an
+extra `%`; for example write `%%X` to produce `%X`.
+
+== A note on strategy names
+
+Only the strategies listed above (`reverse_bytes`, `bit_reverse`, `absolute`,
+`shift_left`, `shift_right`) are supported by the current generator. Older
+`big_endian` / `little_endian` names are no longer recognized; use `reverse_bytes` to
+swap endianness.
+
+[[grammar]]
+== Grammar reference
+
+The following EBNF summarizes the concrete syntax accepted by the parser
+(`Grammar.jj`). Uppercase names denote lexical tokens.
+
+[source,ebnf]
+----
+Specification ::= Decoder "%%" Disassembler EOF ;
+
+Decoder       ::= RootRules Rule+ ;
+RootRules     ::= "root" ID ( "," ID )* ";" ;
+Rule          ::= ID ( "," ID )* "=" Variant ( "|" Variant )* ";" ;
+Variant       ::= ( Return ":" )? Pattern+ ;
+Return        ::= ID | STRING ;
+Pattern       ::= Subrule | Constant ;
+Subrule       ::= ID PrePattern? LENGTH? ;
+PrePattern    ::= "[" Constant "]" ;
+Constant      ::= HEX_NUMBER | BIN_NUMBER ;
+
+Disassembler  ::= Format+ ;
+Format        ::= STRING "=" Value+ ";" ;
+Value         ::= ID ( "(" ID ( "," ID )* ")" )? ;
+
+ID            ::= [A-Za-z_]+ [A-Za-z_0-9]* ;
+STRING        ::= '"' ( ~["\n"] )* '"' ;
+HEX_NUMBER    ::= "0x" [0-9A-Fa-f]+ ;
+BIN_NUMBER    ::= ( "0" | "1" )+ ;
+LENGTH        ::= "(" [1-9] [0-9]* ")" ;
+----

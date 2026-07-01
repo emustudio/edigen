@@ -154,3 +154,6 @@ target/
 .ammonite/
 .metals-sbt/
 .scala-build/
+
+# Generated documentation (./gradlew doc)
+docs/output/
