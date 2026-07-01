@@ -9,6 +9,9 @@ Generator_ – using the https://c4model.com[C4 model]. It is written for
 contributors and integrators who need to understand how a `.eds` specification is
 turned into Java source code of an instruction decoder and a disassembler.
 
+TIP: For the syntax and semantics of the `.eds` input language itself, see the
+<<the-eds-language,EDS Language>> chapter below.
+
 == About Edigen
 
 Edigen is a source-to-source compiler for a small domain-specific language (DSL).
@@ -93,3 +96,8 @@ keeping the AST pipeline unchanged.
 `Translator` supports a debug mode (`-d`) that dumps the AST after every pass. Since
 most of the real compiler logic lives in the transformation pipeline, inspecting the
 post-pass tree is usually the fastest way to reason about unexpected generated output.
+
+[[the-eds-language]]
+== The EDS Language
+
+include::_eds-language.adoc[leveloffset=+1]
