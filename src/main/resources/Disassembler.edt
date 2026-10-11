@@ -4,10 +4,11 @@ package %disasm_package%;
 import net.emustudio.emulib.plugins.cpu.*;
 import net.emustudio.emulib.plugins.memory.MemoryContext;
 import net.emustudio.emulib.runtime.helpers.Bits;
-import net.emustudio.emulib.runtime.helpers.BitOperations;
-import net.emustudio.emulib.runtime.helpers.StringUtils;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.*;
+import java.util.function.UnaryOperator;
 
 import static %decoder_name%.*;
 
@@ -47,6 +48,30 @@ public class %disasm_class% implements Disassembler {
 
         public int getRuleCode() { return ruleCode; }
         public BitOperations getBitOperations() { return bitOperations; }
+    }
+
+    /**
+    * An ordered pipeline of {@link Bits} transformations applied to a decoded parameter.
+    */
+    private static final class BitOperations {
+        private final List<UnaryOperator<Bits>> operations = new ArrayList<>();
+
+        static BitOperations builder() { return new BitOperations(); }
+
+        Bits apply(Bits bits) {
+            Bits result = bits;
+            for (UnaryOperator<Bits> operation : operations) {
+                result = operation.apply(result);
+            }
+            return result;
+        }
+
+        private BitOperations then(UnaryOperator<Bits> operation) { operations.add(operation); return this; }
+        BitOperations reverseBytes() { return then(Bits::reverseBytes); }
+        BitOperations reverseBits() { return then(Bits::reverseBits); }
+        BitOperations absolute() { return then(Bits::absolute); }
+        BitOperations shiftLeft() { return then(Bits::shiftLeft); }
+        BitOperations shiftRight() { return then(Bits::shiftRight); }
     }
 
     private static final Map<Set<Integer>, MnemonicFormat> formatMap;
@@ -194,7 +219,7 @@ public class %disasm_class% implements Disassembler {
             Bits value = instruction.bits[parameter.getRuleCode()];
             if (value != null) {
                 value = parameter.getBitOperations().apply(value);
-                replaced = StringUtils.format(mnemonic.charAt(position + 1), value);
+                replaced = formatValue(mnemonic.charAt(position + 1), value);
             } else {
                 replaced = instruction.strings[parameter.getRuleCode()];
             }
@@ -231,5 +256,47 @@ public class %disasm_class% implements Disassembler {
         formatted[0] = HEX_DIGITS[normalized >>> 4];
         formatted[1] = HEX_DIGITS[normalized & 0x0F];
         return new String(formatted);
+    }
+
+    /**
+     * Transforms bits into a string using the mnemonic formatting character.
+     * <p>
+     * Note: {@link Bits} carries at most 32 bits of numeric data. When formatting a 64-bit float
+     * ('f' with length 64), only the low 32 bits are available.
+     *
+     * @param format the formatting character ('s' for a string, etc.)
+     * @param bits   the bits to format
+     * @return the resulting string
+     */
+    private static String formatValue(char format, Bits bits) {
+        switch (format) {
+            case 'c':
+                String string = new String(bits.toBytes());
+                return (!string.isEmpty()) ? string.substring(0, 1) : "?";
+            case 'd':
+                return Integer.toString(bits.number);
+            case 'f':
+                switch (bits.length) {
+                    case 32:
+                        return Float.toString(ByteBuffer.wrap(bits.toBytes()).order(ByteOrder.LITTLE_ENDIAN).getFloat());
+                    case 64:
+                        ByteBuffer buffer = ByteBuffer.allocate(8).order(ByteOrder.LITTLE_ENDIAN);
+                        buffer.put(bits.toBytes());
+                        buffer.position(0);
+                        return Double.toString(buffer.getDouble());
+                    default:
+                        return "NaN";
+                }
+            case 's':
+                return new String(bits.toBytes()).replace("\0", "");
+            case 'x':
+                return Integer.toHexString(bits.number);
+            case 'X':
+                return Integer.toHexString(bits.number).toUpperCase(Locale.ROOT);
+            case '%':
+                return "%";
+            default:
+                return Character.toString(format);
+        }
     }
 }
