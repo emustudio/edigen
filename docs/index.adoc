@@ -93,7 +93,21 @@ keeping the AST pipeline unchanged.
 
 === Debugging the pipeline
 
-`Translator` supports a debug mode (`-d`) that dumps the AST after every pass. Since
+Generation reports the input specification, each successfully closed output file,
+and total elapsed time. Warnings describe nonfatal findings and how to address them.
+Failures retain their original diagnostic and cause, with specification, pass,
+template, or output context; the CLI or build plugin reports the failure once.
+CLI logging and diagnostics use standard error, while help uses standard output.
+
+`GenerationLog` is supplied to `Edigen` and `Translator` per invocation. Its console,
+Gradle, and Maven adapters own presentation and debug filtering without changing
+global logging configuration. Debug messages are supplied lazily and must be evaluated
+synchronously or discarded. Build-plugin debug logging exposes parsing, pass names
+and timings, and template selection without rendering AST dumps.
+
+The explicit debug mode (`-d`) also dumps the AST after every pass. The console and
+build-plugin adapters make these requested messages visible even when host debug
+logging is disabled. Every dump identifies its completed pass. Since
 most of the real compiler logic lives in the transformation pipeline, inspecting the
 post-pass tree is usually the fastest way to reason about unexpected generated output.
 

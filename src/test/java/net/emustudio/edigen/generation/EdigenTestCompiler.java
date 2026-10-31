@@ -3,6 +3,7 @@
 package net.emustudio.edigen.generation;
 
 import net.emustudio.edigen.Translator;
+import net.emustudio.edigen.ConsoleGenerationLog;
 import net.emustudio.emulib.plugins.cpu.Decoder;
 import net.emustudio.emulib.plugins.cpu.Disassembler;
 import net.emustudio.emulib.plugins.memory.MemoryContext;
@@ -109,7 +110,7 @@ public class EdigenTestCompiler {
                 DISASSEMBLER_NAME, DISASM_FQCN,
                 DECODER_DIRECTORY, packageDir.toString(),
                 DISASSEMBLER_DIRECTORY, packageDir.toString()
-        )).translate();
+        ), new ConsoleGenerationLog(System.err, false)).translate();
 
         // 2. Compile generated sources
         Path decoderSrc = packageDir.resolve("TestDecoder.java");

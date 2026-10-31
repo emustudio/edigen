@@ -20,4 +20,9 @@ public class SemanticException extends Exception {
         super(((node.getLine() != null) ? "Line " + node.getLine() + ": " : "")
                 + message);
     }
+
+    /** Adds operation context while preserving the original diagnostic and cause. */
+    public SemanticException(String context, SemanticException cause) {
+        super(context + ": " + cause.getMessage(), cause);
+    }
 }

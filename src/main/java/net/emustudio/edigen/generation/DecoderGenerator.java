@@ -2,6 +2,7 @@
    SPDX-License-Identifier: GPL-3.0-or-later */
 package net.emustudio.edigen.generation;
 
+import net.emustudio.edigen.GenerationLog;
 import net.emustudio.edigen.SemanticException;
 import net.emustudio.edigen.misc.Template;
 import net.emustudio.edigen.nodes.Decoder;
@@ -23,9 +24,10 @@ public class DecoderGenerator extends Generator {
      *
      * @param decoder the decoder node
      * @param name    the resulting package + class name
+     * @param log     receives generation messages
      */
-    public DecoderGenerator(Decoder decoder, String name) {
-        super("/Decoder.edt", name);
+    public DecoderGenerator(Decoder decoder, String name, GenerationLog log) {
+        super("decoder", "/Decoder.edt", name, log);
 
         this.decoder = decoder;
     }

@@ -8,8 +8,8 @@ import net.emustudio.edigen.ui.CommandLine;
 import net.emustudio.edigen.ui.CommandLineException;
 import net.emustudio.edigen.ui.Help;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Map;
 
 import static net.emustudio.edigen.Setting.*;
@@ -19,10 +19,15 @@ import static net.emustudio.edigen.Setting.*;
  */
 public class Edigen {
 
+    private final GenerationLog log;
+
     /**
-     * Constructs a new Edigen instance.
+     * Constructs an invocation using the caller's logger.
+     *
+     * @param log receives progress, warnings and lazy debug messages
      */
-    public Edigen() {
+    public Edigen(GenerationLog log) {
+        this.log = log;
     }
 
     private static final Argument[] ARGUMENTS = {
@@ -55,24 +60,18 @@ public class Edigen {
         boolean success = false;
 
         try {
-            new Edigen().run(args);
+            new Edigen(new ConsoleGenerationLog(System.err, Arrays.asList(args).contains("-d"))).run(args);
             success = true;
         } catch (CommandLineException ex) {
             if (args.length == 0)
                 success = true;
             else
-                System.out.println("\nError: " + ex.getMessage() + ".\n");
+                System.err.println("ERROR " + ex.getMessage());
 
             Help help = new Help("java -jar edigen.jar", new CommandLine(ARGUMENTS));
             System.out.print(help.generate());
-        } catch (FileNotFoundException ex) {
-            System.out.println("Could not open file: " + ex.getMessage());
-        } catch (IOException ex) {
-            System.out.println("Error during file manipulation: " + ex.getMessage());
-        } catch (ParseException ex) {
-            System.out.println(ex.getMessage());
-        } catch (SemanticException ex) {
-            System.out.println("Error: " + ex.getMessage() + ".");
+        } catch (IOException | ParseException | SemanticException ex) {
+            System.err.println("ERROR " + ex.getMessage());
         } finally {
             if (!success)
                 System.exit(1);
@@ -91,12 +90,8 @@ public class Edigen {
      */
     public void run(String[] args) throws CommandLineException, IOException,
             ParseException, SemanticException {
-        System.out.println("Edigen - Emulator Disassembler Generator");
-
         CommandLine commandLine = new CommandLine(ARGUMENTS);
         Map<Setting, String> configuration = commandLine.parse(args);
-        new Translator(configuration).translate();
-
-        System.out.println("Instruction decoder and disassembler successfully generated.");
+        new Translator(configuration, log).translate();
     }
 }
