@@ -82,6 +82,26 @@ public class DetectUnreachableFormatsVisitorTest {
     }
 
     @Test
+    public void testRepeatedInvocationsCanChooseDifferentVariants() throws SemanticException {
+        Rule c = nest(mkRule("C"), mkVariant("c"));
+        Rule d = nest(mkRule("D"), mkVariant("d"));
+        Rule b = (Rule) mkRule("B").addChildren(
+                nest(mkVariant(), mkSubrule("C").setRule(c)),
+                nest(mkVariant(), mkSubrule("D").setRule(d)));
+
+        rootRule.addChild(mkVariant("a").addChildren(
+                mkSubrule("B").setRule(b),
+                mkSubrule("B").setRule(b)));
+        decoder.addChildren(b, c, d);
+
+        runTest(Set.of(
+                Set.of("A", "C"),
+                Set.of("A", "D"),
+                Set.of("A", "C", "D")
+        ));
+    }
+
+    @Test
     public void testUnorderedPath() throws SemanticException {
         Rule rb = nest(
                 mkRule("B"),

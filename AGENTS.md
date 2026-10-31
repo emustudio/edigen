@@ -20,6 +20,9 @@ Before checking or updating a sibling repository, verify that it is cloned local
 - Bundled CPU plugins or bundled computers affected by generator changes: update `emuStudio`.
 - User or developer documentation for generator usage: update `emustudio.github.io`.
 
+## Documentation
+- Document design decisions within existing documentation only.
+
 ## Tickets And Commits
 - Every change must have an existing GitHub ticket.
 - Every commit subject must start with the ticket prefix: `[#123] Short summary`.

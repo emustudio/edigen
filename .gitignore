@@ -157,3 +157,9 @@ target/
 
 # Generated documentation (./gradlew doc)
 docs/output/
+
+# Local APEX workflow state
+.agents/apex/
+
+# Local Impeccable design-tool metadata
+.impeccable/

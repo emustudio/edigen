@@ -48,9 +48,6 @@ public class GroupVisitor extends Visitor {
     public GroupVisitor() {
     }
 
-    private boolean savingBits;
-    private BitSequence savedBits;
-
     /**
      * Groups the rule recursively.
      *
@@ -63,33 +60,25 @@ public class GroupVisitor extends Visitor {
     }
 
     /**
-     * If the current task is to save bits, saves them and returns the control;
-     * otherwise groups the mask's children and thus continues the traversal.
+     * Groups the mask's children and continues the traversal.
      *
      * @param mask the mask node
      * @throws SemanticException never
      */
     @Override
     public void visit(Mask mask) throws SemanticException {
-        if (savingBits)
-            savedBits = mask.getBits();
-        else
-            group(mask);
+        group(mask);
     }
 
     /**
-     * If the current task is to save bits, saves them and returns the control;
-     * otherwise groups the pattern's children and thus continues the traversal.
+     * Groups the pattern's children and continues the traversal.
      *
      * @param pattern the pattern node
      * @throws SemanticException never
      */
     @Override
     public void visit(Pattern pattern) throws SemanticException {
-        if (savingBits)
-            savedBits = pattern.getBits();
-        else
-            group(pattern);
+        group(pattern);
     }
 
     /**
@@ -103,17 +92,14 @@ public class GroupVisitor extends Visitor {
 
         // group children
         for (TreeNode child : node.getChildren()) {
-            // obtain the bit sequence
-            savedBits = null;
-            savingBits = true;
-            child.accept(this);
+            BitSequence bits = bitsOf(child);
 
             // add the node to the corresponding group
-            if (savedBits != null) {
-                TreeNode uniqueChild = uniqueChildren.get(savedBits);
+            if (bits != null) {
+                TreeNode uniqueChild = uniqueChildren.get(bits);
 
                 if (uniqueChild == null) {
-                    uniqueChildren.put(savedBits, child);
+                    uniqueChildren.put(bits, child);
                 } else {
                     child.remove();
                     uniqueChild.addChild(child.getChild(0));
@@ -122,7 +108,16 @@ public class GroupVisitor extends Visitor {
         }
 
         // traverse
-        savingBits = false;
         node.acceptChildren(this);
+    }
+
+    private static BitSequence bitsOf(TreeNode node) {
+        if (node instanceof Mask) {
+            return ((Mask) node).getBits();
+        }
+        if (node instanceof Pattern) {
+            return ((Pattern) node).getBits();
+        }
+        return null;
     }
 }

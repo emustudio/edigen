@@ -84,6 +84,27 @@ public class GeneratedInstructionSemanticsTest {
     }
 
     @Test
+    public void testKeyWithStringAndBitsIsCountedOnce() throws Exception {
+        String spec = "root instruction;\n"
+                + "instruction = \"prefix\": 0xFF instruction | operand: operand[0x80](8);\n"
+                + "%%\n"
+                + "\"%X\" = instruction;\n";
+
+        try (EdigenTestCompiler.Compiled mixed = EdigenTestCompiler.compile(spec)) {
+            int key = mixed.getDecoderClass().getField("INSTRUCTION").getInt(null);
+            Decoder mixedDecoder = mixed.newDecoder(memory);
+            memory.writeBytes(0x100, new byte[]{(byte) 0xFF, (byte) 0x80});
+
+            DecodedInstruction instruction = mixedDecoder.decode(0x100);
+
+            assertEquals(1, instruction.keyCount);
+            assertEquals("prefix", instruction.strings[key]);
+            assertEquals(0x80, instruction.bits[key].number);
+            assertArrayEquals(new byte[]{(byte) 0xFF, (byte) 0x80}, instruction.image);
+        }
+    }
+
+    @Test
     public void testGeneratedDisassemblerAppliesStrategies() throws Exception {
         memory.writeBytes(0x200, new byte[]{0x02, (byte) 0x81});
 
