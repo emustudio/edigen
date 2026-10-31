@@ -2,6 +2,7 @@
    SPDX-License-Identifier: GPL-3.0-or-later */
 package net.emustudio.edigen.generation;
 
+import net.emustudio.edigen.GenerationLog;
 import net.emustudio.edigen.SemanticException;
 import net.emustudio.edigen.misc.Template;
 import net.emustudio.edigen.nodes.Disassembler;
@@ -23,10 +24,11 @@ public class DisassemblerGenerator extends Generator {
      * @param disassembler     the disassembler node
      * @param disassemblerName the resulting package + class name
      * @param decoderName      the package + class name of the decoder
+     * @param log              receives generation messages
      */
     public DisassemblerGenerator(Disassembler disassembler,
-                                 String disassemblerName, String decoderName) {
-        super("/Disassembler.edt", disassemblerName);
+                                 String disassemblerName, String decoderName, GenerationLog log) {
+        super("disassembler", "/Disassembler.edt", disassemblerName, log);
 
         this.disassembler = disassembler;
         this.decoderName = decoderName;

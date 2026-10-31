@@ -7,6 +7,8 @@ import net.emustudio.edigen.Visitor;
 import net.emustudio.edigen.nodes.*;
 
 import java.util.*;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * Detects unreachable disassembler formats.
@@ -46,10 +48,13 @@ import java.util.*;
  */
 public class DetectUnreachableFormatsVisitor extends Visitor {
 
+    private final Consumer<String> warning;
+
     /**
      * Constructs a new detect-unreachable-formats visitor.
      */
-    public DetectUnreachableFormatsVisitor() {
+    public DetectUnreachableFormatsVisitor(Consumer<String> warning) {
+        this.warning = warning;
     }
 
     private final Set<Set<String>> reachable = new HashSet<>();
@@ -128,7 +133,12 @@ public class DetectUnreachableFormatsVisitor extends Visitor {
         if (!formats.containsAll(reachable)) {
             Set<Set<String>> cp = new HashSet<>(reachable);
             cp.removeAll(formats);
-            System.out.println("Missing formats: " + cp);
+            String missing = cp.stream()
+                    .map(fields -> fields.stream().sorted().collect(Collectors.joining(", ", "[", "]")))
+                    .sorted()
+                    .collect(Collectors.joining(", "));
+            warning.accept("No disassembly format covers decoded field combinations " + missing
+                    + ". Add matching formats in the disassembler section. Generation will continue.");
         }
     }
 

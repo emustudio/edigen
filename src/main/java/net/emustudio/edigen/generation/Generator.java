@@ -2,33 +2,41 @@
    SPDX-License-Identifier: GPL-3.0-or-later */
 package net.emustudio.edigen.generation;
 
+import net.emustudio.edigen.GenerationLog;
 import net.emustudio.edigen.SemanticException;
 import net.emustudio.edigen.misc.Template;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 
 /**
  * An output code generator.
  */
 public abstract class Generator {
 
+    private final String kind;
     private final String defaultTemplate;
     private final String name;
+    private final GenerationLog log;
     private String templateFile;
     private String outputDirectory;
 
     /**
      * Constructs the part of the generator.
      *
+     * @param kind            decoder or disassembler, used in diagnostics
      * @param defaultTemplate the path in the JAR file to the template used if
      *                        no specific template is configured
      * @param name            the name of the package + class
+     * @param log             receives generation messages
      */
-    protected Generator(String defaultTemplate, String name) {
+    protected Generator(String kind, String defaultTemplate, String name, GenerationLog log) {
+        this.kind = kind;
         this.defaultTemplate = defaultTemplate;
         this.name = name;
+        this.log = log;
     }
 
     /**
@@ -84,11 +92,25 @@ public abstract class Generator {
      * @throws SemanticException when there is a semantic error in the input file
      */
     public void generate() throws IOException, SemanticException {
-        try (BufferedReader templateReader = openTemplate(); BufferedWriter outputWriter = openOutput()) {
-            Template template = new Template(templateReader, outputWriter);
+        Path output = (outputDirectory == null ? Path.of(getClassName() + ".java")
+                : Path.of(outputDirectory, getClassName() + ".java")).toAbsolutePath();
+        String templateDescription = templateFile == null
+                ? "bundled template " + defaultTemplate
+                : "custom template " + Path.of(templateFile).toAbsolutePath();
+        log.debug(() -> "Generating " + name + " using " + templateDescription);
+        BufferedReader templateReader = openTemplate();
+        try (BufferedReader input = templateReader;
+             BufferedWriter outputWriter = new BufferedWriter(new FileWriter(output.toFile()))) {
+            Template template = new Template(input, outputWriter);
             fillTemplate(template);
             template.write();
+        } catch (IOException ex) {
+            throw new IOException("Cannot generate " + kind + " " + name + " at " + output
+                    + " using " + templateDescription + ": " + ex.getMessage(), ex);
+        } catch (SemanticException ex) {
+            throw new SemanticException("Cannot generate " + kind + " " + name + " at " + output, ex);
         }
+        log.info("Wrote " + kind + " " + name + " to " + output);
     }
 
     /**
@@ -112,30 +134,17 @@ public abstract class Generator {
         BufferedReader templateSource;
 
         if (templateFile != null) {
-            templateSource = Files.newBufferedReader(new File(templateFile).toPath(), StandardCharsets.UTF_8);
+            try {
+                templateSource = Files.newBufferedReader(new File(templateFile).toPath(), StandardCharsets.UTF_8);
+            } catch (IOException ex) {
+                throw new IOException("Cannot read " + kind + " template "
+                        + Path.of(templateFile).toAbsolutePath() + ": " + ex.getMessage(), ex);
+            }
         } else {
             InputStream stream = getClass().getResourceAsStream(defaultTemplate);
             templateSource = new BufferedReader(new InputStreamReader(stream));
         }
 
         return templateSource;
-    }
-
-    /**
-     * Opens the writer of the output file.
-     *
-     * @return the file writer
-     * @throws IOException when the file can not be open for writing
-     */
-    private BufferedWriter openOutput() throws IOException {
-        String outputFile = getClassName() + ".java";
-        File outputPath;
-
-        if (outputDirectory != null)
-            outputPath = new File(outputDirectory, outputFile);
-        else
-            outputPath = new File(outputFile);
-
-        return new BufferedWriter(new FileWriter(outputPath));
     }
 }

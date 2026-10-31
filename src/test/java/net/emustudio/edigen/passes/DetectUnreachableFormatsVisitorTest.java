@@ -305,7 +305,7 @@ public class DetectUnreachableFormatsVisitorTest {
     }
 
     private void runTest(Set<Set<String>> expected) throws SemanticException {
-        DetectUnreachableFormatsVisitor visitor = new DetectUnreachableFormatsVisitor();
+        DetectUnreachableFormatsVisitor visitor = new DetectUnreachableFormatsVisitor(message -> { });
         visitor.visit(specification);
         assertEquals(expected, visitor.getReachable());
     }
