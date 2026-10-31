@@ -98,11 +98,7 @@ public class GenerateMethodsVisitor extends Visitor {
                         mask
                 );
             }
-            if (maskStart == 0) {
-                put(String.format("unit = readBits(start, %d);", maskLength), true);
-            } else {
-                put(String.format("unit = readBits(start + %d, %d);", maskStart, maskLength), true);
-            }
+            put(String.format("unit = readBits(%s, %d);", startExpression(maskStart), maskLength), true);
             unitWasRead = true;
             unitLastStart = maskStart;
             unitLastLength = maskLength;
@@ -183,11 +179,7 @@ public class GenerateMethodsVisitor extends Visitor {
                     );
                 }
 
-                if (start == 0) {
-                    value = String.format("readBits(start, %d)", length);
-                } else {
-                    value = String.format("readBits(start + %d, %d)", start, length);
-                }
+                value = String.format("readBits(%s, %d)", startExpression(start), length);
                 put(String.format("addInstruction(%s, %s, %d);", field, value, length));
             }
         }
@@ -212,12 +204,11 @@ public class GenerateMethodsVisitor extends Visitor {
             fieldToWrite = ", " + subrule.getFieldName();
 
         String methodName = subrule.getRule().getMethodName();
-        int start = subrule.getStart();
-        if (start == 0) {
-            put(methodName + "(start" + fieldToWrite + ");");
-        } else {
-            put(methodName + "(start + " + subrule.getStart() + fieldToWrite + ");");
-        }
+        put(methodName + "(" + startExpression(subrule.getStart()) + fieldToWrite + ");");
+    }
+
+    private static String startExpression(int offset) {
+        return offset == 0 ? "start" : "start + " + offset;
     }
 
     /**

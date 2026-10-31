@@ -2,11 +2,7 @@
    SPDX-License-Identifier: GPL-3.0-or-later */
 package net.emustudio.edigen.generation;
 
-import net.emustudio.edigen.SemanticException;
-import net.emustudio.edigen.Visitor;
-import net.emustudio.edigen.nodes.Specification;
-import net.emustudio.edigen.parser.Parser;
-import net.emustudio.edigen.passes.*;
+import net.emustudio.edigen.Translator;
 import net.emustudio.emulib.plugins.cpu.Decoder;
 import net.emustudio.emulib.plugins.cpu.Disassembler;
 import net.emustudio.emulib.plugins.memory.MemoryContext;
@@ -17,8 +13,12 @@ import java.io.*;
 import java.lang.reflect.Constructor;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
+
+import static net.emustudio.edigen.Setting.*;
 
 /**
  * Test helper that runs the full Edigen pipeline (parse → transform →
@@ -96,27 +96,22 @@ public class EdigenTestCompiler {
      * @return a {@link Compiled} handle with loaded classes
      */
     public static Compiled compile(String spec) throws Exception {
-        // 1. Parse + transform
-        Parser parser = new Parser(new StringReader(spec));
-        Specification specification = parser.parse();
-        transform(specification);
-
-        // 2. Generate sources to temp directory
+        // 1. Generate sources through the production pipeline
         Path tmpDir = Files.createTempDirectory("edigen-test-");
         Path packageDir = tmpDir.resolve("test").resolve("generated");
         Files.createDirectories(packageDir);
+        Path specFile = tmpDir.resolve("spec.eds");
+        Files.writeString(specFile, spec, Charset.defaultCharset());
 
-        DecoderGenerator decoderGen = new DecoderGenerator(
-                specification.getDecoder(), DECODER_FQCN);
-        decoderGen.setOutputDirectory(packageDir.toString());
-        decoderGen.generate();
+        new Translator(Map.of(
+                SPECIFICATION, specFile.toString(),
+                DECODER_NAME, DECODER_FQCN,
+                DISASSEMBLER_NAME, DISASM_FQCN,
+                DECODER_DIRECTORY, packageDir.toString(),
+                DISASSEMBLER_DIRECTORY, packageDir.toString()
+        )).translate();
 
-        DisassemblerGenerator disasmGen = new DisassemblerGenerator(
-                specification.getDisassembler(), DISASM_FQCN, DECODER_FQCN);
-        disasmGen.setOutputDirectory(packageDir.toString());
-        disasmGen.generate();
-
-        // 3. Compile generated sources
+        // 2. Compile generated sources
         Path decoderSrc = packageDir.resolve("TestDecoder.java");
         Path disasmSrc = packageDir.resolve("TestDisassembler.java");
 
@@ -142,7 +137,7 @@ public class EdigenTestCompiler {
                             + "\nDisassembler source:\n" + disasmSource);
         }
 
-        // 4. Load compiled classes
+        // 3. Load compiled classes
         URLClassLoader loader = new URLClassLoader(
                 new URL[]{tmpDir.toUri().toURL()},
                 EdigenTestCompiler.class.getClassLoader());
@@ -151,27 +146,5 @@ public class EdigenTestCompiler {
         Class<?> disasmClass = loader.loadClass(DISASM_FQCN);
 
         return new Compiled(loader, decoderClass, disasmClass);
-    }
-
-    private static void transform(Specification specification) throws SemanticException {
-        Visitor[] transforms = {
-                new ResolveNamesVisitor(),
-                new DetectRootRulesVisitor(),
-                new DetectUnusedRulesVisitor(),
-                new SemanticCheckVisitor(),
-                new MergePatternsVisitor(),
-                new SortVisitor(),
-                new SplitVisitor(),
-                new PushDownVariantsVisitor(),
-                new GroupVisitor(),
-                new DetectAmbiguousVisitor(),
-                new NarrowMasksVisitor(),
-                new RemoveUnreachablePatternsVisitor(),
-                new DetectUnreachableFormatsVisitor()
-        };
-
-        for (Visitor visitor : transforms) {
-            specification.accept(visitor);
-        }
     }
 }

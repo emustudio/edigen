@@ -175,8 +175,8 @@ public class DetectUnreachableFormatsVisitor extends Visitor {
         return reachableVariants;
     }
 
-    private Set<RuleInvocation> collectReferencedInvocations(Variant variant) {
-        Set<RuleInvocation> referencedInvocations = new LinkedHashSet<>();
+    private List<RuleInvocation> collectReferencedInvocations(Variant variant) {
+        List<RuleInvocation> referencedInvocations = new ArrayList<>();
 
         for (TreeNode child : variant.getChildren()) {
             if (child instanceof Subrule) {
@@ -215,16 +215,7 @@ public class DetectUnreachableFormatsVisitor extends Visitor {
             Variant variant,
             Map<RuleInvocation, Set<Set<String>>> knownReachableFormatKeysByInvocation
     ) {
-        List<RuleInvocation> childInvocations = new ArrayList<>();
-
-        for (TreeNode child : variant.getChildren()) {
-            if (child instanceof Subrule) {
-                Subrule subrule = (Subrule) child;
-                if (subrule.getRule() != null) {
-                    childInvocations.add(new RuleInvocation(subrule.getRule(), subrule.getName()));
-                }
-            }
-        }
+        List<RuleInvocation> childInvocations = collectReferencedInvocations(variant);
 
         if (childInvocations.isEmpty()) {
             if (!variant.returns()) {

@@ -90,19 +90,22 @@ public class CommandLine {
         String option = current.substring(1);
         Argument argument = optional.get(option);
 
-        if (argument != null) {
-            if (argument.getType() == Argument.Type.FLAG) {
-                configuration.put(argument.getKey(), "");
-            } else {
-                if (all.hasNext() && !(current = all.next()).startsWith("-")) {
-                    configuration.put(argument.getKey(), current);
-                } else {
-                    throw new CommandLineException("Option \"-" + option + "\" does not have a value");
-                }
-            }
-        } else {
+        if (argument == null) {
             throw new CommandLineException("Unknown option \"-" + option + "\"");
         }
+        if (argument.getType() == Argument.Type.FLAG) {
+            configuration.put(argument.getKey(), "");
+            return;
+        }
+        if (!all.hasNext()) {
+            throw new CommandLineException("Option \"-" + option + "\" does not have a value");
+        }
+
+        String value = all.next();
+        if (value.startsWith("-")) {
+            throw new CommandLineException("Option \"-" + option + "\" does not have a value");
+        }
+        configuration.put(argument.getKey(), value);
     }
 
     /**

@@ -45,7 +45,6 @@ public class %decoder_class% implements Decoder {
     private String[] strings = new String[INITIAL_KEY_CAPACITY];
     private int[] bitValues = new int[INITIAL_KEY_CAPACITY];
     private int[] bitLengths = new int[INITIAL_KEY_CAPACITY];
-    private int[] keys = new int[INITIAL_KEY_CAPACITY];
 
     private int keyCount;
 
@@ -197,7 +196,6 @@ public class %decoder_class% implements Decoder {
         strings = new String[INITIAL_KEY_CAPACITY];
         bitValues = new int[INITIAL_KEY_CAPACITY];
         bitLengths = new int[INITIAL_KEY_CAPACITY];
-        keys = new int[INITIAL_KEY_CAPACITY];
         keyCount = 0;
     }
 
@@ -209,10 +207,7 @@ public class %decoder_class% implements Decoder {
      * @param constant the constant obtained from the string
      */
     private void addInstruction(int key, String string, int constant) {
-        ensureKeyCapacity(key);
-        if (keyStates[key] == 0) {
-            rememberKey(key);
-        }
+        prepareKey(key);
         keyStates[key] |= HAS_CONSTANT | HAS_STRING;
         constants[key] = constant;
         strings[key] = string;
@@ -226,20 +221,17 @@ public class %decoder_class% implements Decoder {
      * @param length bit length (in bits)
      */
     private void addInstruction(int key, int bits, int length) {
-        ensureKeyCapacity(key);
-        if (keyStates[key] == 0) {
-            rememberKey(key);
-        }
+        prepareKey(key);
         keyStates[key] |= HAS_BITS;
         bitValues[key] = bits;
         bitLengths[key] = length;
     }
 
-    private void rememberKey(int key) {
-        if (keyCount == keys.length) {
-            keys = Arrays.copyOf(keys, keyCount << 1);
+    private void prepareKey(int key) {
+        ensureKeyCapacity(key);
+        if (keyStates[key] == 0) {
+            keyCount++;
         }
-        keys[keyCount++] = key;
     }
 
     private void ensureKeyCapacity(int key) {

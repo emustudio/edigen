@@ -210,7 +210,7 @@ more *formats*:
 ----
 
 The right side of `=` is a *set of rule names*; the left side is a format string. During
-disassembly, Edigen selects the *first* format whose rule set is a subset of the decoded
+disassembly, Edigen selects the format whose rule set *exactly matches* the decoded
 result's keys, and substitutes the format specifiers with the corresponding values.
 
 For the result `{instruction: "sub", dst_reg: "Y", immediate: 3}`, the first format
