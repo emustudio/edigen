@@ -51,7 +51,7 @@ src_reg, dst_reg =
 # disassembler
 "%s %s, %s" = instruction dst_reg src_reg;
 "%s %s, %d" = instruction dst_reg immediate;
-"%0x"       = data;
+"%x"        = data;
 ```
 
 For the full syntax and semantics, see the *EDS Language* chapter of the
