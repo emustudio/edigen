@@ -3,7 +3,6 @@
 package net.emustudio.edigen.generation;
 
 import net.emustudio.emulib.plugins.memory.MemoryContext;
-import net.emustudio.emulib.plugins.memory.annotations.MemoryContextAnnotations;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -76,11 +75,6 @@ class FakeByteMemory implements MemoryContext<Byte> {
     @Override
     public int getSize() {
         return Integer.MAX_VALUE;
-    }
-
-    @Override
-    public MemoryContextAnnotations annotations() {
-        return null;
     }
 
     @Override
