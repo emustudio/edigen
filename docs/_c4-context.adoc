@@ -3,7 +3,7 @@
 At the highest level, Edigen is a single command-line tool used while _building_ a
 CPU emulator plugin. A developer describes an instruction set in a `.eds` file; a
 build integration (Gradle or Maven plugin) runs Edigen during the build; Edigen
-emits Java source that implements the emuLib decoder and disassembler contracts and
+emits Java source that implements the emuLib decoder contract and
 ultimately runs inside emuStudio.
 
 [plantuml,c4-context,svg]
@@ -44,7 +44,7 @@ build --> gen : compiles into\nthe plugin
 
 | CPU / Emulator Developer | Person
 | Author of the `.eds` specification. Configures the build to run Edigen and
-  integrates the generated decoder/disassembler into a CPU plugin.
+  integrates the generated decoder into a CPU plugin.
 
 | Edigen | Software System (this project)
 | Reads a `.eds` file, validates it, and generates Java source of a decoder and a

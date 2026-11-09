@@ -3,7 +3,6 @@
 package net.emustudio.edigen;
 
 import net.emustudio.edigen.generation.DecoderGenerator;
-import net.emustudio.edigen.generation.DisassemblerGenerator;
 import net.emustudio.edigen.nodes.Specification;
 import net.emustudio.edigen.parser.ParseException;
 import net.emustudio.edigen.parser.Parser;
@@ -23,7 +22,7 @@ import static net.emustudio.edigen.Setting.*;
 
 /**
  * A translator from the input file in the domain specific language (processor
- * specification) to two output files (instruction decoder and disassembler)
+ * specification) to one instruction decoder with captured disassembly
  * in the Java language.
  */
 public class Translator {
@@ -52,26 +51,18 @@ public class Translator {
     public void translate() throws IOException, ParseException, SemanticException {
         long start = System.nanoTime();
         Path source = Path.of(settings.get(SPECIFICATION)).toAbsolutePath();
-        log.info("Generating decoder and disassembler from " + source);
+        log.info("Generating decoder from " + source);
         Specification specification = parse(source);
         transform(specification, source);
 
         DecoderGenerator decoder = new DecoderGenerator(
-                specification.getDecoder(),
+                specification,
                 settings.get(DECODER_NAME), log
         );
         decoder.setOutputDirectory(settings.get(DECODER_DIRECTORY));
         decoder.setTemplateFile(settings.get(DECODER_TEMPLATE));
         decoder.generate();
 
-        DisassemblerGenerator disassembler = new DisassemblerGenerator(
-                specification.getDisassembler(),
-                settings.get(DISASSEMBLER_NAME),
-                settings.get(DECODER_NAME), log
-        );
-        disassembler.setOutputDirectory(settings.get(DISASSEMBLER_DIRECTORY));
-        disassembler.setTemplateFile(settings.get(DISASSEMBLER_TEMPLATE));
-        disassembler.generate();
         log.info("Generation completed in " + elapsedMillis(start) + " ms");
     }
 

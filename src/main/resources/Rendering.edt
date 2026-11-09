@@ -1,21 +1,4 @@
-%auto_gen_warning%
-package %disasm_package%;
-
-import net.emustudio.emulib.plugins.cpu.*;
-import net.emustudio.emulib.plugins.memory.MemoryContext;
-import net.emustudio.emulib.runtime.helpers.Bits;
-
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.util.*;
-import java.util.function.UnaryOperator;
-
-import static %decoder_name%.*;
-
-/**
- * The disassembler implementation.
- */
-public class %disasm_class% implements Disassembler {
+private static final class Rendering {
     private static final char[] HEX_DIGITS = "0123456789ABCDEF".toCharArray();
 
     /**
@@ -75,13 +58,6 @@ public class %disasm_class% implements Disassembler {
     }
 
     private static final Map<Set<Integer>, MnemonicFormat> formatMap;
-    private final MemoryContext<? extends Number> memory;
-    private final Decoder decoder;
-
-    private int lastRenderedPosition = -1;
-    private DecodedInstruction lastRenderedDecodedInstruction;
-    private String lastRenderedMnemonic;
-    private String lastRenderedCode;
 
     static {
         String[] formats = {
@@ -105,78 +81,16 @@ public class %disasm_class% implements Disassembler {
         }
     }
 
-    /**
-     * The constructor.
-     * @param memory the memory context which will be used to read instructions
-     * @param decoder the decoder to use to decode instructions
-     */
-    public %disasm_class%(MemoryContext<? extends Number> memory, Decoder decoder) {
-        this.decoder = Objects.requireNonNull(decoder);
-        this.memory = Objects.requireNonNull(memory);
-    }
-
-    /**
-     * Disassembles an instruction.
-     * @param memoryPosition the starting address of the instruction
-     * @return the disassembled instruction
-     */
-    @Override
-    public DisassembledInstruction disassemble(int memoryPosition) {
-        String mnemonic;
-        String code;
-
-        try {
-            DecodedInstruction instruction = decoder.decode(memoryPosition);
-            if (memoryPosition == lastRenderedPosition && instruction == lastRenderedDecodedInstruction) {
-                return new DisassembledInstruction(memoryPosition, lastRenderedMnemonic, lastRenderedCode);
-            }
-
-            MnemonicFormat format = formatMap.get(getKeys(instruction));
-
-            if (format == null) {
-                mnemonic = "N/A";
-            } else {
-                mnemonic = createMnemonic(instruction, format);
-            }
-
-            code = formatImage(instruction.image);
-            lastRenderedPosition = memoryPosition;
-            lastRenderedDecodedInstruction = instruction;
-            lastRenderedMnemonic = mnemonic;
-            lastRenderedCode = code;
-        } catch (InvalidInstructionException ex) {
-            mnemonic = "unknown";
-            code = formatByte(memory.read(memoryPosition).intValue());
-        }
-
-        return new DisassembledInstruction(memoryPosition, mnemonic, code);
-    }
-
-    /**
-     * Returns an address of the instruction located right after the current
-     * instruction.
-     * @param memoryPosition the starting address of the current instruction
-     * @return the starting address of the next instruction
-     */
-    @Override
-    public int getNextInstructionPosition(int memoryPosition) {
-        try {
-            return memoryPosition + decoder.decode(memoryPosition).image.length;
-        } catch (InvalidInstructionException ex) {
-            return memoryPosition + 1;
-        }
-    }
-
-    private Set<Integer> getKeys(DecodedInstruction instruction) {
-        Set<Integer> keys = new HashSet<>(Math.max(1, instruction.keyCount));
-
-        for (int ruleCode = 0; ruleCode < instruction.strings.length && keys.size() < instruction.keyCount; ruleCode++) {
-            if (instruction.strings[ruleCode] != null || instruction.bits[ruleCode] != null) {
+    static String mnemonic(int keyCount, String[] strings, Bits[] bits) {
+        Set<Integer> keys = new HashSet<>(Math.max(1, keyCount));
+        for (int ruleCode = 0; ruleCode < strings.length && keys.size() < keyCount; ruleCode++) {
+            if (strings[ruleCode] != null || bits[ruleCode] != null) {
                 keys.add(ruleCode);
             }
         }
 
-        return keys;
+        MnemonicFormat format = formatMap.get(keys);
+        return format == null ? "N/A" : createMnemonic(strings, bits, format);
     }
 
     /**
@@ -185,7 +99,7 @@ public class %disasm_class% implements Disassembler {
      * @param format the formatting string + rule codes
      * @return the instruction mnemonic
      */
-    private String createMnemonic(DecodedInstruction instruction, MnemonicFormat format) {
+    private static String createMnemonic(String[] strings, Bits[] bits, MnemonicFormat format) {
         StringBuilder mnemonic = new StringBuilder(format.getFormat());
         int position = 0;
 
@@ -196,12 +110,12 @@ public class %disasm_class% implements Disassembler {
             }
 
             String replaced;
-            Bits value = instruction.bits[parameter.getRuleCode()];
+            Bits value = bits[parameter.getRuleCode()];
             if (value != null) {
                 value = parameter.getBitOperations().apply(value);
                 replaced = formatValue(mnemonic.charAt(position + 1), value);
             } else {
-                replaced = instruction.strings[parameter.getRuleCode()];
+                replaced = strings[parameter.getRuleCode()];
             }
 
             mnemonic.replace(position, position + 2, replaced);
@@ -210,7 +124,7 @@ public class %disasm_class% implements Disassembler {
         return mnemonic.toString();
     }
 
-    private String formatImage(byte[] image) {
+    static String formatImage(byte[] image) {
         if (image.length == 0) {
             return "";
         }
@@ -227,14 +141,6 @@ public class %disasm_class% implements Disassembler {
             }
         }
 
-        return new String(formatted);
-    }
-
-    private String formatByte(int value) {
-        char[] formatted = new char[2];
-        int normalized = value & 0xFF;
-        formatted[0] = HEX_DIGITS[normalized >>> 4];
-        formatted[1] = HEX_DIGITS[normalized & 0x0F];
         return new String(formatted);
     }
 

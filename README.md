@@ -3,11 +3,8 @@
 ![Maven Central Version](https://img.shields.io/maven-central/v/net.emustudio/edigen)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
-Edigen is a command-line tool which generates Java source code of:
- * instruction decoder of an emulator
- * and disassembler
-
-from a text file written in its own domain-specific language.
+Edigen generates one Java instruction decoder from a text specification. Each decoded
+instruction captures its address, length, mnemonic, encoding, and immutable presentation.
 
 Writing disassemblers and emulator instruction decoders by hand is tedious and error-prone. The code is often
 unreadable and unmaintainable. *Edigen* takes a file containing the description of instruction formats, operation
@@ -33,7 +30,7 @@ disassembler part, separated by `%%`. A small taste:
 
 ```
 # decoder
-root: instruction, data;
+root instruction, data;
 
 instruction =
     "add": 0xE dst_reg(2) src_reg(2) |

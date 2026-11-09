@@ -73,7 +73,13 @@ public class GenerateMethodsVisitor extends Visitor {
 
         put("private void " + currentRule.getMethodName() + "(int start"
                 + secondParameter + ") throws InvalidInstructionException {");
+        put("if (ruleDepth == MAX_RULE_DEPTH) throw new InvalidInstructionException();");
+        put("ruleDepth++;");
+        put("try {");
         rule.acceptChildren(this);
+        put("} finally {");
+        put("ruleDepth--;");
+        put("}");
         put("}", true);
     }
 
@@ -165,7 +171,7 @@ public class GenerateMethodsVisitor extends Visitor {
                 field = currentRule.getFieldName(currentRule.getNames().get(0));
 
             if (variant.getReturnString() != null) {
-                value = '"' + variant.getReturnString() + "\", " + variant.getFieldName();
+                value = '"' + variant.getReturnString() + "\"";
                 put(String.format("addInstruction(%s, %s);", field, value));
             } else {
                 int start = variant.getReturnSubrule().getStart();

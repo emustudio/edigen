@@ -17,3 +17,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 rootProject.name = 'edigen'
+
+if (providers.gradleProperty('emuLibPath').isPresent()) {
+    includeBuild(providers.gradleProperty('emuLibPath').get()) {
+        dependencySubstitution {
+            substitute module('net.emustudio:emulib') using project(':')
+        }
+    }
+}

@@ -16,10 +16,10 @@ documentation to understand and maintain the generator.
 
 ## Product Purpose
 
-Generate Java instruction decoders and disassemblers from a plain-text `.eds`
+Generate Java instruction decoders with captured disassembly from a plain-text `.eds`
 specification. Edigen reduces the tedious, error-prone work of maintaining these
 classes by hand. Success means a developer can describe an instruction set and
-generate classes that implement the emuLib decoder and disassembler contracts.
+generate a class implementing the emuLib `Decoder` contract.
 
 ## Positioning
 
@@ -41,10 +41,9 @@ fields, and mnemonic formatting.
 ## Capabilities and Constraints
 
 - Edigen parses and validates specifications, transforms an AST through ordered
-  visitor passes, and expands templates into Java decoder and disassembler classes.
-- Generated classes implement `net.emustudio.emulib.plugins.cpu.Decoder` and
-  `net.emustudio.emulib.plugins.cpu.Disassembler`.
-- Custom decoder and disassembler templates are supported through `-dt` and `-at`.
+  visitor passes, and expands templates into one Java decoder class.
+- Generated classes implement `net.emustudio.emulib.plugins.cpu.Decoder`.
+- Custom decoder templates are supported through `-dt`.
   Debug mode (`-d`) exposes the AST after each pass.
 - This repository owns the EDS language, parser, and generated code shape. Build
   integration, shared runtime APIs, and bundled CPU plugins belong to their respective
@@ -63,7 +62,7 @@ or visual direction has been established in this initialization.
 - `README.md`: purpose, invocation options, and a small EDS example.
 - `docs/index.adoc` and `docs/_c4-*.adoc`: architecture and integration workflow.
 - `docs/_eds-language.adoc`: language syntax and semantics.
-- `src/main/resources/Decoder.edt` and `Disassembler.edt`: generation templates.
+- `src/main/resources/Decoder.edt` and private `Rendering.edt`: generation templates.
 - `src/test`: executable verification examples for the parser and generation.
 
 ## Product Principles

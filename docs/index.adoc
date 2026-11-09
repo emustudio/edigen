@@ -7,7 +7,7 @@ Matúš Sulír; Peter Jakubčo
 This document describes the architecture of *Edigen* – the _Emulator Disassembler
 Generator_ – using the https://c4model.com[C4 model]. It is written for
 contributors and integrators who need to understand how a `.eds` specification is
-turned into Java source code of an instruction decoder and a disassembler.
+turned into a Java instruction decoder with captured disassembly.
 
 TIP: For the syntax and semantics of the `.eds` input language itself, see the
 <<the-eds-language,EDS Language>> chapter below.
@@ -16,10 +16,9 @@ TIP: For the syntax and semantics of the `.eds` input language itself, see the
 
 Edigen is a source-to-source compiler for a small domain-specific language (DSL).
 Its input is an `.eds` file describing instruction formats, operation codes and
-mnemonics; its output is Java source code for:
-
-* an instruction *decoder* implementing `net.emustudio.emulib.plugins.cpu.Decoder`,
-* a *disassembler* implementing `net.emustudio.emulib.plugins.cpu.Disassembler`.
+mnemonics; its output is one instruction *decoder* implementing
+`net.emustudio.emulib.plugins.cpu.Decoder`. Each result exposes immutable instruction
+facts and presentation through `DecodedInstruction`.
 
 The generated classes are compatible with the
 https://github.com/emustudio/emuStudio[emuStudio] platform and rely on interfaces
@@ -39,8 +38,8 @@ tree and fill text templates.
     -> AST (Specification)
     -> semantic + structural visitor passes
     -> generator visitors
-    -> template expansion (Decoder.edt, Disassembler.edt)
-    -> generated Java classes
+    -> template expansion (Decoder.edt with private Rendering.edt)
+    -> generated Java decoder
 ----
 
 == About the C4 Model
@@ -82,10 +81,7 @@ of the architecture* and must not be changed casually.
 
 === Extension points
 
-The architecture exposes two supported extension points without changing Java code:
-
-* a custom decoder template via the `-dt` option,
-* a custom disassembler template via the `-at` option.
+The architecture supports a custom decoder template through the `-dt` option.
 
 Because the generators produce template variables rather than final files directly,
 template replacement is a first-class way to customize the emitted runtime while
@@ -110,6 +106,162 @@ build-plugin adapters make these requested messages visible even when host debug
 logging is disabled. Every dump identifies its completed pass. Since
 most of the real compiler logic lives in the transformation pipeline, inspecting the
 post-pass tree is usually the fastest way to reason about unexpected generated output.
+
+[[unified-instruction-design]]
+== Recipe: Captured Instructions and Observed Flow
+
+[cols="1,4",options="header"]
+|===
+| Item | Decision
+| Ticket | https://github.com/emustudio/edigen/issues/99[#99]
+| Goal | One immutable instruction capture; flow knowledge learned only from execution
+| Why | Shared decoding for listing and debugging; actual execution supplies graph edges
+| EDS | Existing syntax unchanged; existing CPU specifications unchanged
+| Flow lifetime | Accumulate until CPU reset; never remove old branches during ordinary execution
+| Annotations | Retain across CPU reset
+|===
+
+=== 1. Keep decoding minimal
+
+.emuLib: Decoder and DecodedInstruction
+[source,java]
+----
+public interface Decoder {
+    DecodedInstruction decode(int address)
+            throws InvalidInstructionException, IndexOutOfBoundsException;
+}
+
+public interface DecodedInstruction {
+    int address();
+    int length();
+    String mnemonic();
+    String encoding();
+}
+----
+
+[cols="1,3,3",options="header"]
+|===
+| Member | Contract | Why
+| `address()` | Logical instruction start | Shared listing and execution identity
+| `length()` | Positive occupied addressable-cell count | Byte, integer, and object memories
+| `mnemonic()` | Captured mnemonic and operands | Stable display and recording
+| `encoding()` | Captured encoding as display text | No byte-only shared contract
+| Accessors | Immutable; no live-memory reads | Self-modifying code cannot rewrite earlier captures
+|===
+
+* CPU access: `Decoder getDecoder()`.
+* No `flow()`, `sequentialAddress()`, opcode classification, or public rule payload.
+* Generated decoder: existing EDS recognition and private rendering.
+* Address wrapping/mapping: CPU-provided memory wiring; no new EDS declarations.
+* Invalid/truncated input: decode failure; no fabricated valid instruction.
+* Listing recovery: independent one-cell undecodable row; no runtime graph observation.
+
+=== 2. Report actual execution
+
+.emuLib: relevant Debugging interface
+[source,java]
+----
+public interface Debugging {
+    enum Capture { INSTRUCTION, ACCESSES, FULL }
+
+    AutoCloseable observe(Observer observer, Capture capture);
+
+    interface Observer {
+        boolean beforeStep();
+        boolean afterStep(
+                boolean completed,
+                Optional<DecodedInstruction> instruction,
+                OptionalInt nextAddress,
+                Optional<StepView> capture);
+        default void failed(String message) {}
+    }
+}
+----
+
+[cols="1,4",options="header"]
+|===
+| Item | Contract
+| `instruction` | Exact pre-execution captured instruction; absent for invalid/synthetic steps
+| `nextAddress` | Actual post-step logical PC; never a predicted successor
+| `completed` | Truthful completion of semantic execution
+| `capture` | Optional existing register/access presentation for full recording
+| `INSTRUCTION` | Lightweight instruction and actual-next-PC capture; default flow learning
+| `ACCESSES` | Instruction capture plus access observation required by watches
+| `FULL` | Instruction/access capture plus existing register/recording views
+| Synthetic interrupt | No stale memory instruction attached
+| Incomplete step | No successful execution edge
+| `StepView` / recording codec | Existing presentation and file layout retained
+|===
+
+=== 3. Accumulate observed edges
+
+[cols="2,4",options="header"]
+|===
+| Runtime observation | Graph result
+| Completed instruction at 100; actual PC 103 | Add observed edge 100 → 103
+| Later completed instruction at 100; actual PC 200 | Add observed edge 100 → 200; retain 100 → 103
+| Repeated 100 → 200 | Retain existing edge; no duplicate storage
+| Destination not executed | Known next-PC destination; instruction remains unobserved
+| Decode for listing only | No runtime node or edge
+| Root/view/analysis limit change | Filter immutable snapshot only; underlying observations retained
+| Changed instruction encoding at existing address | Latest executed capture for display; all earlier observed edges retained
+| Memory write / mapping change | Retain observed history
+| Annotation edit | Retain observed history
+| Pause / resume / stop | Retain observed history
+| Successful CPU reset | Clear observed nodes and edges; keep annotations
+|===
+
+* Edge meaning: observed transition only.
+* No inferred branch, call, return, fall-through, or unexecuted path.
+* No adjacency inference across separate steps or manual PC relocation.
+* No graph cleanup, eviction, or admission cap that discards previously observed branches.
+* Observation storage: unique executed addresses and edges; growth until reset.
+* Display limits: snapshot/view limits only.
+* Previously observed edges: historical evidence; no claim about all possible or current-memory paths.
+
+=== 4. Assign ownership
+
+[cols="1,3,3",options="header"]
+|===
+| Owner | Recipe | Why
+| emuLib | Four-accessor instruction; decoder; typed runtime observation | Minimal reusable contracts
+| Edigen | Decode and render existing EDS; private payload | No semantic declarations or CPU-flow knowledge
+| CPU plugin | Capture instruction before effects; report actual next PC after execution | Machine truth at execution seam
+| DebuggerSession | Accumulate observations independently of memory/annotation revisions | No accidental branch cleanup
+| FlowAnalysis | Snapshot and traverse recorded edges only | No live-memory decoding or execution prediction
+| AnalysisTasks | Snapshot/filter scheduling and lifecycle checks | No CPU execution or hidden decoding
+| PaginatingDisassembler | Listing boundaries and captured row reuse | Listing geometry separate from observed flow
+| Execution reset | Clear runtime graph after successful reset | Reset-only lifetime
+| Annotation store | Preserve labels and other annotations | Flow reset independent of annotations
+| Recording | Existing optional full capture and persistence | Flow learning independent of recording mode/history limits
+|===
+
+=== 5. Replace superseded contracts
+
+. Remove public `Disassembler`, `DisassembledInstruction`, and `InstructionFlow`.
+. Remove generator static-flow annotations, directives, helpers, and tests.
+. Restore all four CPU EDS specifications exactly.
+. Replace CPU-specific opcode flow wrappers with runtime execution observations.
+. Share instruction captures across listing columns and execution callbacks.
+. Keep recording start/stop independent of default instruction observation.
+. Retain every observed edge until successful CPU reset.
+. Update current developer docs and build integrations.
+. Validate both emuLib package layouts; integrate against compatible layout.
+
+=== Acceptance checklist
+
+* [x] Original grammar and four CPU EDS files: zero diff.
+* [x] DecodedInstruction: four accessors; no static flow semantics.
+* [x] Before execution: no predicted instruction edge.
+* [x] Execute one path: only that path observed.
+* [x] Execute another path: both old and new edges retained.
+* [x] Memory/annotation/view/pause/resume changes: earlier edges retained.
+* [x] CPU reset: flow empty; annotations unchanged.
+* [x] Listing and root filtering: no CPU execution and no graph learning.
+* [x] Invalid/incomplete/synthetic step: no fabricated instruction edge.
+* [x] Default capture: no full register/access history allocation.
+* [x] Recording codec and history-limit behavior retained.
+* [x] Focused/full suites; independent review; runtime branch/reset proof.
 
 [[the-eds-language]]
 == The EDS Language

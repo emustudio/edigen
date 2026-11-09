@@ -61,7 +61,7 @@ public class ArgumentTest {
 
     @Test
     public void testMultipleWordsInBrackets() {
-        Argument arg = new Argument("Output <some_value>", Setting.DISASSEMBLER_DIRECTORY);
+        Argument arg = new Argument("Output <some_value>", Setting.DECODER_DIRECTORY);
         assertEquals("<some_value>", arg.getValue());
     }
 }

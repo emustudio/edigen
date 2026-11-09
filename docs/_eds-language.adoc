@@ -1,8 +1,8 @@
 [.lead]
 The *EDS* language is the domain-specific language read by Edigen. An `.eds` file
 describes the instruction formats, operation codes and mnemonics of a processor, and
-Edigen compiles it into Java source code of an instruction *decoder* and a
-*disassembler*.
+Edigen compiles it into one Java instruction *decoder*, including disassembly
+from captured instruction fields.
 
 This chapter is a reference for people who *write* `.eds` files. How the compiler turns
 a specification into Java is covered by the architecture chapters above.
@@ -15,7 +15,7 @@ separated by a `%%` line:
 [source,text]
 ----
 # decoder
-root: instruction, data;
+root instruction, data;
 
 instruction =
     "add": 0xE dst_reg(2) src_reg(2) |
@@ -36,10 +36,10 @@ src_reg, dst_reg =
 "%0x"       = data;
 ----
 
-* The *decoder* part (before `%%`) maps a sequence of bits to an associative array of
-  decoded fields, in the form `{rule: value, ...}`.
-* The *disassembler* part (after `%%`) maps that associative array to a human-readable
-  mnemonic string.
+* The *decoder* part (before `%%`) recognizes bits, captures operands privately,
+  without flow declarations.
+* The *disassembler* part (after `%%`) maps captured fields to a human-readable
+  mnemonic string within the same generated decoder.
 
 == Lexical elements
 
@@ -111,7 +111,7 @@ The decoder part starts with a *root-rule declaration* and is followed by one or
 
 [source,text]
 ----
-root: instruction, data;
+root instruction, data;
 ----
 
 The declaration begins with the reserved word `root`, followed by a comma-separated
@@ -119,8 +119,7 @@ list of rule names and terminated by a semicolon. Root rules are attempted in th
 written: decoding first tries `instruction`, and if that does not match, it tries
 `data`. Every listed name must refer to a defined rule.
 
-NOTE: The `root` keyword may be followed by a colon (`root: instruction;`) or written
-without one (`root instruction;`); both forms are accepted.
+NOTE: Write `root instruction;` without a colon.
 
 === Rules
 

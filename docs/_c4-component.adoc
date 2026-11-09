@@ -24,11 +24,11 @@ package "Edigen CLI Application" {
   rectangle "**Parser**\nparser.* (JavaCC)\n\nBuilds the initial AST\nfrom .eds text" as parser #438DD5
   rectangle "**AST Model**\nnodes.*\n\nSpecification, Decoder,\nDisassembler, Rule,\nVariant, Mask, Pattern..." as ast #63BEF2
   rectangle "**Transformation Passes**\npasses.*\n\n13 in-place Visitor\npasses: validate +\nnormalize the AST" as passes #438DD5
-  rectangle "**Code Generators**\ngeneration.*\n\nDecoder/Disassembler\ngenerators + emitting\nvisitors" as gen #438DD5
+  rectangle "**Code Generator**\ngeneration.*\n\nDecoder generator\n+ emitting visitors" as gen #438DD5
   rectangle "**Templating**\nmisc.Template,\nPrettyPrinter\n\nVariable substitution\n+ indentation" as tmplsys #438DD5
 }
 
-rectangle "Templates\nDecoder.edt / Disassembler.edt\n<<Resource>>" as edt #E8F0FE
+rectangle "Templates\nDecoder.edt / Rendering.edt\n<<Resource>>" as edt #E8F0FE
 rectangle "Generated .java\n<<Output>>" as out #E8F0FE
 
 user --> cli : args
@@ -60,7 +60,7 @@ tmplsys --> out : write Java
 
 | Translator | `net.emustudio.edigen.Translator`
 | The application core. Opens the specification, invokes the `Parser`, runs the
-  fixed pass pipeline over the AST, and finally runs the two generators. Its
+  fixed pass pipeline over the AST, and finally runs the decoder generator. Its
   `transform(...)` method is the authoritative definition of pass order.
 
 | Parser | `net.emustudio.edigen.parser` (generated from `Grammar.jj`)
@@ -78,7 +78,7 @@ tmplsys --> out : write Java
   decoder subtree into a decision tree. Detailed in <<Code>>.
 
 | Code Generators | `net.emustudio.edigen.generation`
-| `DecoderGenerator` and `DisassemblerGenerator` (both extend `Generator`) compute
+| `DecoderGenerator` extends `Generator`, computes
   template variables and delegate code fragments to emitting visitors
   (`GenerateFieldsVisitor`, `GenerateMethodsVisitor`, `GenerateFormatsVisitor`,
   `GenerateParametersVisitor`).

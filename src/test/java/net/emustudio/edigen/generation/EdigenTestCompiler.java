@@ -5,7 +5,6 @@ package net.emustudio.edigen.generation;
 import net.emustudio.edigen.Translator;
 import net.emustudio.edigen.ConsoleGenerationLog;
 import net.emustudio.emulib.plugins.cpu.Decoder;
-import net.emustudio.emulib.plugins.cpu.Disassembler;
 import net.emustudio.emulib.plugins.memory.MemoryContext;
 
 import javax.tools.JavaCompiler;
@@ -23,31 +22,27 @@ import static net.emustudio.edigen.Setting.*;
 
 /**
  * Test helper that runs the full Edigen pipeline (parse → transform →
- * generate) against the real {@code Decoder.edt} and
- * {@code Disassembler.edt} templates, compiles the generated Java
+ * generate) against the real {@code Decoder.edt} template, compiles the generated Java
  * sources at test-time and returns loaded {@link Class} objects.
  * <p>
  * This is used by {@link DecoderCacheTest} and
- * {@link DisassemblerCacheTest} so they exercise the <em>actual</em>
+ * {@link CapturedInstructionTest} so they exercise the <em>actual</em>
  * generated caching code rather than hand-written fakes.
  */
 public class EdigenTestCompiler {
 
     private static final String DECODER_FQCN = "test.generated.TestDecoder";
-    private static final String DISASM_FQCN = "test.generated.TestDisassembler";
 
     /**
-     * Holds the compiled decoder and disassembler classes.
+     * Holds the compiled decoder class.
      */
     public static class Compiled implements Closeable {
         private final URLClassLoader classLoader;
         private final Class<?> decoderClass;
-        private final Class<?> disassemblerClass;
 
-        Compiled(URLClassLoader classLoader, Class<?> decoderClass, Class<?> disassemblerClass) {
+        Compiled(URLClassLoader classLoader, Class<?> decoderClass) {
             this.classLoader = classLoader;
             this.decoderClass = decoderClass;
-            this.disassemblerClass = disassemblerClass;
         }
 
         /**
@@ -62,26 +57,6 @@ public class EdigenTestCompiler {
             }
         }
 
-        /**
-         * Creates a new disassembler instance.
-         */
-        public Disassembler newDisassembler(MemoryContext<? extends Number> memory, Decoder decoder) {
-            try {
-                Constructor<?> ctor = disassemblerClass.getConstructor(MemoryContext.class, Decoder.class);
-                return (Disassembler) ctor.newInstance(memory, decoder);
-            } catch (ReflectiveOperationException e) {
-                throw new RuntimeException("Cannot instantiate disassembler", e);
-            }
-        }
-
-        public Class<?> getDecoderClass() {
-            return decoderClass;
-        }
-
-        public Class<?> getDisassemblerClass() {
-            return disassemblerClass;
-        }
-
         @Override
         public void close() throws IOException {
             classLoader.close();
@@ -89,9 +64,8 @@ public class EdigenTestCompiler {
     }
 
     /**
-     * Parses the given Edigen specification, generates decoder and
-     * disassembler Java sources from the real {@code .edt} templates,
-     * compiles them and returns loaded classes.
+     * Parses the given Edigen specification, generates a decoder from the real template,
+     * compiles it and returns the loaded class.
      *
      * @param spec the Edigen specification text
      * @return a {@link Compiled} handle with loaded classes
@@ -107,14 +81,11 @@ public class EdigenTestCompiler {
         new Translator(Map.of(
                 SPECIFICATION, specFile.toString(),
                 DECODER_NAME, DECODER_FQCN,
-                DISASSEMBLER_NAME, DISASM_FQCN,
-                DECODER_DIRECTORY, packageDir.toString(),
-                DISASSEMBLER_DIRECTORY, packageDir.toString()
+                DECODER_DIRECTORY, packageDir.toString()
         ), new ConsoleGenerationLog(System.err, false)).translate();
 
         // 2. Compile generated sources
         Path decoderSrc = packageDir.resolve("TestDecoder.java");
-        Path disasmSrc = packageDir.resolve("TestDisassembler.java");
 
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         if (compiler == null) {
@@ -127,15 +98,12 @@ public class EdigenTestCompiler {
         int rc = compiler.run(null, null, null,
                 "-classpath", classpath,
                 "-d", tmpDir.toString(),
-                decoderSrc.toString(),
-                disasmSrc.toString());
+                decoderSrc.toString());
         if (rc != 0) {
             // Read sources for debugging
             String decoderSource = new String(Files.readAllBytes(decoderSrc));
-            String disasmSource = new String(Files.readAllBytes(disasmSrc));
             throw new RuntimeException(
-                    "Compilation failed (rc=" + rc + ").\nDecoder source:\n" + decoderSource
-                            + "\nDisassembler source:\n" + disasmSource);
+                    "Compilation failed (rc=" + rc + ").\nDecoder source:\n" + decoderSource);
         }
 
         // 3. Load compiled classes
@@ -144,8 +112,7 @@ public class EdigenTestCompiler {
                 EdigenTestCompiler.class.getClassLoader());
 
         Class<?> decoderClass = loader.loadClass(DECODER_FQCN);
-        Class<?> disasmClass = loader.loadClass(DISASM_FQCN);
 
-        return new Compiled(loader, decoderClass, disasmClass);
+        return new Compiled(loader, decoderClass);
     }
 }

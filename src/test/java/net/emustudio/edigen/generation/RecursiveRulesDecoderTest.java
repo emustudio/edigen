@@ -4,14 +4,15 @@ package net.emustudio.edigen.generation;
 
 import net.emustudio.emulib.plugins.cpu.DecodedInstruction;
 import net.emustudio.emulib.plugins.cpu.Decoder;
+import net.emustudio.emulib.plugins.cpu.InvalidInstructionException;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThrows;
 
 public class RecursiveRulesDecoderTest {
 
@@ -55,12 +56,12 @@ public class RecursiveRulesDecoderTest {
         DecodedInstruction onePrefix = decoder.decode(0x200);
         DecodedInstruction twoPrefixes = decoder.decode(0x300);
 
-        assertEquals(1, noPrefix.image.length);
-        assertEquals(2, onePrefix.image.length);
-        assertEquals(3, twoPrefixes.image.length);
-        assertArrayEquals(new byte[]{(byte) 0xEF}, noPrefix.image);
-        assertArrayEquals(new byte[]{(byte) 0xFF, (byte) 0xEF}, onePrefix.image);
-        assertArrayEquals(new byte[]{(byte) 0xFF, (byte) 0xFF, (byte) 0xEF}, twoPrefixes.image);
+        assertEquals(1, noPrefix.length());
+        assertEquals(2, onePrefix.length());
+        assertEquals(3, twoPrefixes.length());
+        assertEquals("EF", noPrefix.encoding());
+        assertEquals("FF EF", onePrefix.encoding());
+        assertEquals("FF FF EF", twoPrefixes.encoding());
     }
 
     @Test
@@ -72,5 +73,17 @@ public class RecursiveRulesDecoderTest {
 
         assertSame(first, second);
         assertEquals(4, memory.readCount);
+    }
+
+    @Test
+    public void excessivePrefixesFailWithoutOverflowAndLaterDecodeStillWorks() throws Exception {
+        byte[] prefixes = new byte[1024];
+        java.util.Arrays.fill(prefixes, (byte) 0xFF);
+        memory.writeBytes(0, prefixes);
+
+        assertThrows(InvalidInstructionException.class, () -> decoder.decode(0));
+
+        memory.writeBytes(0, new byte[]{(byte) 0xEF});
+        assertEquals("halt", decoder.decode(0).mnemonic());
     }
 }

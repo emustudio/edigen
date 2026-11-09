@@ -48,7 +48,7 @@ public class GenerateFieldsVisitor extends Visitor {
         int ruleNumber = 1;
 
         for (String field : fields) {
-            printer.writeLine("public static final int "
+            printer.writeLine("private static final int "
                     + field + " = " + ruleNumber++ + ";");
         }
     }
@@ -79,9 +79,6 @@ public class GenerateFieldsVisitor extends Visitor {
      */
     @Override
     public void visit(Variant variant) {
-        if (variant.getFieldName() != null)
-            fields.add(variant.getFieldName());
-
         if (variant.returns())
             ruleReturns = true;
     }
