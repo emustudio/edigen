@@ -165,8 +165,6 @@ public class %decoder_class% implements Decoder {
 
     private void ensureInstructionBytesLength(int bitLength) {
         int requiredBytes = Math.max(1, (bitLength + 7) >>> 3);
-        if (requiredBytes > memory.getSize())
-            throw new IndexOutOfBoundsException("Instruction exceeds address space");
         if (loadedInstructionBytes < requiredBytes) {
             Number[] missingBytes = readMemory(
                     Math.addExact(memoryPosition, loadedInstructionBytes),
