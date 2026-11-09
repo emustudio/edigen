@@ -38,7 +38,7 @@ tree and fill text templates.
     -> AST (Specification)
     -> semantic + structural visitor passes
     -> generator visitors
-    -> template expansion (Decoder.edt with private Rendering.edt)
+    -> template expansion (Decoder.edt)
     -> generated Java decoder
 ----
 

@@ -24,7 +24,7 @@ rectangle "Build Integration\n<<External System>>" as build #999999
 
 package "Edigen" {
   rectangle "**Edigen CLI Application**\n<<Container: Java 11 executable JAR>>\n\nParses arguments, runs the\ntranslation pipeline, writes output" as app #1168BD
-  rectangle "**Bundled Templates**\n<<Container: JAR resources>>\n\nDecoder.edt,\nRendering.edt" as tpl #438DD5
+  rectangle "**Bundled Template**\n<<Container: JAR resource>>\n\nDecoder.edt" as tpl #438DD5
 }
 
 database "Specification\n(.eds file)" as eds #E8F0FE
@@ -52,8 +52,8 @@ app --> dec : writes
   transform -> generate pipeline, and writes the output files. Entry point:
   `net.emustudio.edigen.Edigen`.
 
-| Bundled Templates | Container (classpath resources)
-| `src/main/resources/Decoder.edt` and private `Rendering.edt`. Provide the shared Java
+| Bundled Template | Container (classpath resource)
+| `src/main/resources/Decoder.edt` provides the shared Java
   runtime scaffold around the generated code fragments. Loaded from the JAR unless
   decoder template overridden with `-dt`.
 

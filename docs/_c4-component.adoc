@@ -28,7 +28,7 @@ package "Edigen CLI Application" {
   rectangle "**Templating**\nmisc.Template,\nPrettyPrinter\n\nVariable substitution\n+ indentation" as tmplsys #438DD5
 }
 
-rectangle "Templates\nDecoder.edt / Rendering.edt\n<<Resource>>" as edt #E8F0FE
+rectangle "Template\nDecoder.edt\n<<Resource>>" as edt #E8F0FE
 rectangle "Generated .java\n<<Output>>" as out #E8F0FE
 
 user --> cli : args

@@ -193,7 +193,6 @@ The generators map the normalized tree onto Java control flow:
 |===
 
 `DecoderGenerator` fills `%decoder_package%`, `%decoder_class%`, `%root_rule%`,
-`%decoder_fields%`, `%decoder_methods%` and `%rendering%`.
-The private rendering template receives `%disasm_formats%` and `%disasm_parameters%`.
+`%decoder_fields%`, `%decoder_methods%`, `%disasm_formats%` and `%disasm_parameters%`.
 `Template` substitutes these variables, and `PrettyPrinter` supplies indentation,
 producing one Java source file.

@@ -11,11 +11,6 @@ import net.emustudio.edigen.nodes.Specification;
 
 import java.io.StringWriter;
 import java.io.Writer;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.InputStreamReader;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 
 /**
  * The instruction decoder generator.
@@ -70,23 +65,10 @@ public class DecoderGenerator extends Generator {
 
         Writer formats = new StringWriter();
         specification.getDisassembler().accept(new GenerateFormatsVisitor(formats));
+        template.setVariable("disasm_formats", formats.toString());
         Writer parameters = new StringWriter();
         specification.getDisassembler().accept(new GenerateParametersVisitor(parameters));
-        StringWriter rendering = new StringWriter();
-        try (BufferedReader input = new BufferedReader(new InputStreamReader(
-                getClass().getResourceAsStream("/Rendering.edt"), StandardCharsets.UTF_8))) {
-            BufferedWriter output = new BufferedWriter(rendering);
-            Template renderer = new Template(input, output);
-            renderer.setVariable("disasm_formats", formats.toString());
-            renderer.setVariable("disasm_parameters", parameters.toString());
-            renderer.write();
-            output.flush();
-        } catch (IOException failure) {
-            SemanticException error = new SemanticException("Cannot load instruction rendering template", specification);
-            error.initCause(failure);
-            throw error;
-        }
-        template.setVariable("rendering", rendering.toString());
+        template.setVariable("disasm_parameters", parameters.toString());
     }
 
 }
