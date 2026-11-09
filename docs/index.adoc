@@ -18,8 +18,8 @@ Edigen is a source-to-source compiler for a small domain-specific language (DSL)
 Its input is an `.eds` file describing instruction formats, operation codes and
 mnemonics; its output is Java source code for:
 
-* an instruction *decoder* implementing `net.emustudio.emulib.plugins.cpu.Decoder`,
-* a *disassembler* implementing `net.emustudio.emulib.plugins.cpu.Disassembler`.
+* an instruction *decoder* implementing `net.emustudio.emulib.plugin.cpu.Decoder`,
+* a *disassembler* implementing `net.emustudio.emulib.plugin.cpu.Disassembler`.
 
 The generated classes are compatible with the
 https://github.com/emustudio/emuStudio[emuStudio] platform and rely on interfaces
