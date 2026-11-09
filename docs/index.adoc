@@ -111,6 +111,193 @@ logging is disabled. Every dump identifies its completed pass. Since
 most of the real compiler logic lives in the transformation pipeline, inspecting the
 post-pass tree is usually the fastest way to reason about unexpected generated output.
 
+[[unified-instruction-design]]
+== Recipe: Unified Instruction Interface
+
+[cols="1,4",options="header"]
+|===
+| Item | Decision
+| Status | Proposal; coordinated breaking change; no implementation
+| Documentation ticket | https://github.com/emustudio/edigen/issues/88[#88: Architecture documentation]
+| Related API work | https://github.com/emustudio/edigen/issues/80[#80: Decoder API performance]
+| Goal | One decoded instruction; shared facts for listing, flow analysis, debugging, recording
+| Why | Repeated decoding; separate opcode interpretation; duplicated instruction geometry; generator details exposed to callers
+| Scope | emuLib contracts; Edigen output; emuStudio CPU providers and debugger consumers
+|===
+
+=== 1. Expose one decoding operation
+
+.emuLib: Decoder
+[source,java]
+----
+public interface Decoder {
+    DecodedInstruction decode(int address)
+            throws InvalidInstructionException, IndexOutOfBoundsException;
+}
+----
+
+.emuLib: DecodedInstruction
+[source,java]
+----
+public interface DecodedInstruction {
+    int address();
+    int length();
+    String mnemonic();
+    String encoding();
+    InstructionFlow flow();
+}
+----
+
+[cols="1,3,3",options="header"]
+|===
+| Member | Contract | Why
+| `address()` | Logical instruction start; CPU address units | Shared identity within a memory view
+| `length()` | Positive occupied-cell count; no byte assumption | Byte, integer, and object memories
+| `mnemonic()` | Captured instruction's rendered mnemonic and operands | Shared listing and recording text
+| `encoding()` | Captured encoding as display text; no byte-only format | RAM/RASP and byte CPUs through one interface
+| `flow()` | Non-null static flow description; explicit `UNKNOWN` | Valid decoding independent of available flow semantics
+| All accessors | Immutable values; no live-memory reads | Stable analysis, display, and historical inspection
+| Equality | No shared value-equality requirement; no image-only identity | Different locations, CPU modes, and memory mappings
+|===
+
+* CPU interface: replace `Disassembler getDisassembler()` with `Decoder getDecoder()`.
+* Public `Disassembler`, `DisassembledInstruction`: remove after coordinated consumer migration.
+* Public Edigen rule keys, constants, strings, bits: remove from shared instruction contract.
+* `sequentialAddress()`: omit; extent through `address()`/`length()`; execution destinations through `flow()`.
+* Structured operands, register effects, timing, configurable rendering: outside initial scope.
+
+=== 2. Describe flow without redundant flags
+
+.emuLib: InstructionFlow
+[source,java]
+----
+import java.util.List;
+import java.util.OptionalInt;
+
+public interface InstructionFlow {
+    enum Kind { LINEAR, JUMP, CALL, RETURN, STOP, UNKNOWN }
+
+    Kind kind();
+    OptionalInt fallThrough();
+    List<Integer> targets();
+    OptionalInt returnSite();
+}
+----
+
+[cols="1,4",options="header"]
+|===
+| Member | Contract
+| `kind()` | Instruction's static transfer category
+| `fallThrough()` | Immediate sequential execution path; absent when impossible
+| `targets()` | Immutable direct transfer destinations; exhaustive when nonempty; empty for unresolved jump/call/return
+| `returnSite()` | Continuation after a call returns; present for `CALL` only; no guarantee of return
+| All addresses | CPU logical address space; CPU wrapping rules already applied
+| Conditionality | `JUMP`/`CALL`/`RETURN` plus present `fallThrough()`; no additional boolean
+| `UNKNOWN` | Flow semantics unavailable; all destinations absent
+| `STOP` | No statically followed successor; no claim of permanent machine termination
+|===
+
+[cols="2,1,1,1,1",options="header"]
+|===
+| Instruction | Kind | Fall-through | Targets | Return site
+| Linear at 100, length 3 | `LINEAR` | 103 | `[]` | absent
+| Jump to 500 | `JUMP` | absent | `[500]` | absent
+| Conditional jump to 500 | `JUMP` | 103 | `[500]` | absent
+| Indirect jump | `JUMP` | absent | `[]` | absent
+| Call to 500 | `CALL` | absent | `[500]` | 103
+| Conditional call to 500 | `CALL` | 103 | `[500]` | 103
+| Return | `RETURN` | absent | `[]` | absent
+| Conditional return | `RETURN` | 103 | `[]` | absent
+| Stop | `STOP` | absent | `[]` | absent
+| Valid instruction; unsupported flow | `UNKNOWN` | absent | `[]` | absent
+|===
+
+* Example addresses: start 100; length 3; direct destination 500; no wrapping.
+* Call return site: analysis continuation; never an immediate execution edge.
+* Empty indirect target: unresolved transfer; retain decoded node; mark analysis incomplete.
+* `UNKNOWN`: retain decoded node and presentation; stop traversal with unsupported-flow reason.
+* Resume after interrupts, asynchronous transfers, partial target sets: outside initial scope.
+
+=== 3. Keep failures outside valid instructions
+
+[cols="2,3,3",options="header"]
+|===
+| Outcome | Decoder contract | Consumer policy
+| Valid instruction | `DecodedInstruction` | Use extent, presentation, and flow
+| Invalid encoding | `InvalidInstructionException` | Listing: undecodable row; analysis: terminal diagnostic
+| Unavailable or truncated input | Existing memory-access failure; `IndexOutOfBoundsException` for bounds | Diagnostic; no fabricated instruction
+| Stale memory view | Session rejects result | Discard analysis or refresh listing
+|===
+
+* Listing recovery: advance one addressable cell after invalid encoding.
+* Recovery extent: listing policy; never a decoded instruction length.
+* Display text: presentation only; never a flow or validity signal.
+
+=== 4. Assign ownership
+
+[cols="1,3,3",options="header"]
+|===
+| Owner | Recipe | Why
+| emuLib | Own `Decoder`, `DecodedInstruction`, `InstructionFlow`, CPU decoder access | One plugin-facing contract
+| Edigen | Generate instruction facts and explicit flow semantics from the same recognized variant and captured operands | One instruction interpretation
+| Edigen | Keep rule payload and formatting machinery private | Minimal shared interface
+| `.eds` | Declare transfer category, target source, conditional path, call return site | No mnemonic parsing; no separate opcode classifier
+| CPU plugin | Supply address units, wrapping, mapping, handwritten semantics where needed | CPU-specific knowledge in CPU provider
+| `DebuggerSession` | Own memory-view validity and guarded decoding | Shared consistency policy
+| `FlowAnalysis` | Own traversal, graph construction, limits, diagnostics | Analysis policy outside plugin contracts
+| `AnalysisTasks` | Own scheduling, cancellation, publication checks | Task lifecycle outside instruction facts
+| `PaginatingDisassembler` | Own page layout and listing adjacency | Listing order independent of control flow
+| Recording | Own before/after state, accesses, actual next PC, completion | Execution observations separate from static instruction facts
+|===
+
+=== 5. Replace consumer assumptions
+
+[cols="2,3,3",options="header"]
+|===
+| Consumer | Replace | With
+| `FlowAnalysis` | `getFlow` + `getNextInstructionPosition` + `disassemble` | One `decode`; direct shared flow consumption
+| `FlowAnalysis` | Mnemonic/opcode-derived identity; duplicate enum conversion | Captured instruction facts; shared flow kind
+| `DebuggerSession` | Three-operation guarded disassembler | One-operation guarded decoder
+| `AnalysisTasks` | Instruction-specific interpretation | Session-scoped operation and unchanged publication guard
+| `PaginatingDisassembler` | Independent length decoding | Decoded extent from same session memory view
+| Debugger table | Repeated per-column disassembly | One captured instruction per displayed row
+| 8080/Z80 | Separate opcode-based flow wrapper | Generated flow from decoded variant
+| RAM/RASP | Disassembly-only providers | Handwritten decoder satisfying same contract
+| SSEM/Brainduck | Missing flow semantics | CPU-specific flow provider or explicit `UNKNOWN`
+| Recording | Historical redisassembly from current memory | Captured mnemonic and encoding; execution-event provenance
+|===
+
+* Session validity: machine identity; memory revision; mapping/bank context; decode mode.
+* Analysis publication: existing source/annotation revision and cancellation guards retained.
+* Concurrent callers: no unsynchronized shared mutable decoder state.
+* Immutable result: stable values; no guarantee of atomic live-memory capture.
+* Previous listing instruction: discovered instruction boundaries; never CFG predecessors.
+* Extent: occupied cells; end-exclusive extent may cross address-space end.
+* Wrapped execution destination: explicit flow address; never inferred from extent alone.
+
+=== 6. Deliver as coordinated replacement
+
+. emuLib: agree contracts and invariants.
+. Edigen: agree `.eds` semantic declarations; regenerate byte CPU providers.
+. emuStudio: migrate handwritten CPU providers and shared consumers.
+. emuStudio: remove superseded flow wrappers and disassembler calls.
+. emuLib/Edigen: remove obsolete public payload and disassembler contracts.
+. Verified local siblings: check Gradle integration, shared CPU tests, developer documentation.
+
+=== Acceptance checklist
+
+* [ ] One decode operation per instruction within a stable consumer view.
+* [ ] Accessors remain stable after memory mutation.
+* [ ] RAM object cells; RASP integer cells; byte CPU instructions.
+* [ ] Direct/indirect jumps; conditional calls/returns; stop; unsupported flow.
+* [ ] Call continuation distinct from immediate fall-through.
+* [ ] Wrapped execution addresses distinct from instruction extent.
+* [ ] Invalid/truncated instruction diagnostics distinct from unknown flow.
+* [ ] Self-modifying code, mapping changes, decode-mode changes invalidate reuse.
+* [ ] Cancelled/stale analysis never published.
+* [ ] Backward pagination uses discovered boundaries.
+* [ ] No public generator payload; no compatibility shims; no new dependencies.
+
 [[the-eds-language]]
 == The EDS Language
 
