@@ -7,7 +7,7 @@ Matúš Sulír; Peter Jakubčo
 This document describes the architecture of *Edigen* – the _Emulator Disassembler
 Generator_ – using the https://c4model.com[C4 model]. It is written for
 contributors and integrators who need to understand how a `.eds` specification is
-turned into Java source code of an instruction decoder and a disassembler.
+turned into a Java instruction decoder with captured disassembly.
 
 TIP: For the syntax and semantics of the `.eds` input language itself, see the
 <<the-eds-language,EDS Language>> chapter below.
@@ -16,10 +16,9 @@ TIP: For the syntax and semantics of the `.eds` input language itself, see the
 
 Edigen is a source-to-source compiler for a small domain-specific language (DSL).
 Its input is an `.eds` file describing instruction formats, operation codes and
-mnemonics; its output is Java source code for:
-
-* an instruction *decoder* implementing `net.emustudio.emulib.plugin.cpu.Decoder`,
-* a *disassembler* implementing `net.emustudio.emulib.plugin.cpu.Disassembler`.
+mnemonics; its output is one instruction *decoder* implementing
+`net.emustudio.emulib.plugin.cpu.Decoder`. Each result exposes immutable instruction
+facts and presentation through `DecodedInstruction`.
 
 The generated classes are compatible with the
 https://github.com/emustudio/emuStudio[emuStudio] platform and rely on interfaces
@@ -39,8 +38,8 @@ tree and fill text templates.
     -> AST (Specification)
     -> semantic + structural visitor passes
     -> generator visitors
-    -> template expansion (Decoder.edt, Disassembler.edt)
-    -> generated Java classes
+    -> template expansion (Decoder.edt)
+    -> generated Java decoder
 ----
 
 == About the C4 Model
@@ -82,10 +81,7 @@ of the architecture* and must not be changed casually.
 
 === Extension points
 
-The architecture exposes two supported extension points without changing Java code:
-
-* a custom decoder template via the `-dt` option,
-* a custom disassembler template via the `-at` option.
+The architecture supports a custom decoder template through the `-dt` option.
 
 Because the generators produce template variables rather than final files directly,
 template replacement is a first-class way to customize the emitted runtime while
@@ -111,6 +107,7 @@ logging is disabled. Every dump identifies its completed pass. Since
 most of the real compiler logic lives in the transformation pipeline, inspecting the
 post-pass tree is usually the fastest way to reason about unexpected generated output.
 
+[[unified-instruction-design]]
 [[the-eds-language]]
 == The EDS Language
 

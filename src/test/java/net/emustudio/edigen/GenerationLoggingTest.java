@@ -39,15 +39,13 @@ public class GenerationLoggingTest {
 
         new Edigen(log).run(fixture.arguments());
 
-        assertEquals(4, log.info.size());
-        assertEquals("Generating decoder and disassembler from " + fixture.source, log.info.get(0));
+        assertEquals(3, log.info.size());
+        assertEquals("Generating decoder from " + fixture.source, log.info.get(0));
         assertEquals("Wrote decoder example.Decoder to " + fixture.output.resolve("Decoder.java"), log.info.get(1));
-        assertEquals("Wrote disassembler example.Disassembler to " + fixture.output.resolve("Disassembler.java"), log.info.get(2));
-        assertTrue(log.info.get(3).matches("Generation completed in [0-9]+ ms"));
+        assertTrue(log.info.get(2).matches("Generation completed in [0-9]+ ms"));
         assertTrue(log.warnings.isEmpty());
         assertTrue(log.debug.isEmpty());
         assertTrue(Files.size(fixture.output.resolve("Decoder.java")) > 0);
-        assertTrue(Files.size(fixture.output.resolve("Disassembler.java")) > 0);
     }
 
     @Test
@@ -63,7 +61,6 @@ public class GenerationLoggingTest {
         assertTrue(started >= 0);
         assertTrue(completed > started);
         assertTrue(log.debug.contains("Generating example.Decoder using bundled template /Decoder.edt"));
-        assertTrue(log.debug.contains("Generating example.Disassembler using bundled template /Disassembler.edt"));
         assertFalse(log.debug.stream().anyMatch(message -> message.startsWith("AST after ")));
     }
 
@@ -72,7 +69,6 @@ public class GenerationLoggingTest {
         Fixture fixture = fixture(SPEC);
         new Edigen(new RecordingLog(false)).run(fixture.arguments());
         byte[] decoder = Files.readAllBytes(fixture.output.resolve("Decoder.java"));
-        byte[] disassembler = Files.readAllBytes(fixture.output.resolve("Disassembler.java"));
         RecordingLog log = new RecordingLog(true);
 
         new Edigen(log).run(fixture.arguments("-d"));
@@ -80,7 +76,6 @@ public class GenerationLoggingTest {
         assertTrue(log.debug.stream().anyMatch(message -> message.startsWith("AST after ResolveNamesVisitor:\n")));
         assertTrue(log.debug.stream().anyMatch(message -> message.startsWith("AST after DetectUnreachableFormatsVisitor:\n")));
         assertArrayEquals(decoder, Files.readAllBytes(fixture.output.resolve("Decoder.java")));
-        assertArrayEquals(disassembler, Files.readAllBytes(fixture.output.resolve("Disassembler.java")));
     }
 
     @Test
@@ -172,18 +167,17 @@ public class GenerationLoggingTest {
     }
 
     @Test
-    public void secondOutputFailureKeepsOnlyTheFirstCompletedFileMessage() throws Exception {
+    public void outputFailureNeverAnnouncesTheFileAsWritten() throws Exception {
         Fixture fixture = fixture(SPEC);
-        Files.createDirectory(fixture.output.resolve("Disassembler.java"));
+        Files.createDirectory(fixture.output.resolve("Decoder.java"));
         RecordingLog log = new RecordingLog(false);
 
         IOException failure = assertThrows(IOException.class, () -> new Edigen(log).run(fixture.arguments()));
 
-        assertTrue(failure.getMessage().startsWith("Cannot generate disassembler example.Disassembler at "
-                + fixture.output.resolve("Disassembler.java") + " using bundled template /Disassembler.edt: "));
+        assertTrue(failure.getMessage().startsWith("Cannot generate decoder example.Decoder at "
+                + fixture.output.resolve("Decoder.java") + " using bundled template /Decoder.edt: "));
         assertTrue(failure.getCause() instanceof IOException);
-        assertEquals(2, log.info.size());
-        assertTrue(log.info.get(1).startsWith("Wrote decoder example.Decoder to "));
+        assertEquals(1, log.info.size());
     }
 
     @Test
@@ -322,8 +316,8 @@ public class GenerationLoggingTest {
         }
 
         String[] arguments(String... options) {
-            List<String> arguments = new ArrayList<>(List.of(source.toString(), "example.Decoder", "example.Disassembler",
-                    "-do", output.toString(), "-ao", output.toString()));
+            List<String> arguments = new ArrayList<>(List.of(source.toString(), "example.Decoder",
+                    "-do", output.toString()));
             arguments.addAll(Arrays.asList(options));
             return arguments.toArray(new String[0]);
         }

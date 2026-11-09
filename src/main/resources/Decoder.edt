@@ -5,11 +5,12 @@ import net.emustudio.emulib.plugin.cpu.DecodedInstruction;
 import net.emustudio.emulib.plugin.cpu.Decoder;
 import net.emustudio.emulib.plugin.cpu.InvalidInstructionException;
 import net.emustudio.emulib.plugin.memory.MemoryContext;
+import net.emustudio.emulib.Bits;
 
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.util.function.UnaryOperator;
 
 /**
  * The instruction decoder.
@@ -18,9 +19,6 @@ public class %decoder_class% implements Decoder {
     private static final int CACHE_CAPACITY = 256;
     private static final int INITIAL_BUFFER_SIZE = 8;
     private static final long UNSIGNED_INT_MASK = 0xFFFFFFFFL;
-
-    // A rule key can carry the constant decoded from a string-returning variant.
-    private static final byte HAS_CONSTANT = 1;
 
     // A rule key can carry the original string returned by a named variant.
     private static final byte HAS_STRING = 2;
@@ -41,22 +39,30 @@ public class %decoder_class% implements Decoder {
     private int bitsRead;
 
     private byte[] keyStates = new byte[INITIAL_KEY_CAPACITY];
-    private int[] constants = new int[INITIAL_KEY_CAPACITY];
     private String[] strings = new String[INITIAL_KEY_CAPACITY];
     private int[] bitValues = new int[INITIAL_KEY_CAPACITY];
     private int[] bitLengths = new int[INITIAL_KEY_CAPACITY];
 
     private int keyCount;
 
+    private static final class Cached {
+        final byte[] image;
+        final DecodedInstruction instruction;
+        Cached(byte[] image, DecodedInstruction instruction) {
+            this.image = image;
+            this.instruction = instruction;
+        }
+    }
+
     /**
      * LRU cache of decoded instructions keyed by memory position.
      * Evicts least-recently-used entries when capacity is exceeded.
      */
-    private final Map<Integer, DecodedInstruction> cache = new LinkedHashMap<Integer, DecodedInstruction>(
+    private final Map<Integer, Cached> cache = new LinkedHashMap<Integer, Cached>(
             CACHE_CAPACITY + 1, 0.75f, true
     ) {
         @Override
-        protected boolean removeEldestEntry(Map.Entry<Integer, DecodedInstruction> eldest) {
+        protected boolean removeEldestEntry(Map.Entry<Integer, Cached> eldest) {
             return size() > CACHE_CAPACITY;
         }
     };
@@ -69,6 +75,8 @@ public class %decoder_class% implements Decoder {
      */
     public %decoder_class%(MemoryContext<? extends Number> memory) {
         this.memory = Objects.requireNonNull(memory);
+        if (memory.getCellTypeClass() != Byte.class)
+            throw new IllegalArgumentException("Generated decoder requires byte memory");
     }
 
     /**
@@ -82,16 +90,18 @@ public class %decoder_class% implements Decoder {
      * @throws InvalidInstructionException when decoding is not successful
      */
     @Override
-    public DecodedInstruction decode(int memoryPosition) throws InvalidInstructionException {
+    public synchronized DecodedInstruction decode(int memoryPosition) throws InvalidInstructionException {
+        if (memoryPosition < 0 || memoryPosition >= memory.getSize())
+            throw new IndexOutOfBoundsException("Instruction address outside memory");
         this.memoryPosition = memoryPosition;
         this.loadedInstructionBytes = 0;
 
-        DecodedInstruction entry = cache.get(memoryPosition);
+        Cached entry = cache.get(memoryPosition);
         if (entry != null) {
             byte[] cachedBytes = entry.image;
-            Number[] currentBytes = memory.read(memoryPosition, cachedBytes.length);
+            Number[] currentBytes = readMemory(memoryPosition, cachedBytes.length);
             if (matchesCachedBytes(cachedBytes, currentBytes)) {
-                return entry;
+                return entry.instruction;
             }
             copyBytes(currentBytes, 0);
             loadedInstructionBytes = currentBytes.length;
@@ -103,12 +113,23 @@ public class %decoder_class% implements Decoder {
         int imageLength = Math.max(1, (bitsRead + 7) >>> 3);
         byte[] image = Arrays.copyOf(instructionBytes, imageLength);
 
-        DecodedInstruction instruction = new DecodedInstruction(
-            image, keyCount, keyStates, constants, strings, bitValues, bitLengths
-        );
+        Bits[] bits = new Bits[keyStates.length];
+        for (int key = 0; key < keyStates.length; key++) {
+            if ((keyStates[key] & HAS_BITS) != 0) bits[key] = new Bits(bitValues[key], bitLengths[key]);
+        }
+        DecodedInstruction instruction = DecodedInstruction.of(memoryPosition, imageLength,
+                Rendering.mnemonic(keyCount, strings, bits), Rendering.formatImage(image));
 
-        cache.put(memoryPosition, instruction);
+        cache.put(memoryPosition, new Cached(image, instruction));
         return instruction;
+    }
+
+    private Number[] readMemory(int address, int count) {
+        if (count < 0 || count > memory.getSize())
+            throw new IndexOutOfBoundsException("Instruction exceeds address space");
+        Number[] cells = memory.read(address, count);
+        if (cells.length != count) throw new IndexOutOfBoundsException("Incomplete instruction input");
+        return cells;
     }
 
     private boolean matchesCachedBytes(byte[] cachedBytes, Number[] currentBytes) {
@@ -145,8 +166,8 @@ public class %decoder_class% implements Decoder {
     private void ensureInstructionBytesLength(int bitLength) {
         int requiredBytes = Math.max(1, (bitLength + 7) >>> 3);
         if (loadedInstructionBytes < requiredBytes) {
-            Number[] missingBytes = memory.read(
-                    memoryPosition + loadedInstructionBytes,
+            Number[] missingBytes = readMemory(
+                    Math.addExact(memoryPosition, loadedInstructionBytes),
                     requiredBytes - loadedInstructionBytes
             );
             copyBytes(missingBytes, loadedInstructionBytes);
@@ -192,7 +213,6 @@ public class %decoder_class% implements Decoder {
     private void reset() {
         bitsRead = 0;
         keyStates = new byte[INITIAL_KEY_CAPACITY];
-        constants = new int[INITIAL_KEY_CAPACITY];
         strings = new String[INITIAL_KEY_CAPACITY];
         bitValues = new int[INITIAL_KEY_CAPACITY];
         bitLengths = new int[INITIAL_KEY_CAPACITY];
@@ -204,12 +224,10 @@ public class %decoder_class% implements Decoder {
      *
      * @param key      the key (rule code)
      * @param string   the string which the recognized variant returned
-     * @param constant the constant obtained from the string
      */
-    private void addInstruction(int key, String string, int constant) {
+    private void addInstruction(int key, String string) {
         prepareKey(key);
-        keyStates[key] |= HAS_CONSTANT | HAS_STRING;
-        constants[key] = constant;
+        keyStates[key] |= HAS_STRING;
         strings[key] = string;
     }
 
@@ -245,11 +263,199 @@ public class %decoder_class% implements Decoder {
         }
 
         keyStates = Arrays.copyOf(keyStates, newLength);
-        constants = Arrays.copyOf(constants, newLength);
         strings = Arrays.copyOf(strings, newLength);
         bitValues = Arrays.copyOf(bitValues, newLength);
         bitLengths = Arrays.copyOf(bitLengths, newLength);
     }
 
     %decoder_methods%
+
+    private static final class Rendering {
+        private static final char[] HEX_DIGITS = "0123456789ABCDEF".toCharArray();
+
+        /**
+        * An instruction mnemonic format string with associated parameters.
+        */
+        private static class MnemonicFormat {
+            private final String format;
+            private final Parameter[] parameters;
+
+            public MnemonicFormat(String format, Parameter[] parameters) {
+                this.format = format;
+                this.parameters = parameters;
+            }
+
+            public String getFormat() { return format; }
+            public Parameter[] getParameters() { return parameters; }
+        }
+
+        /**
+        * A parameter of a format (a rule and a constant-decoding strategy).
+        */
+        private static class Parameter {
+            private final int ruleCode;
+            private final BitOperations bitOperations;
+
+            public Parameter(int ruleCode, BitOperations bitOperations) {
+                this.ruleCode = ruleCode;
+                this.bitOperations = bitOperations;
+            }
+
+            public int getRuleCode() { return ruleCode; }
+            public BitOperations getBitOperations() { return bitOperations; }
+        }
+
+        /**
+        * An ordered pipeline of {@link Bits} transformations applied to a decoded parameter.
+        */
+        private static final class BitOperations {
+            private final List<UnaryOperator<Bits>> operations = new ArrayList<>();
+
+            static BitOperations builder() { return new BitOperations(); }
+
+            Bits apply(Bits bits) {
+                Bits result = bits;
+                for (UnaryOperator<Bits> operation : operations) {
+                    result = operation.apply(result);
+                }
+                return result;
+            }
+
+            private BitOperations then(UnaryOperator<Bits> operation) { operations.add(operation); return this; }
+            BitOperations reverseBytes() { return then(Bits::reverseBytes); }
+            BitOperations reverseBits() { return then(Bits::reverseBits); }
+            BitOperations absolute() { return then(Bits::absolute); }
+            BitOperations shiftLeft() { return then(Bits::shiftLeft); }
+            BitOperations shiftRight() { return then(Bits::shiftRight); }
+        }
+
+        private static final Map<Set<Integer>, MnemonicFormat> formatMap;
+
+        static {
+            String[] formats = {
+              %disasm_formats%
+            };
+
+            Parameter[][] parameters = {
+                %disasm_parameters%
+            };
+
+            formatMap = new HashMap<>();
+
+            for (int i = 0; i < formats.length; i++) {
+                Set<Integer> ruleCodes = new HashSet<>();
+
+                for (Parameter parameter : parameters[i]) {
+                    ruleCodes.add(parameter.getRuleCode());
+                }
+
+                formatMap.put(ruleCodes, new MnemonicFormat(formats[i], parameters[i]));
+            }
+        }
+
+        static String mnemonic(int keyCount, String[] strings, Bits[] bits) {
+            Set<Integer> keys = new HashSet<>(Math.max(1, keyCount));
+            for (int ruleCode = 0; ruleCode < strings.length && keys.size() < keyCount; ruleCode++) {
+                if (strings[ruleCode] != null || bits[ruleCode] != null) {
+                    keys.add(ruleCode);
+                }
+            }
+
+            MnemonicFormat format = formatMap.get(keys);
+            return format == null ? "N/A" : createMnemonic(strings, bits, format);
+        }
+
+        /**
+         * Returns the instruction mnemonic.
+         * @param instruction the decoded instruction
+         * @param format the formatting string + rule codes
+         * @return the instruction mnemonic
+         */
+        private static String createMnemonic(String[] strings, Bits[] bits, MnemonicFormat format) {
+            StringBuilder mnemonic = new StringBuilder(format.getFormat());
+            int position = 0;
+
+            for (Parameter parameter : format.getParameters()) {
+                position = mnemonic.indexOf("%", position);
+                if (position == -1 || position == mnemonic.length()) {
+                    break;
+                }
+
+                String replaced;
+                Bits value = bits[parameter.getRuleCode()];
+                if (value != null) {
+                    value = parameter.getBitOperations().apply(value);
+                    replaced = formatValue(mnemonic.charAt(position + 1), value);
+                } else {
+                    replaced = strings[parameter.getRuleCode()];
+                }
+
+                mnemonic.replace(position, position + 2, replaced);
+            }
+
+            return mnemonic.toString();
+        }
+
+        static String formatImage(byte[] image) {
+            if (image.length == 0) {
+                return "";
+            }
+
+            char[] formatted = new char[(image.length * 3) - 1];
+            int out = 0;
+
+            for (int i = 0; i < image.length; i++) {
+                int value = image[i] & 0xFF;
+                formatted[out++] = HEX_DIGITS[value >>> 4];
+                formatted[out++] = HEX_DIGITS[value & 0x0F];
+                if (i + 1 < image.length) {
+                    formatted[out++] = ' ';
+                }
+            }
+
+            return new String(formatted);
+        }
+
+        /**
+         * Transforms bits into a string using the mnemonic formatting character.
+         * <p>
+         * Note: {@link Bits} carries at most 32 bits of numeric data. When formatting a 64-bit float
+         * ('f' with length 64), only the low 32 bits are available.
+         *
+         * @param format the formatting character ('s' for a string, etc.)
+         * @param bits   the bits to format
+         * @return the resulting string
+         */
+        private static String formatValue(char format, Bits bits) {
+            switch (format) {
+                case 'c':
+                    String string = new String(bits.toBytes());
+                    return (!string.isEmpty()) ? string.substring(0, 1) : "?";
+                case 'd':
+                    return Integer.toString(bits.number);
+                case 'f':
+                    switch (bits.length) {
+                        case 32:
+                            return Float.toString(ByteBuffer.wrap(bits.toBytes()).order(ByteOrder.LITTLE_ENDIAN).getFloat());
+                        case 64:
+                            ByteBuffer buffer = ByteBuffer.allocate(8).order(ByteOrder.LITTLE_ENDIAN);
+                            buffer.put(bits.toBytes());
+                            buffer.position(0);
+                            return Double.toString(buffer.getDouble());
+                        default:
+                            return "NaN";
+                    }
+                case 's':
+                    return new String(bits.toBytes()).replace("\0", "");
+                case 'x':
+                    return Integer.toHexString(bits.number);
+                case 'X':
+                    return Integer.toHexString(bits.number).toUpperCase(Locale.ROOT);
+                case '%':
+                    return "%";
+                default:
+                    return Character.toString(format);
+            }
+        }
+    }
 }

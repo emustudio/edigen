@@ -7,6 +7,7 @@ import net.emustudio.edigen.SemanticException;
 import net.emustudio.edigen.misc.Template;
 import net.emustudio.edigen.nodes.Decoder;
 import net.emustudio.edigen.nodes.Rule;
+import net.emustudio.edigen.nodes.Specification;
 
 import java.io.StringWriter;
 import java.io.Writer;
@@ -18,18 +19,20 @@ import java.io.Writer;
 public class DecoderGenerator extends Generator {
 
     private final Decoder decoder;
+    private final Specification specification;
 
     /**
      * Constructs the instruction decoder generator.
      *
-     * @param decoder the decoder node
+     * @param specification the decoder rules and presentation formats
      * @param name    the resulting package + class name
      * @param log     receives generation messages
      */
-    public DecoderGenerator(Decoder decoder, String name, GenerationLog log) {
+    public DecoderGenerator(Specification specification, String name, GenerationLog log) {
         super("decoder", "/Decoder.edt", name, log);
 
-        this.decoder = decoder;
+        this.specification = specification;
+        this.decoder = specification.getDecoder();
     }
 
     /**
@@ -59,6 +62,13 @@ public class DecoderGenerator extends Generator {
         Writer methods = new StringWriter();
         decoder.accept(new GenerateMethodsVisitor(methods));
         template.setVariable("decoder_methods", methods.toString());
+
+        Writer formats = new StringWriter();
+        specification.getDisassembler().accept(new GenerateFormatsVisitor(formats));
+        template.setVariable("disasm_formats", formats.toString());
+        Writer parameters = new StringWriter();
+        specification.getDisassembler().accept(new GenerateParametersVisitor(parameters));
+        template.setVariable("disasm_parameters", parameters.toString());
     }
 
 }

@@ -15,22 +15,6 @@ public enum Setting {
      */
     DECODER_NAME,
     /**
-     * The package + class name of the generated disassembler.
-     */
-    DISASSEMBLER_NAME,
-    /**
-     * An output directory of the generated disassembler file.
-     */
-    DISASSEMBLER_DIRECTORY,
-    /**
-     * The generated disassembler will be a member of this package.
-     */
-    DISASSEMBLER_PACKAGE,
-    /**
-     * The external disassembler template to use (instead of the internal, default template).
-     */
-    DISASSEMBLER_TEMPLATE,
-    /**
      * If set, the program will run in the debug mode (printing the tree after each transformation).
      */
     DEBUG,

@@ -2,8 +2,8 @@
 
 Edigen is a small single-process CLI application, so its "containers" are the
 executable itself, the resources it bundles, and the files it reads and writes.
-The container diagram makes the data flow explicit: a specification file in, two
-Java source files out, using templates embedded in the JAR.
+The container diagram makes the data flow explicit: a specification file in, one
+Java decoder source file out, using templates embedded in the JAR.
 
 [plantuml,c4-container,svg]
 ....
@@ -24,21 +24,19 @@ rectangle "Build Integration\n<<External System>>" as build #999999
 
 package "Edigen" {
   rectangle "**Edigen CLI Application**\n<<Container: Java 11 executable JAR>>\n\nParses arguments, runs the\ntranslation pipeline, writes output" as app #1168BD
-  rectangle "**Bundled Templates**\n<<Container: JAR resources>>\n\nDecoder.edt,\nDisassembler.edt" as tpl #438DD5
+  rectangle "**Bundled Template**\n<<Container: JAR resource>>\n\nDecoder.edt" as tpl #438DD5
 }
 
 database "Specification\n(.eds file)" as eds #E8F0FE
 database "Generated Decoder\n(Decoder.java)" as dec #E8F0FE
-database "Generated Disassembler\n(Disassembler.java)" as dis #E8F0FE
 
 dev --> build : runs build
-build --> app : java -jar edigen.jar\n<spec> <decoder> <disasm>
+build --> app : java -jar edigen.jar\n<spec> <decoder>
 app --> eds : reads
 eds --> app
-app --> tpl : loads default template\n(or -dt / -at override)
+app --> tpl : loads default template\n(or -dt override)
 tpl --> app
 app --> dec : writes
-app --> dis : writes
 
 @enduml
 ....
@@ -54,18 +52,17 @@ app --> dis : writes
   transform -> generate pipeline, and writes the output files. Entry point:
   `net.emustudio.edigen.Edigen`.
 
-| Bundled Templates | Container (classpath resources)
-| `src/main/resources/Decoder.edt` and `Disassembler.edt`. Provide the shared Java
+| Bundled Template | Container (classpath resource)
+| `src/main/resources/Decoder.edt` provides the shared Java
   runtime scaffold around the generated code fragments. Loaded from the JAR unless
-  overridden with `-dt` / `-at`.
+  decoder template overridden with `-dt`.
 
 | Specification (`.eds`) | Data store (input file)
 | The DSL description of the instruction set: decoder rules and disassembler
   formats separated by `%%`.
 
-| Generated Decoder / Disassembler | Data store (output files)
-| `Decoder.java` and `Disassembler.java`, written to the configured output
-  directories (`-do` / `-ao`).
+| Generated Decoder | Data store (output file)
+| `Decoder.java`, written to the configured output directory (`-do`).
 |===
 
 === Command-line contract
@@ -80,11 +77,8 @@ are:
 
 | `<specification>` | `SPECIFICATION` | Path to the input `.eds` file.
 | `<decoder>` | `DECODER_NAME` | Fully-qualified name of the generated decoder class.
-| `<disassembler>` | `DISASSEMBLER_NAME` | Fully-qualified name of the generated disassembler class.
 | `-do <dir>` | `DECODER_DIRECTORY` | Output directory for the decoder.
-| `-ao <dir>` | `DISASSEMBLER_DIRECTORY` | Output directory for the disassembler.
 | `-dt <file>` | `DECODER_TEMPLATE` | Custom decoder template (overrides the bundled one).
-| `-at <file>` | `DISASSEMBLER_TEMPLATE` | Custom disassembler template.
 | `-iu` | `IGNORE_UNUSED_RULES` | Skip the unused-rule check.
 | `-d` | `DEBUG` | Dump the AST after each transformation pass.
 |===

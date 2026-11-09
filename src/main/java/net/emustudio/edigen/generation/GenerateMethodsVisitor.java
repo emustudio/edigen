@@ -165,7 +165,7 @@ public class GenerateMethodsVisitor extends Visitor {
                 field = currentRule.getFieldName(currentRule.getNames().get(0));
 
             if (variant.getReturnString() != null) {
-                value = '"' + variant.getReturnString() + "\", " + variant.getFieldName();
+                value = '"' + variant.getReturnString() + "\"";
                 put(String.format("addInstruction(%s, %s);", field, value));
             } else {
                 int start = variant.getReturnSubrule().getStart();

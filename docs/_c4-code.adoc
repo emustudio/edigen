@@ -188,13 +188,11 @@ The generators map the normalized tree onto Java control flow:
 | `Rule` | a private method
 | `Mask` | a `readBits(...)` call plus a `switch`
 | `Pattern` | a `case ...:` or `default:` label
-| `Variant` | an `instruction.add(...)` statement
+| `Variant` | captured operands
 | `Subrule` | a recursive call into another generated rule method
 |===
 
 `DecoderGenerator` fills `%decoder_package%`, `%decoder_class%`, `%root_rule%`,
-`%decoder_fields%` and `%decoder_methods%`; `DisassemblerGenerator` fills
-`%disasm_package%`, `%disasm_class%`, `%decoder_name%`, `%disasm_formats%` and
-`%disasm_parameters%`. `Template` substitutes these variables into the `.edt`
-templates, and `PrettyPrinter` supplies indentation, producing the final Java
-source files.
+`%decoder_fields%`, `%decoder_methods%`, `%disasm_formats%` and `%disasm_parameters%`.
+`Template` substitutes these variables, and `PrettyPrinter` supplies indentation,
+producing one Java source file.
