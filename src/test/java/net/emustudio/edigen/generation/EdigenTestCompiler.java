@@ -4,9 +4,9 @@ package net.emustudio.edigen.generation;
 
 import net.emustudio.edigen.Translator;
 import net.emustudio.edigen.ConsoleGenerationLog;
-import net.emustudio.emulib.plugins.cpu.Decoder;
-import net.emustudio.emulib.plugins.cpu.Disassembler;
-import net.emustudio.emulib.plugins.memory.MemoryContext;
+import net.emustudio.emulib.plugin.cpu.Decoder;
+import net.emustudio.emulib.plugin.cpu.Disassembler;
+import net.emustudio.emulib.plugin.memory.MemoryContext;
 
 import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;

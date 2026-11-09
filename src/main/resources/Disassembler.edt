@@ -1,9 +1,9 @@
 %auto_gen_warning%
 package %disasm_package%;
 
-import net.emustudio.emulib.plugins.cpu.*;
-import net.emustudio.emulib.plugins.memory.MemoryContext;
-import net.emustudio.emulib.runtime.helpers.Bits;
+import net.emustudio.emulib.plugin.cpu.*;
+import net.emustudio.emulib.plugin.memory.MemoryContext;
+import net.emustudio.emulib.Bits;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;

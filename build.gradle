@@ -25,7 +25,8 @@ java {
 
 dependencies {
   testImplementation 'junit:junit:4.13.2'
-  testImplementation 'net.emustudio:emulib:12.1.0-SNAPSHOT'
+  // Pin the public package layout from emustudio/emuLib#133.
+  testImplementation 'net.emustudio:emulib:12.1.0-20261109.085158-8'
 }
 
 javacc {
