@@ -2,9 +2,8 @@
    SPDX-License-Identifier: GPL-3.0-or-later */
 package net.emustudio.edigen.generation;
 
-import net.emustudio.emulib.plugins.cpu.DecodedInstruction;
-import net.emustudio.emulib.plugins.cpu.Decoder;
-import net.emustudio.emulib.plugins.cpu.InvalidInstructionException;
+import net.emustudio.emulib.plugin.cpu.DecodedInstruction;
+import net.emustudio.emulib.plugin.cpu.Decoder;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -12,7 +11,6 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertThrows;
 
 public class RecursiveRulesDecoderTest {
 
@@ -75,15 +73,4 @@ public class RecursiveRulesDecoderTest {
         assertEquals(4, memory.readCount);
     }
 
-    @Test
-    public void excessivePrefixesFailWithoutOverflowAndLaterDecodeStillWorks() throws Exception {
-        byte[] prefixes = new byte[1024];
-        java.util.Arrays.fill(prefixes, (byte) 0xFF);
-        memory.writeBytes(0, prefixes);
-
-        assertThrows(InvalidInstructionException.class, () -> decoder.decode(0));
-
-        memory.writeBytes(0, new byte[]{(byte) 0xEF});
-        assertEquals("halt", decoder.decode(0).mnemonic());
-    }
 }

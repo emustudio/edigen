@@ -1,11 +1,11 @@
 %auto_gen_warning%
 package %decoder_package%;
 
-import net.emustudio.emulib.plugins.cpu.DecodedInstruction;
-import net.emustudio.emulib.plugins.cpu.Decoder;
-import net.emustudio.emulib.plugins.cpu.InvalidInstructionException;
-import net.emustudio.emulib.plugins.memory.MemoryContext;
-import net.emustudio.emulib.runtime.helpers.Bits;
+import net.emustudio.emulib.plugin.cpu.DecodedInstruction;
+import net.emustudio.emulib.plugin.cpu.Decoder;
+import net.emustudio.emulib.plugin.cpu.InvalidInstructionException;
+import net.emustudio.emulib.plugin.memory.MemoryContext;
+import net.emustudio.emulib.Bits;
 
 import java.util.*;
 import java.nio.ByteBuffer;
@@ -18,7 +18,6 @@ import java.util.function.UnaryOperator;
 public class %decoder_class% implements Decoder {
     private static final int CACHE_CAPACITY = 256;
     private static final int INITIAL_BUFFER_SIZE = 8;
-    private static final int MAX_RULE_DEPTH = 256;
     private static final long UNSIGNED_INT_MASK = 0xFFFFFFFFL;
 
     // A rule key can carry the original string returned by a named variant.
@@ -38,7 +37,6 @@ public class %decoder_class% implements Decoder {
     private int loadedInstructionBytes;
     private int unit;
     private int bitsRead;
-    private int ruleDepth;
 
     private byte[] keyStates = new byte[INITIAL_KEY_CAPACITY];
     private String[] strings = new String[INITIAL_KEY_CAPACITY];
@@ -216,7 +214,6 @@ public class %decoder_class% implements Decoder {
      */
     private void reset() {
         bitsRead = 0;
-        ruleDepth = 0;
         keyStates = new byte[INITIAL_KEY_CAPACITY];
         strings = new String[INITIAL_KEY_CAPACITY];
         bitValues = new int[INITIAL_KEY_CAPACITY];

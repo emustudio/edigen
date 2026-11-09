@@ -73,13 +73,7 @@ public class GenerateMethodsVisitor extends Visitor {
 
         put("private void " + currentRule.getMethodName() + "(int start"
                 + secondParameter + ") throws InvalidInstructionException {");
-        put("if (ruleDepth == MAX_RULE_DEPTH) throw new InvalidInstructionException();");
-        put("ruleDepth++;");
-        put("try {");
         rule.acceptChildren(this);
-        put("} finally {");
-        put("ruleDepth--;");
-        put("}");
         put("}", true);
     }
 

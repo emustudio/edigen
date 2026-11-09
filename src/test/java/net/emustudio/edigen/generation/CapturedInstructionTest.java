@@ -2,8 +2,8 @@
    SPDX-License-Identifier: GPL-3.0-or-later */
 package net.emustudio.edigen.generation;
 
-import net.emustudio.emulib.plugins.cpu.Decoder;
-import net.emustudio.emulib.plugins.cpu.DecodedInstruction;
+import net.emustudio.emulib.plugin.cpu.Decoder;
+import net.emustudio.emulib.plugin.cpu.DecodedInstruction;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
